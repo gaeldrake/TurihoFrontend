@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier {{ opp.titre|truncate(30) }} | TURIHO{% endblock %}
+
+{% block extra_css %}
+<style>
+  .form-grid { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; }
+  @media (max-width: 1024px) { .form-grid { grid-template-columns: 1fr; } .sidebar-sticky { position: static !important; } }
+
+  .form-section { transition: all 0.3s; }
+  .form-section:hover { border-color: rgba(16, 185, 129, 0.15); }
+
+  .section-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #10b981, #fbbf24);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 20px -8px rgba(16, 185, 129, 0.5);
+    flex-shrink: 0;
+  }
+
+  .input-premium {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+    color: white; font-size: 14px;
+    transition: all 0.25s; font-family: inherit;
+  }
+  .input-premium::placeholder { color: #64748b; }
+  .input-premium:focus {
+    outline: none;
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.03);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+  }
+  textarea.input-premium { resize: vertical; min-height: 140px; line-height: 1.6; }
+
+  .label-premium {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: #94a3b8; margin-bottom: 0.5rem;
+  }
+  .label-premium .required { color: #ef4444; }
+  .label-hint { font-size: 11px; color: #64748b; margin-top: 0.375rem; }
+
+  .input-with-suffix { position: relative; }
+  .input-suffix {
+    position: absolute; right: 1rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px; color: #64748b; font-weight: 600;
+  }
+  .input-with-suffix .input-premium { padding-right: 4rem; }
+  input[type="date"].input-premium, input[type="number"].input-premium { color-scheme: dark; }
+
+  .field-group { display: grid; gap: 1.25rem; }
+  .field-row-2 { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 640px) { .field-row-2 { grid-template-columns: 1fr; } }
+
+  .btn-submit {
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.6); }
+  .btn-submit::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform: translateX(-100%); transition: transform 0.6s;
+  }
+  .btn-submit:hover::before { transform: translateX(100%); }
+
+  .char-counter { font-size: 11px; color: #64748b; text-align: right; margin-top: 0.25rem; }
+  .char-counter.warning { color: #f59e0b; }
+  .char-counter.danger { color: #ef4444; }
+
+  .tip-card {
+    padding: 1.25rem; border-radius: 16px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(251, 191, 36, 0.04));
+    border: 1px solid rgba(16, 185, 129, 0.15);
+  }
+
+  .danger-zone {
+    padding: 1.25rem; border-radius: 16px;
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up { animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="relative pt-28 pb-10 overflow-hidden">
+  <div class="absolute inset-0" style="background: radial-gradient(600px circle at 20% 30%, rgba(16, 185, 129, 0.08), transparent 50%);"></div>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="flex items-center gap-2 text-xs text-gray-500 mb-6">
+      <a href="{{ url_for('public.index') }}" class="hover:text-white transition-colors">Accueil</a>
+      <i class="fas fa-chevron-right text-[8px]"></i>
+      <a href="{{ url_for('opportunites.afficher_opportunites') }}" class="hover:text-white transition-colors">Opportunités</a>
+      <i class="fas fa-chevron-right text-[8px]"></i>
+      <span class="text-brand-400">Modifier</span>
+    </nav>
+
+    <h1 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-3">
+      Modifier <span class="gradient-text">l'opportunité</span>
+    </h1>
+    <p class="text-gray-400 max-w-2xl">Mettez à jour les informations de "{{ opp.titre|truncate(50) }}".</p>
+  </div>
+</section>
+
+<section class="pb-24">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <form method="POST" action="{{ url_for('opportunites.edit', id=opp.id) }}" class="form-grid">
+
+      <div class="space-y-6">
+
+        {# ─── CONTENU ─── #}
+        <div class="form-section glass rounded-2xl p-6 lg:p-8 animate-slide-up">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="section-icon"><i class="fas fa-file-alt text-white"></i></div>
+            <div class="flex-1">
+              <h2 class="font-display text-xl font-bold mb-1">Contenu principal</h2>
+              <p class="text-sm text-gray-400">Les informations essentielles de votre opportunité.</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div>
+              <label class="label-premium">
+                <i class="fas fa-heading text-brand-400 text-[10px]"></i>
+                Titre <span class="required">*</span>
+              </label>
+              <input type="text" name="titre" value="{{ opp.titre }}" required maxlength="150"
+                     class="input-premium" data-counter="titre-counter" data-max="150">
+              <div class="flex justify-between mt-1">
+                <div class="label-hint">Titre accrocheur et descriptif.</div>
+                <div id="titre-counter" class="char-counter">{{ opp.titre|length }} / 150</div>
+              </div>
+            </div>
+
+            <div>
+              <label class="label-premium">
+                <i class="fas fa-align-left text-brand-400 text-[10px]"></i>
+                Description <span class="required">*</span>
+              </label>
+              <textarea name="description" required maxlength="3000" rows="8"
+                        class="input-premium" data-counter="desc-counter" data-max="3000">{{ opp.description }}</textarea>
+              <div class="flex justify-between mt-1">
+                <div class="label-hint">Décrivez clairement l'opportunité et ses bénéfices.</div>
+                <div id="desc-counter" class="char-counter">{{ opp.description|length }} / 3000</div>
+              </div>
+            </div>
+
+            <div class="field-row-2">
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-tag text-brand-400 text-[10px]"></i>
+                  Type
+                </label>
+                <input type="text" name="type" value="{{ opp.type }}" class="input-premium" placeholder="Ex: Partenariat, Événement...">
+              </div>
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-map-marker-alt text-brand-400 text-[10px]"></i>
+                  Lieu
+                </label>
+                <input type="text" name="lieu" value="{{ opp.lieu }}" class="input-premium" placeholder="Ville, pays...">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# ─── DATES & PRIX ─── #}
+        <div class="form-section glass rounded-2xl p-6 lg:p-8 animate-slide-up" style="animation-delay: 0.1s;">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="section-icon"><i class="fas fa-calendar text-white"></i></div>
+            <div class="flex-1">
+              <h2 class="font-display text-xl font-bold mb-1">Période & Tarifs</h2>
+              <p class="text-sm text-gray-400">Dates clés et informations financières.</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-row-2">
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-calendar-plus text-brand-400 text-[10px]"></i>
+                  Date de début
+                </label>
+                <input type="date" name="date_debut"
+                       value="{{ opp.date_debut.strftime('%Y-%m-%d') if opp.date_debut else '' }}"
+                       class="input-premium">
+              </div>
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-hourglass-end text-brand-400 text-[10px]"></i>
+                  Date limite / fin
+                </label>
+                <input type="date" name="date_fin"
+                       value="{{ opp.date_fin.strftime('%Y-%m-%d') if opp.date_fin else '' }}"
+                       class="input-premium">
+              </div>
+            </div>
+
+            <div class="field-row-2">
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-tag text-gold-400 text-[10px]"></i>
+                  Prix
+                </label>
+                <div class="input-with-suffix">
+                  <input type="number" name="prix" value="{{ opp.prix }}" min="0" class="input-premium" placeholder="0">
+                  <span class="input-suffix">FBU</span>
+                </div>
+              </div>
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-coins text-gold-400 text-[10px]"></i>
+                  Montant maximum
+                </label>
+                <div class="input-with-suffix">
+                  <input type="number" name="montant_max" value="{{ opp.montant_max }}" min="0" class="input-premium" placeholder="0">
+                  <span class="input-suffix">FBU</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# ─── ACTIONS ─── #}
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+          <a href="{{ url_for('opportunites.detail_programme', id=opp.id) }}"
+             class="btn-ghost px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2">
+            <i class="fas fa-arrow-left text-xs"></i> Retour
+          </a>
+          <button type="submit" class="btn-submit px-8 py-3 rounded-xl font-semibold text-white text-sm flex items-center gap-2">
+            <i class="fas fa-check text-xs"></i> Enregistrer les modifications
+          </button>
+        </div>
+      </div>
+
+      {# ══════════ SIDEBAR ══════════ #}
+      <aside>
+        <div class="sidebar-sticky space-y-5" style="position: sticky; top: 100px;">
+
+          <div class="glass rounded-2xl p-5">
+            <h3 class="font-display font-bold text-sm mb-4">Informations</h3>
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-400">Catégorie</span>
+                <span class="font-semibold">{{ opp.categorie|capitalize|default('Opportunité') }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Créée le</span>
+                <span class="font-semibold text-xs">{{ opp.created_at|format_date if opp.created_at else '—' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Modifiée le</span>
+                <span class="font-semibold text-xs">{{ opp.updated_at|format_date if opp.updated_at else '—' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Statut</span>
+                <span class="inline-flex items-center gap-1 text-xs text-brand-400">
+                  <span class="w-1.5 h-1.5 rounded-full bg-brand-400"></span>
+                  Active
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-gold-500 flex items-center justify-center">
+                <i class="fas fa-lightbulb text-white text-xs"></i>
+              </div>
+              <div class="font-semibold text-sm">Conseil</div>
+            </div>
+            <p class="text-xs text-gray-300 leading-relaxed">
+              Gardez vos informations à jour pour maintenir la <span class="text-brand-400 font-semibold">confiance</span> de votre audience.
+            </p>
+          </div>
+
+          <div class="danger-zone">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-exclamation-triangle text-red-400 text-xs"></i>
+              <div class="font-semibold text-sm text-red-400">Zone sensible</div>
+            </div>
+            <p class="text-xs text-gray-400 mb-3">La suppression est définitive.</p>
+            <button type="button" class="w-full px-4 py-2 rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 text-xs font-semibold hover:bg-red-500/10 transition-colors">
+              <i class="fas fa-trash mr-1"></i> Supprimer l'opportunité
+            </button>
+          </div>
+
+        </div>
+      </aside>
+
+    </form>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('[data-counter]').forEach(input => {
+  const counterId = input.dataset.counter;
+  const max = parseInt(input.dataset.max);
+  const counter = document.getElementById(counterId);
+  if (!counter) return;
+  const update = () => {
+    const len = input.value.length;
+    counter.textContent = `${len} / ${max}`;
+    counter.classList.remove('warning', 'danger');
+    if (len > max * 0.9) counter.classList.add('danger');
+    else if (len > max * 0.75) counter.classList.add('warning');
+  };
+  input.addEventListener('input', update);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{# ══════════════════════════════════════════
+   TAB: ÉVÉNEMENTS
+   ══════════════════════════════════════════ #}
+
+<div class="content-card">
+    <div class="content-card-header">
+        <div class="content-card-title">
+            <i class="fas fa-calendar-alt" style="color: #34d399;"></i>
+            Événements
+            {% if evenements %}
+            <span class="content-card-count">{{ evenements|length }}</span>
+            {% endif %}
+        </div>
+        <a href="{{ url_for('dashboard.ajouter_evenement') }}" class="btn-dashboard primary sm">
+            <i class="fas fa-plus"></i> Nouvel événement
+        </a>
+    </div>
+
+    {% if evenements %}
+    <div class="events-timeline">
+        {% for e in evenements %}
+        <div class="event-item" style="animation: fadeIn 0.4s ease-out {{ loop.index0 * 0.08 }}s both;">
+            <div class="event-date">
+                <i class="fas fa-calendar"></i>
+                {{ e.date_debut.strftime('%d %B %Y') if e.date_debut else 'Date à définir' }}
+                {% if e.date_fin %}
+                    → {{ e.date_fin.strftime('%d %B %Y') }}
+                {% endif %}
+            </div>
+            
+            <div class="event-title">{{ e.nom|e }}</div>
+            
+            {% if e.description %}
+            <div style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.75rem; line-height: 1.6;">
+                {{ e.description|truncate(200)|e }}
+            </div>
+            {% endif %}
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.8125rem; color: #64748b; margin-bottom: 0.75rem;">
+                {% if e.lieu %}
+                <span style="display: flex; align-items: center; gap: 0.375rem;">
+                    <i class="fas fa-map-marker-alt" style="color: #f87171;"></i> {{ e.lieu|e }}
+                </span>
+                {% endif %}
+                {% if e.categorie %}
+                <span style="display: flex; align-items: center; gap: 0.375rem;">
+                    <i class="fas fa-tag" style="color: #34d399;"></i> {{ e.categorie|e }}
+                </span>
+                {% endif %}
+                {% if e.prix is defined and e.prix %}
+                <span style="display: flex; align-items: center; gap: 0.375rem;">
+                    <i class="fas fa-ticket-alt" style="color: #fbbf24;"></i> {{ e.prix }} FBU
+                </span>
+                {% else %}
+                <span style="display: flex; align-items: center; gap: 0.375rem;">
+                    <i class="fas fa-gift" style="color: #34d399;"></i> Gratuit
+                </span>
+                {% endif %}
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                <a href="{{ url_for('dashboard.modifier_evenement', id=e.id) }}" class="btn-dashboard ghost sm">
+                    <i class="fas fa-edit"></i> Modifier
+                </a>
+                <form method="POST" action="{{ url_for('dashboard.supprimer_evenement', id=e.id) }}" style="display: inline;" onsubmit="return confirm('Supprimer cet événement ?')">
+                    <button type="submit" class="btn-dashboard danger sm">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div style="font-weight: 600; color: white; margin-bottom: 0.25rem;">Aucun événement planifié</div>
+        <div style="font-size: 0.875rem; margin-bottom: 1rem;">Organisez des événements pour votre organisation.</div>
+        <a href="{{ url_for('dashboard.ajouter_evenement') }}" class="btn-dashboard primary">
+            <i class="fas fa-plus"></i> Créer un événement
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>

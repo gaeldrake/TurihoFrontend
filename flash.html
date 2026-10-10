@@ -1,0 +1,122 @@
+{# ══════════════════════════════════════════
+   PARTIAL: Messages Flash (Notifications Toast)
+   ══════════════════════════════════════════ #}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+
+{# ——— Configuration des catégories ——— #}
+{% set flash_config = {
+    'success': {
+        'icon': 'fa-circle-check',
+        'gradient': 'from-brand-500/20 to-emerald-700/10',
+        'border': 'border-brand-500/30',
+        'text': 'text-brand-300',
+        'icon_color': 'text-brand-400',
+        'title': 'Succès'
+    },
+    'danger': {
+        'icon': 'fa-circle-xmark',
+        'gradient': 'from-red-500/20 to-rose-700/10',
+        'border': 'border-red-500/30',
+        'text': 'text-red-300',
+        'icon_color': 'text-red-400',
+        'title': 'Erreur'
+    },
+    'warning': {
+        'icon': 'fa-triangle-exclamation',
+        'gradient': 'from-gold-500/20 to-amber-700/10',
+        'border': 'border-gold-500/30',
+        'text': 'text-gold-300',
+        'icon_color': 'text-gold-400',
+        'title': 'Attention'
+    },
+    'info': {
+        'icon': 'fa-circle-info',
+        'gradient': 'from-blue-500/20 to-cyan-700/10',
+        'border': 'border-blue-500/30',
+        'text': 'text-blue-300',
+        'icon_color': 'text-blue-400',
+        'title': 'Information'
+    }
+} %}
+
+{# ——— Container des toasts ——— #}
+<div id="flash-container" class="fixed top-20 right-4 z-[9999] space-y-3 max-w-sm w-full pointer-events-none">
+    {% for category, message in messages %}
+        {% set cfg = flash_config.get(category, flash_config['info']) %}
+
+        <div class="flash-toast pointer-events-auto glass bg-gradient-to-r {{ cfg.gradient }} {{ cfg.border }} border rounded-2xl p-4 shadow-2xl backdrop-blur-xl relative overflow-hidden"
+             data-flash-auto="5000"
+             style="animation: flash-slide-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) {{ loop.index0 * 0.1 }}s both;">
+
+            {# Barre de progression auto-dismiss #}
+            <div class="flash-progress absolute bottom-0 left-0 h-0.5 {{ cfg.icon_color|replace('text-', 'bg-') }}"
+                 style="animation: flash-progress 5s linear forwards;"></div>
+
+            {# Glow décoratif #}
+            <div class="absolute -top-10 -right-10 w-32 h-32 rounded-full {{ cfg.icon_color|replace('text-', 'bg-') }} opacity-10 blur-3xl"></div>
+
+            <div class="relative flex items-start gap-3">
+                {# Icône #}
+                <div class="flex-shrink-0 w-10 h-10 rounded-xl {{ cfg.icon_color|replace('text-', 'bg-')|replace('-400', '-500/20') }} flex items-center justify-center">
+                    <i class="fas {{ cfg.icon }} {{ cfg.icon_color }}"></i>
+                </div>
+
+                {# Contenu #}
+                <div class="flex-1 min-w-0 pt-0.5">
+                    <div class="text-xs font-bold uppercase tracking-wider {{ cfg.text }} mb-0.5">{{ cfg.title }}</div>
+                    <p class="text-sm text-gray-200 leading-relaxed break-words">{{ message|e }}</p>
+                </div>
+
+                {# Bouton fermer #}
+                <button onclick="closeFlashToast(this)"
+                        class="flex-shrink-0 w-7 h-7 rounded-lg hover:bg-white/10 flex items-center justify-center transition-colors text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{# ——— Styles & Scripts inline (autonomes) ——— #}
+<style>
+@keyframes flash-slide-in {
+    from { opacity: 0; transform: translateX(100%) scale(0.9); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes flash-slide-out {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to { opacity: 0; transform: translateX(100%) scale(0.9); }
+}
+@keyframes flash-progress {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+.flash-toast {
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flash-toast.closing {
+    animation: flash-slide-out 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+</style>
+
+<script>
+(function() {
+    // Auto-dismiss après 5 secondes
+    document.querySelectorAll('.flash-toast[data-flash-auto]').forEach((toast, i) => {
+        const delay = parseInt(toast.dataset.flashAuto) + (i * 200);
+        setTimeout(() => closeFlashToast(toast.querySelector('button')), delay);
+    });
+})();
+
+function closeFlashToast(btn) {
+    const toast = btn.closest ? btn.closest('.flash-toast') : btn.parentElement.closest('.flash-toast');
+    if (!toast) return;
+    toast.classList.add('closing');
+    setTimeout(() => toast.remove(), 400);
+}
+</script>
+
+{% endif %}
+{% endwith %}

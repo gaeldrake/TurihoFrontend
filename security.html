@@ -1,0 +1,1186 @@
+{% extends 'admin/basee.html' %}
+{% block title %}Centre de Sécurité{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════
+       CYBERSECURITY THEME
+       ══════════════════════════════════════════ */
+    :root {
+        --cyber-green: #00ff88;
+        --cyber-red: #ff3344;
+        --cyber-blue: #00aaff;
+        --cyber-amber: #ffaa00;
+        --cyber-purple: #aa44ff;
+        --cyber-bg: #030507;
+        --cyber-card: rgba(10, 15, 20, 0.7);
+    }
+    
+    .security-page {
+        background: var(--cyber-bg);
+    }
+    
+    /* Scan line effect subtil */
+    .security-page::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--cyber-green), transparent);
+        animation: scan-line 4s linear infinite;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0.3;
+    }
+    
+    @keyframes scan-line {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(100vh); }
+    }
+    
+    /* ══════════════════════════════════════════
+       HEADER
+       ══════════════════════════════════════════ */
+    .security-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .security-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.875rem;
+        font-weight: 800;
+        color: white;
+        margin: 0 0 0.25rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .security-title i {
+        color: var(--cyber-green);
+        text-shadow: 0 0 20px var(--cyber-green);
+    }
+    
+    .security-subtitle {
+        color: #64748b;
+        font-size: 0.9375rem;
+        margin: 0;
+    }
+    
+    /* ══════════════════════════════════════════
+       SCORE GAUGE
+       ══════════════════════════════════════════ */
+    .score-card {
+        background: var(--cyber-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .score-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.1), transparent 70%);
+        pointer-events: none;
+    }
+    
+    .score-gauge {
+        position: relative;
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 1rem;
+    }
+    
+    .score-gauge svg {
+        transform: rotate(-90deg);
+    }
+    
+    .score-gauge circle {
+        fill: none;
+        stroke-width: 12;
+    }
+    
+    .gauge-bg {
+        stroke: rgba(255, 255, 255, 0.05);
+    }
+    
+    .gauge-fill {
+        stroke: url(#scoreGradient);
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+        filter: drop-shadow(0 0 8px var(--cyber-green));
+    }
+    
+    .score-value {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .score-number {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--cyber-green), var(--cyber-blue));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+    
+    .score-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-top: 0.25rem;
+    }
+    
+    /* ══════════════════════════════════════════
+       KPI CARDS
+       ══════════════════════════════════════════ */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .kpi-card {
+        background: var(--cyber-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 14px;
+        padding: 1.25rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s;
+    }
+    
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--kpi-color, var(--cyber-green));
+        box-shadow: 0 0 10px var(--kpi-color, var(--cyber-green));
+    }
+    
+    .kpi-card:hover {
+        border-color: var(--kpi-color, var(--cyber-green));
+        transform: translateY(-2px);
+    }
+    
+    .kpi-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--kpi-color, var(--cyber-green));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--kpi-color, var(--cyber-green));
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .kpi-value {
+        font-family: 'JetBrains Mono', 'Courier New', monospace;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.25rem;
+        font-variant-numeric: tabular-nums;
+    }
+    
+    .kpi-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+    }
+    
+    /* ══════════════════════════════════════════
+       ALERTS LIST
+       ══════════════════════════════════════════ */
+    .alerts-card {
+        background: var(--cyber-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 51, 68, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+    }
+    
+    .alerts-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .alerts-title i {
+        color: var(--cyber-red);
+        animation: pulse-alert 2s infinite;
+    }
+    
+    @keyframes pulse-alert {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .alert-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.875rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-left: 3px solid var(--alert-color, var(--cyber-amber));
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s;
+    }
+    
+    .alert-item:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-left-width: 4px;
+    }
+    
+    .alert-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--alert-color, var(--cyber-amber));
+        flex-shrink: 0;
+    }
+    
+    .alert-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .alert-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.125rem;
+    }
+    
+    .alert-meta {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .alert-time {
+        font-size: 0.6875rem;
+        color: #64748b;
+        flex-shrink: 0;
+    }
+    
+    /* ══════════════════════════════════════════
+       CHARTS
+       ══════════════════════════════════════════ */
+    .chart-card {
+        background: var(--cyber-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 1.5rem;
+    }
+    
+    .chart-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .chart-title i {
+        color: var(--cyber-blue);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    
+    /* ══════════════════════════════════════════
+       MAP
+       ══════════════════════════════════════════ */
+    #security-map {
+        height: 400px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        background: #030507;
+    }
+    
+    .leaflet-popup-content-wrapper {
+        background: rgba(10, 15, 20, 0.95);
+        backdrop-filter: blur(20px);
+        color: white;
+        border: 1px solid rgba(0, 255, 136, 0.3);
+        border-radius: 12px;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .leaflet-popup-tip {
+        background: rgba(10, 15, 20, 0.95);
+    }
+    
+    .popup-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--cyber-green);
+        margin-bottom: 0.5rem;
+    }
+    
+    .popup-stat {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.25rem 0;
+        font-size: 0.8125rem;
+    }
+    
+    .popup-stat-label {
+        color: #94a3b8;
+    }
+    
+    .popup-stat-value {
+        color: white;
+        font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    
+    /* ══════════════════════════════════════════
+       LOGS TABLE
+       ══════════════════════════════════════════ */
+    .logs-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8125rem;
+    }
+    
+    .logs-table thead th {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+    }
+    
+    .logs-table tbody td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        color: #cbd5e1;
+    }
+    
+    .logs-table tbody tr:hover {
+        background: rgba(0, 255, 136, 0.03);
+    }
+    
+    .severity-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .severity-badge.info {
+        background: rgba(0, 170, 255, 0.15);
+        color: var(--cyber-blue);
+        border: 1px solid rgba(0, 170, 255, 0.3);
+    }
+    
+    .severity-badge.warning {
+        background: rgba(255, 170, 0, 0.15);
+        color: var(--cyber-amber);
+        border: 1px solid rgba(255, 170, 0, 0.3);
+    }
+    
+    .severity-badge.critical {
+        background: rgba(255, 51, 68, 0.15);
+        color: var(--cyber-red);
+        border: 1px solid rgba(255, 51, 68, 0.3);
+        animation: pulse-alert 2s infinite;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.6875rem;
+        font-weight: 600;
+    }
+    
+    .status-badge.success {
+        background: rgba(0, 255, 136, 0.15);
+        color: var(--cyber-green);
+    }
+    
+    .status-badge.failed {
+        background: rgba(255, 170, 0, 0.15);
+        color: var(--cyber-amber);
+    }
+    
+    .status-badge.blocked {
+        background: rgba(255, 51, 68, 0.15);
+        color: var(--cyber-red);
+    }
+    
+    /* ══════════════════════════════════════════
+       SESSIONS
+       ══════════════════════════════════════════ */
+    .session-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s;
+    }
+    
+    .session-item:hover {
+        border-color: rgba(0, 255, 136, 0.3);
+        background: rgba(0, 255, 136, 0.03);
+    }
+    
+    .session-device {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: rgba(0, 170, 255, 0.1);
+        border: 1px solid rgba(0, 170, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyber-blue);
+        font-size: 1.125rem;
+        flex-shrink: 0;
+    }
+    
+    .session-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .session-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.125rem;
+    }
+    
+    .session-meta {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    
+    /* ══════════════════════════════════════════
+       TOP IPs
+       ══════════════════════════════════════════ */
+    .top-ip-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 8px;
+        margin-bottom: 0.375rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8125rem;
+    }
+    
+    .top-ip-rank {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: rgba(0, 255, 136, 0.15);
+        color: var(--cyber-green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    
+    .top-ip-address {
+        flex: 1;
+        color: white;
+    }
+    
+    .top-ip-count {
+        color: var(--cyber-green);
+        font-weight: 600;
+    }
+    
+    /* ══════════════════════════════════════════
+       TABS
+       ══════════════════════════════════════════ */
+    .security-tabs {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        background: rgba(10, 15, 20, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+    }
+    
+    .security-tab {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        border-radius: 10px;
+        color: #94a3b8;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    
+    .security-tab:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .security-tab.active {
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 170, 255, 0.05));
+        color: var(--cyber-green);
+        border: 1px solid rgba(0, 255, 136, 0.2);
+    }
+    
+    /* ══════════════════════════════════════════
+       GRID
+       ══════════════════════════════════════════ */
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .grid-2, .grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* ══════════════════════════════════════════
+       BUTTONS
+       ══════════════════════════════════════════ */
+    .btn-cyber {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        text-decoration: none;
+    }
+    
+    .btn-cyber.primary {
+        background: linear-gradient(135deg, var(--cyber-green), #00cc66);
+        color: #030507;
+        box-shadow: 0 4px 12px -4px rgba(0, 255, 136, 0.4);
+    }
+    
+    .btn-cyber.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px -4px rgba(0, 255, 136, 0.5);
+    }
+    
+    .btn-cyber.danger {
+        background: rgba(255, 51, 68, 0.15);
+        border-color: rgba(255, 51, 68, 0.3);
+        color: var(--cyber-red);
+    }
+    
+    .btn-cyber.danger:hover {
+        background: rgba(255, 51, 68, 0.25);
+    }
+    
+    .btn-cyber.ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+    
+    .btn-cyber.ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(0, 255, 136, 0.3);
+    }
+    
+    /* ══════════════════════════════════════════
+       SECTION TITLE
+       ══════════════════════════════════════════ */
+    .section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: white;
+        margin: 2rem 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title i {
+        color: var(--cyber-green);
+    }
+</style>
+
+{# Leaflet CSS #}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" />
+{% endblock %}
+
+{% block content %}
+<div class="security-page">
+
+{# ══════════════════════════════════════════
+   HEADER
+   ══════════════════════════════════════════ #}
+<div class="security-header">
+    <div>
+        <h1 class="security-title">
+            <i class="fas fa-shield-alt"></i>
+            Centre de Sécurité
+        </h1>
+        <p class="security-subtitle">
+            Surveillance et protection en temps réel de la plateforme TURIHO
+        </p>
+    </div>
+    
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="{{ url_for('admin.security_export', format_type='csv') }}" class="btn-cyber ghost">
+            <i class="fas fa-file-csv"></i>
+            Export CSV
+        </a>
+        <a href="{{ url_for('admin.security_config') }}" class="btn-cyber ghost">
+            <i class="fas fa-cog"></i>
+            Configuration
+        </a>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════ #}
+<div class="security-tabs">
+    <a href="{{ url_for('admin.security_dashboard') }}" class="security-tab active">
+        <i class="fas fa-tachometer-alt"></i>
+        Vue d'ensemble
+    </a>
+    <a href="{{ url_for('admin.security_logs') }}" class="security-tab">
+        <i class="fas fa-list"></i>
+        Logs
+    </a>
+    <a href="{{ url_for('admin.security_sessions') }}" class="security-tab">
+        <i class="fas fa-desktop"></i>
+        Sessions
+    </a>
+    <a href="{{ url_for('admin.security_ip_rules') }}" class="security-tab">
+        <i class="fas fa-network-wired"></i>
+        Règles IP
+    </a>
+    <a href="{{ url_for('admin.security_config') }}" class="security-tab">
+        <i class="fas fa-sliders-h"></i>
+        Configuration
+    </a>
+</div>
+
+{# ══════════════════════════════════════════
+   SCORE + KPIs
+   ══════════════════════════════════════════ #}
+<div class="grid-2">
+    {# Score Gauge #}
+    <div class="score-card">
+        <div class="score-gauge">
+            <svg width="180" height="180">
+                <defs>
+                    <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00ff88"/>
+                        <stop offset="100%" stop-color="#00aaff"/>
+                    </linearGradient>
+                </defs>
+                <circle class="gauge-bg" cx="90" cy="90" r="75"></circle>
+                <circle class="gauge-fill" cx="90" cy="90" r="75"
+                        stroke-dasharray="471"
+                        stroke-dashoffset="471"
+                        data-target="{{ score }}"></circle>
+            </svg>
+            <div class="score-value">
+                <div class="score-number" data-count="{{ score }}">0</div>
+                <div class="score-label">Score Sécurité</div>
+            </div>
+        </div>
+        
+        <div style="font-size: 0.875rem; color: #94a3b8; margin-top: 1rem;">
+            {% if score >= 80 %}
+                <i class="fas fa-check-circle" style="color: var(--cyber-green);"></i>
+                Niveau de sécurité excellent
+            {% elif score >= 60 %}
+                <i class="fas fa-exclamation-triangle" style="color: var(--cyber-amber);"></i>
+                Quelques améliorations recommandées
+            {% else %}
+                <i class="fas fa-exclamation-circle" style="color: var(--cyber-red);"></i>
+                Actions de sécurité requises
+            {% endif %}
+        </div>
+    </div>
+    
+    {# KPIs #}
+    <div>
+        <div class="kpi-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="kpi-card" style="--kpi-color: var(--cyber-green);">
+                <div class="kpi-icon"><i class="fas fa-sign-in-alt"></i></div>
+                <div class="kpi-value" data-count="{{ kpis.logins_today }}">0</div>
+                <div class="kpi-label">Connexions</div>
+            </div>
+            
+            <div class="kpi-card" style="--kpi-color: var(--cyber-amber);">
+                <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="kpi-value" data-count="{{ kpis.failed_today }}">0</div>
+                <div class="kpi-label">Échouées</div>
+            </div>
+            
+            <div class="kpi-card" style="--kpi-color: var(--cyber-red);">
+                <div class="kpi-icon"><i class="fas fa-ban"></i></div>
+                <div class="kpi-value" data-count="{{ kpis.blocked_today }}">0</div>
+                <div class="kpi-label">Bloquées</div>
+            </div>
+            
+            <div class="kpi-card" style="--kpi-color: var(--cyber-blue);">
+                <div class="kpi-icon"><i class="fas fa-desktop"></i></div>
+                <div class="kpi-value" data-count="{{ kpis.active_sessions }}">0</div>
+                <div class="kpi-label">Sessions</div>
+            </div>
+            
+            <div class="kpi-card" style="--kpi-color: var(--cyber-purple);">
+                <div class="kpi-icon"><i class="fas fa-lock"></i></div>
+                <div class="kpi-value" data-count="{{ kpis.locked_accounts }}">0</div>
+                <div class="kpi-label">Verrouillés</div>
+            </div>
+            
+            <div class="kpi-card" style="--kpi-color: var(--cyber-red);">
+                <div class="kpi-icon"><i class="fas fa-skull-crossbones"></i></div>
+                <div class="kpi-value" data-count="{{ kpis.critical_alerts }}">0</div>
+                <div class="kpi-label">Alertes</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   ALERTS + CHART
+   ══════════════════════════════════════════ #}
+<div class="grid-2">
+    {# Recent Alerts #}
+    <div class="alerts-card">
+        <h3 class="alerts-title">
+            <i class="fas fa-bell"></i>
+            Alertes Récentes
+        </h3>
+        
+        {% if recent_alerts %}
+            {% for alert in recent_alerts %}
+            <div class="alert-item" style="--alert-color: {{ alert.color }};">
+                <div class="alert-icon">
+                    <i class="fas {{ alert.icon }}"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title">{{ alert.event_type|replace('_', ' ')|title }}</div>
+                    <div class="alert-meta">
+                        {{ alert.user_email or alert.ip_address or '—' }}
+                    </div>
+                </div>
+                <div class="alert-time">
+                    {{ alert.created_at.strftime('%H:%M') if alert.created_at else '—' }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 2rem; color: #64748b;">
+                <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--cyber-green); margin-bottom: 0.5rem;"></i>
+                <p>Aucune alerte récente</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    {# Activity Chart #}
+    <div class="chart-card">
+        <h3 class="chart-title">
+            <i class="fas fa-chart-area"></i>
+            Activité (7 jours)
+        </h3>
+        <div class="chart-container">
+            <canvas id="activityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   MAP + TOP IPs
+   ══════════════════════════════════════════ #}
+<div class="grid-2">
+    {# Map #}
+    <div class="chart-card">
+        <h3 class="chart-title">
+            <i class="fas fa-globe"></i>
+            Connexions Géolocalisées
+        </h3>
+        <div id="security-map"></div>
+    </div>
+    
+    {# Top IPs #}
+    <div class="chart-card">
+        <h3 class="chart-title">
+            <i class="fas fa-network-wired"></i>
+            Top IPs
+        </h3>
+        
+        {% if top_ips %}
+            {% for ip, count in top_ips %}
+            <div class="top-ip-item">
+                <div class="top-ip-rank">{{ loop.index }}</div>
+                <div class="top-ip-address">{{ ip }}</div>
+                <div class="top-ip-count">{{ count }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 2rem; color: #64748b;">
+                Aucune donnée
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   RECENT LOGINS
+   ══════════════════════════════════════════ #}
+<div class="section-title">
+    <i class="fas fa-history"></i>
+    Connexions Récentes
+</div>
+
+<div class="chart-card">
+    <div style="overflow-x: auto;">
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Utilisateur</th>
+                    <th>IP</th>
+                    <th>Pays</th>
+                    <th>Navigateur</th>
+                    <th>OS</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in recent_logins %}
+                <tr>
+                    <td>{{ log.created_at.strftime('%d/%m %H:%M') if log.created_at else '—' }}</td>
+                    <td>{{ log.user_email or '—' }}</td>
+                    <td style="font-family: 'JetBrains Mono', monospace;">{{ log.ip_address or '—' }}</td>
+                    <td>{{ log.country or '—' }}</td>
+                    <td>{{ log.browser or '—' }}</td>
+                    <td>{{ log.os or '—' }}</td>
+                    <td>
+                        <span class="status-badge {{ log.status }}">
+                            {{ log.status|upper }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   ACTIVE SESSIONS
+   ══════════════════════════════════════════ #}
+<div class="section-title">
+    <i class="fas fa-desktop"></i>
+    Sessions Actives
+</div>
+
+<div class="chart-card">
+    {% if active_sessions %}
+        {% for session in active_sessions %}
+        <div class="session-item">
+            <div class="session-device">
+                <i class="fas {% if session.device_type == 'mobile' %}fa-mobile-alt{% elif session.device_type == 'tablet' %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i>
+            </div>
+            <div class="session-info">
+                <div class="session-title">
+                    {{ session.browser }} · {{ session.os }}
+                </div>
+                <div class="session-meta">
+                    {{ session.ip_address }} · {{ session.country or '—' }} · {{ session.time_ago }}
+                </div>
+            </div>
+            <form method="POST" action="{{ url_for('admin.security_sessions') }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="terminate">
+                <input type="hidden" name="session_id" value="{{ session.id }}">
+                <button type="submit" class="btn-cyber danger" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+                    <i class="fas fa-times"></i>
+                    Terminer
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="text-align: center; padding: 2rem; color: #64748b;">
+            Aucune session active
+        </div>
+    {% endif %}
+</div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{# Chart.js #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+{# Leaflet #}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+{# GSAP #}
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const chartData = {{ chart_data|tojson }};
+const mapData = {{ map_data|tojson }};
+
+// ══════════════════════════════════════════
+// ACTIVITY CHART
+// ══════════════════════════════════════════
+const activityCtx = document.getElementById('activityChart');
+if (activityCtx) {
+    new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.map(d => d.date),
+            datasets: [
+                {
+                    label: 'Connexions',
+                    data: chartData.map(d => d.logins),
+                    borderColor: '#00ff88',
+                    backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                },
+                {
+                    label: 'Échouées',
+                    data: chartData.map(d => d.failed),
+                    borderColor: '#ff3344',
+                    backgroundColor: 'rgba(255, 51, 68, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 1500,
+                easing: 'easeOutQuart'
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#94a3b8',
+                        usePointStyle: true,
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 15, 20, 0.95)',
+                    borderColor: 'rgba(0, 255, 136, 0.3)',
+                    borderWidth: 1,
+                    padding: 12,
+                    titleFont: { family: "'JetBrains Mono', monospace" }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace" } }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace" } }
+                }
+            }
+        }
+    });
+}
+
+// ══════════════════════════════════════════
+// MAP
+// ══════════════════════════════════════════
+const map = L.map('security-map', {
+    zoomControl: true,
+    scrollWheelZoom: false
+}).setView([0, 20], 2);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO',
+    maxZoom: 19
+}).addTo(map);
+
+mapData.forEach(point => {
+    const marker = L.circleMarker([point.latitude, point.longitude], {
+        radius: Math.sqrt(point.count) * 4,
+        fillColor: '#00ff88',
+        color: '#00ff88',
+        weight: 2,
+        opacity: 0.8,
+        fillOpacity: 0.4
+    }).addTo(map);
+    
+    marker.bindPopup(`
+        <div class="popup-title">${point.city}, ${point.country}</div>
+        <div class="popup-stat">
+            <span class="popup-stat-label">Connexions</span>
+            <span class="popup-stat-value">${point.count}</span>
+        </div>
+    `);
+});
+
+// ══════════════════════════════════════════
+// ANIMATIONS
+// ══════════════════════════════════════════
+if (typeof gsap !== 'undefined') {
+    // Score gauge
+    const gaugeFill = document.querySelector('.gauge-fill');
+    if (gaugeFill) {
+        const target = parseInt(gaugeFill.dataset.target);
+        const circumference = 2 * Math.PI * 75;
+        const offset = circumference - (target / 100) * circumference;
+        
+        setTimeout(() => {
+            gaugeFill.style.strokeDashoffset = offset;
+        }, 300);
+    }
+    
+    // Animated counters
+    document.querySelectorAll('[data-count]').forEach(el => {
+        const target = parseInt(el.dataset.count);
+        if (isNaN(target)) return;
+        
+        const duration = 1500;
+        const start = performance.now();
+        
+        function update(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 4);
+            el.textContent = Math.round(target * eased).toLocaleString('fr-FR');
+            if (progress < 1) requestAnimationFrame(update);
+        }
+        
+        requestAnimationFrame(update);
+    });
+    
+    // Fade in cards
+    gsap.from('.kpi-card', {
+        y: 20,
+        opacity: 0,
+        duration: 0.5,
+        stagger: 0.05,
+        ease: 'power3.out'
+    });
+    
+    gsap.from('.chart-card, .alerts-card, .score-card', {
+        y: 30,
+        opacity: 0,
+        duration: 0.6,
+        delay: 0.2,
+        stagger: 0.1,
+        ease: 'power3.out'
+    });
+}
+</script>
+{% endblock %}

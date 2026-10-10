@@ -1,0 +1,91 @@
+{# FIX 1: 🔴 THE CRASH — Line 3 of the original:
+     evenements|selectattr('date_debut', '>=', now)|list
+
+   This compares evenement.date_debut (naive datetime from DB) with
+   now (timezone-aware datetime from datetime.now(timezone.utc)).
+   Python 3 raises TypeError: can't compare offset-naive and offset-aware datetimes.
+
+   THREE problems to fix:
+   a) The timezone mismatch (fixed in _now() helper — use naive datetimes)
+   b) Events with date_debut=None will ALSO crash selectattr (AttributeError)
+   c) The entire stat computation is crammed into a single Jinja2 set statement,
+      making it impossible to debug and hard to read
+
+   Computing values BEFORE the loop for clarity and safety. #}
+
+{# ——— Pre-compute event stats safely ——— #}
+{# FIX 2: Filter out events with None date_debut before comparing.
+   The backend allows events to exist with date_debut=None (if parsing fails),
+   and selectattr('date_debut', '>=', now) crashes on None values. #}
+{% set upcoming_events = [] %}
+{% for evt in evenements %}
+    {% if evt.date_debut is not none and evt.date_debut >= now %}
+        {% set _ = upcoming_events.append(evt) %}
+    {% endif %}
+{% endfor %}
+{% set upcoming_count = upcoming_events|length %}
+
+{# ——— Stats grid ——— #}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    {% set stats = [
+        ('Membres',     membres_count,   membres_new,     'ce mois',  'fa-users',        'green'),
+        ('Événements',  evenements|length, upcoming_count, 'à venir',  'fa-calendar-alt', 'blue'),
+        ('Documents',   documents_count, documents_new,   'nouveaux', 'fa-file-alt',     'purple'),
+        ('Activités',   activites_count, activites_count, 'total',    'fa-tasks',        'orange'),
+    ] %}
+
+    {% for label, total, extra, extra_label, icon, color in stats %}
+    {# FIX 3: 🔴 DYNAMIC TAILWIND CLASSES DON'T WORK.
+
+       The original uses: border-{{ color }}-500, bg-{{ color }}-100, text-{{ color }}-600
+
+       Tailwind CSS purges unused classes at build time by scanning source files
+       for complete class names. It uses a simple regex/string match — it does NOT
+       execute Jinja2 templates.
+
+       So when Tailwind scans this file, it sees:
+         "border-{{ color }}-500"  →  not a valid class name  →  PURGED
+
+       It does NOT see "border-green-500" because that string never appears
+       literally in the source code.
+
+       Result: In development (with JIT or full CSS), it might work.
+       In production (with purged/minified CSS), ALL dynamic colors disappear.
+       Cards render with no border color, no background tint, no text color.
+
+       SOLUTION: Use a lookup map with complete, literal class strings that
+       Tailwind's scanner can find. #}
+
+    {% set color_map = {
+        'green':  {'border': 'border-green-500',  'bg': 'bg-green-100',  'text': 'text-green-600'},
+        'blue':   {'border': 'border-blue-500',   'bg': 'bg-blue-100',   'text': 'text-blue-600'},
+        'purple': {'border': 'border-purple-500',  'bg': 'bg-purple-100',  'text': 'text-purple-600'},
+        'orange': {'border': 'border-orange-500',  'bg': 'bg-orange-100',  'text': 'text-orange-600'},
+    } %}
+    {% set colors = color_map.get(color, color_map['blue']) %}
+
+    <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 {{ colors.border }}">
+        <div class="flex justify-between items-start">
+            <div>
+                {# FIX 4: Added aria-label for screen readers so the stat card
+                   is announced as a meaningful unit, not just random numbers. #}
+                <p class="text-xs text-gray-500 uppercase tracking-wide">
+                    {{ label }}
+                </p>
+                <h3 class="text-2xl font-bold text-gray-800 mt-1"
+                    aria-label="{{ total }} {{ label|lower }}">
+                    {{ total }}
+                </h3>
+            </div>
+            <div class="{{ colors.bg }} {{ colors.text }} p-2.5 rounded-lg"
+                 aria-hidden="true">
+                <i class="fas {{ icon }}"></i>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">
+            <span class="text-green-600 font-medium">{{ extra }}</span>
+            {{ extra_label }}
+        </p>
+    </div>
+    {% endfor %}
+</div>

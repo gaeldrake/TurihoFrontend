@@ -1,0 +1,136 @@
+{# ══════════════════════════════════════════
+   TAB: MEMBRES
+   ══════════════════════════════════════════ #}
+
+<div class="content-card">
+    <div class="content-card-header">
+        <div class="content-card-title">
+            <i class="fas fa-users" style="color: #34d399;"></i>
+            Membres
+            {% if membres %}
+            <span class="content-card-count">{{ membres|length }}</span>
+            {% endif %}
+        </div>
+        <a href="{{ url_for('dashboard.ajouter_membre') }}" class="btn-dashboard primary sm">
+            <i class="fas fa-user-plus"></i> Nouveau membre
+        </a>
+    </div>
+
+    {% if membres %}
+        {# Barre de recherche #}
+        <div class="members-search">
+            <input type="text" id="members-search" placeholder="🔍 Rechercher un membre...">
+        </div>
+
+        {# Tableau #}
+        <div style="overflow-x: auto;">
+            <table class="members-table">
+                <thead>
+                    <tr>
+                        <th>Membre</th>
+                        <th>Rôle</th>
+                        <th>Depuis</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set role_colors = {
+                        'Président':      {'bg': 'rgba(239, 68, 68, 0.15)', 'text': '#f87171'},
+                        'Vice-Président': {'bg': 'rgba(249, 115, 22, 0.15)', 'text': '#fb923c'},
+                        'Trésorier':      {'bg': 'rgba(59, 130, 246, 0.15)', 'text': '#60a5fa'},
+                        'Secrétaire':     {'bg': 'rgba(168, 85, 247, 0.15)', 'text': '#a78bfa'},
+                        'Bénévole':       {'bg': 'rgba(16, 185, 129, 0.15)', 'text': '#34d399'},
+                        'Membre':         {'bg': 'rgba(148, 163, 184, 0.15)', 'text': '#94a3b8'}
+                    } %}
+
+                    {% for m in membres %}
+                    <tr class="member-row" style="animation: fadeIn 0.3s ease-out {{ loop.index0 * 0.03 }}s both;">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div class="member-avatar">
+                                    {% if m.photo %}
+                                        <img src="{{ get_url(m.photo) }}" alt="{{ m.nom|e }}">
+                                    {% else %}
+                                        {{ m.nom[0]|upper if m.nom else '?' }}{{ (m.prenom[0]|upper) if m.prenom else '' }}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600;">{{ m.nom|e }} {{ m.prenom|e }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if m.role %}
+                                {% set rc = role_colors.get(m.role, {'bg': 'rgba(148, 163, 184, 0.15)', 'text': '#94a3b8'}) %}
+                                <span style="display: inline-flex; padding: 0.125rem 0.625rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; background: {{ rc.bg }}; color: {{ rc.text }};">
+                                    {{ m.role|e }}
+                                </span>
+                            {% else %}
+                                <span style="color: #64748b; font-size: 0.8125rem;">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span style="color: #94a3b8; font-size: 0.8125rem;">
+                                {{ m.date_adhesion.strftime('%d/%m/%Y') if m.date_adhesion else '—' }}
+                            </span>
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: flex; gap: 0.25rem; justify-content: flex-end;">
+                                <a href="{{ url_for('dashboard.modifier_membre', id=m.id) }}" class="btn-dashboard ghost sm icon" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('dashboard.supprimer_membre', id=m.id) }}" style="display: inline;" onsubmit="return confirm('Supprimer ce membre ?')">
+                                    <button type="submit" class="btn-dashboard danger sm icon" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Footer info #}
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <span style="font-size: 0.75rem; color: #64748b;">
+                {{ membres|length }} membre{{ 's' if membres|length > 1 else '' }} au total
+            </span>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div style="font-weight: 600; color: white; margin-bottom: 0.25rem;">Aucun membre enregistré</div>
+            <div style="font-size: 0.875rem; margin-bottom: 1rem;">Ajoutez les membres de votre organisation.</div>
+            <a href="{{ url_for('dashboard.ajouter_membre') }}" class="btn-dashboard primary">
+                <i class="fas fa-user-plus"></i> Ajouter un membre
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Recherche instantanée
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('members-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.member-row').forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>

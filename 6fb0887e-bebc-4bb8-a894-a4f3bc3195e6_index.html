@@ -1,0 +1,1435 @@
+{% extends "base.html" %}
+
+{# ══════════════════════════════════════════
+   SEO & META
+══════════════════════════════════════════ #}
+{% block title %}TURIHO — Le réseau entrepreneurial du Burundi{% endblock %}
+{% block meta_description %}La plateforme qui connecte startups, PME, investisseurs et institutions du Burundi. Découvrez les entreprises qui construisent le Burundi.{% endblock %}
+{% block og_title %}TURIHO — Le réseau entrepreneurial du Burundi{% endblock %}
+{% block og_description %}Découvrez et connectez-vous avec les entreprises du Burundi.{% endblock %}
+
+
+{# ══════════════════════════════════════════
+   MACROS
+══════════════════════════════════════════ #}
+
+{# ——— MACRO : carte entreprise premium ——— #}
+{% macro org_card(org, index=0) %}
+{% set org_logo = org.logo or 'sta_img/Untitled2.png' %}
+{% set org_url = url_for('public.profil_token', token=org.token) %}
+{% set address_parts = [org.province, org.commune]|select|list %}
+{% set address = address_parts|join(', ') if address_parts else 'Burundi' %}
+
+{% set gradients = [
+    'from-brand-600 via-brand-700 to-ink-900',
+    'from-amber-700 via-amber-800 to-ink-900',
+    'from-emerald-600 via-teal-700 to-ink-900',
+    'from-blue-600 via-blue-700 to-ink-900',
+    'from-red-600 via-pink-700 to-ink-900',
+    'from-purple-600 via-purple-700 to-ink-900'
+] %}
+{% set gradient = gradients[index % gradients|length] %}
+
+<div class="reveal glass rounded-2xl overflow-hidden card-hover group" style="transition-delay: {{ (index % 6) * 0.08 }}s;">
+    <div class="relative h-44 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br {{ gradient }}"></div>
+        <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at {{ [20, 80, 50][index % 3] }}% 50%, rgba(255,255,255,0.3), transparent 50%);"></div>
+
+        {% if org.is_verified is defined and org.is_verified %}
+        <div class="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-brand-500 text-white text-xs font-semibold flex items-center gap-1">
+            <i class="fas fa-check-circle text-[10px]"></i> Vérifié
+        </div>
+        {% endif %}
+
+        <div class="absolute bottom-4 left-4 w-14 h-14 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center overflow-hidden">
+            {% if org.logo %}
+                <img src="{{ get_url(org.logo) }}" alt="{{ org.org_name|e }}" class="w-full h-full object-cover">
+            {% else %}
+                <span class="font-display font-bold text-white text-lg">{{ org.org_name[:2]|upper|e }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="p-6">
+        <h3 class="font-display text-xl font-bold mb-1 group-hover:text-brand-400 transition-colors">
+            {{ org.org_name|e }}
+        </h3>
+        <p class="text-xs text-gray-500 mb-3">
+            {{ org.category|capitalize|e if org.category else 'Entreprise' }} · {{ address|e }}
+        </p>
+
+        {% if org.description %}
+        <p class="text-sm text-gray-400 mb-5 leading-relaxed line-clamp-2">
+            {{ org.description|truncate(140)|e }}
+        </p>
+        {% endif %}
+
+        <div class="flex items-center justify-between pt-4 border-t border-white/5">
+            <div class="flex items-center gap-3">
+                {% if org.creation_date %}
+                <span class="text-xs text-gray-500">
+                    <i class="fas fa-calendar-alt mr-1"></i>
+                    Depuis {{ org.creation_date.strftime('%Y') }}
+                </span>
+                {% endif %}
+            </div>
+            <a href="{{ org_url }}" class="text-xs font-semibold text-brand-400 hover:text-brand-300 flex items-center gap-1 group/link">
+                Voir le profil
+                <i class="fas fa-arrow-right text-[9px] group-hover/link:translate-x-0.5 transition-transform"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# ——— MACRO : carte événement premium ——— #}
+{% macro event_card(ev, index=0) %}
+{% set ev_image = ev.image or 'sta_img/Untitled2.png' %}
+{% set modal_id = 'event-modal-' ~ index %}
+<div class="reveal glass rounded-2xl overflow-hidden card-hover group" style="transition-delay: {{ (index % 4) * 0.1 }}s;">
+    <div class="relative h-48 overflow-hidden cursor-pointer" onclick="document.getElementById('{{ modal_id }}').classList.remove('hidden')">
+        <img src="{{ get_url(ev_image) }}" alt="{{ ev.nom|e }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+        <div class="absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent"></div>
+
+        {% if ev.prix and ev.prix > 0 %}
+        <div class="absolute top-4 right-4 px-3 py-1 rounded-full bg-gold-500/90 text-ink-900 text-xs font-bold">
+            {{ ev.prix }} FBU
+        </div>
+        {% else %}
+        <div class="absolute top-4 right-4 px-3 py-1 rounded-full bg-brand-500/90 text-white text-xs font-bold">
+            Gratuit
+        </div>
+        {% endif %}
+
+        <div class="absolute bottom-4 left-4 right-4">
+            {% if ev.categorie %}
+            <span class="inline-block px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-sm text-[10px] text-white font-semibold uppercase tracking-wider mb-2">
+                {{ ev.categorie|e }}
+            </span>
+            {% endif %}
+            <h3 class="font-display text-lg font-bold text-white leading-tight">{{ ev.nom|e }}</h3>
+        </div>
+    </div>
+
+    <div class="p-5">
+        {% if ev.description %}
+        <p class="text-sm text-gray-400 mb-4 line-clamp-2">{{ ev.description|truncate(100, True, '…')|e }}</p>
+        {% endif %}
+
+        <div class="space-y-2 mb-4">
+            <div class="flex items-center gap-2 text-xs text-gray-400">
+                <i class="fas fa-calendar text-brand-400 w-4"></i>
+                <span>{{ ev.date_debut.strftime('%d/%m/%Y %H:%M') if ev.date_debut else 'Date à confirmer' }}</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-gray-400">
+                <i class="fas fa-map-marker-alt text-brand-400 w-4"></i>
+                <span>{{ ev.lieu|e if ev.lieu else 'Lieu à confirmer' }}</span>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-white/5">
+            {% if ev.structure %}
+            <div class="flex items-center gap-2 min-w-0">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center flex-shrink-0">
+                    <span class="text-[9px] font-bold text-white">{{ ev.structure.org_name[0]|upper|e }}</span>
+                </div>
+                <span class="text-xs text-gray-500 truncate">{{ ev.structure.org_name|e }}</span>
+            </div>
+            {% else %}
+            <div></div>
+            {% endif %}
+            <button onclick="document.getElementById('{{ modal_id }}').classList.remove('hidden')" class="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white">
+                Détails
+            </button>
+        </div>
+    </div>
+</div>
+
+{# Modal événement #}
+<div id="{{ modal_id }}" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);">
+    <div class="glass-strong rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="relative h-56">
+            <img src="{{ get_url(ev_image) }}" alt="{{ ev.nom|e }}" class="w-full h-full object-cover rounded-t-3xl">
+            <div class="absolute inset-0 bg-gradient-to-t from-ink-900 via-transparent to-transparent rounded-t-3xl"></div>
+            <button onclick="document.getElementById('{{ modal_id }}').classList.add('hidden')" class="absolute top-4 right-4 w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-colors">
+                <i class="fas fa-times text-white"></i>
+            </button>
+        </div>
+        <div class="p-6 -mt-10 relative">
+            {% if ev.categorie %}
+            <span class="inline-block px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-xs font-semibold text-brand-400 mb-3">{{ ev.categorie|e }}</span>
+            {% endif %}
+            <h2 class="font-display text-2xl font-bold mb-4">{{ ev.nom|e }}</h2>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="glass rounded-xl p-3">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Date</div>
+                    <div class="text-sm font-semibold">{{ ev.date_debut.strftime('%d/%m/%Y %H:%M') if ev.date_debut else '—' }}</div>
+                </div>
+                <div class="glass rounded-xl p-3">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Lieu</div>
+                    <div class="text-sm font-semibold">{{ ev.lieu|e if ev.lieu else '—' }}</div>
+                </div>
+            </div>
+
+            {% if ev.description %}
+            <div class="text-sm text-gray-300 leading-relaxed mb-6">{{ ev.description|e }}</div>
+            {% endif %}
+
+            {% if ev.structure %}
+            <div class="glass rounded-xl p-4 flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center flex-shrink-0">
+                    <span class="font-bold text-white text-sm">{{ ev.structure.org_name[0]|upper|e }}</span>
+                </div>
+                <div>
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">Organisé par</div>
+                    <a href="{{ url_for('public.profil_token', token=ev.structure.token) }}" class="font-semibold hover:text-brand-400 transition-colors">{{ ev.structure.org_name|e }}</a>
+                </div>
+            </div>
+            {% endif %}
+
+            <button onclick="document.getElementById('{{ modal_id }}').classList.add('hidden')" class="btn-ghost w-full py-3 rounded-xl font-semibold">Fermer</button>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# ——— MACRO : étoiles ——— #}
+{% macro star_rating(rating) %}
+{% set full_stars = rating|int %}
+{% set has_half = (rating - full_stars) >= 0.5 %}
+{% set empty_stars = 5 - full_stars - (1 if has_half else 0) %}
+<div class="flex items-center gap-0.5">
+    {% for i in range(full_stars) %}<i class="fas fa-star text-gold-400 text-sm"></i>{% endfor %}
+    {% if has_half %}<i class="fas fa-star-half-alt text-gold-400 text-sm"></i>{% endif %}
+    {% for i in range(empty_stars) %}<i class="far fa-star text-gold-400 text-sm"></i>{% endfor %}
+</div>
+{% endmacro %}
+
+
+{# ══════════════════════════════════════════
+   STYLES PREMIUM (conservés de indd.html)
+══════════════════════════════════════════ #}
+{% block extra_css %}
+<style>
+  :root { --emerald-glow: rgba(16, 185, 129, 0.35); --gold-glow: rgba(251, 191, 36, 0.25); }
+  * { -webkit-font-smoothing: antialiased; }
+  html, body { background: #05070a; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+  body { overflow-x: hidden; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #05070a; }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #10b981, #059669); border-radius: 4px; }
+
+  .font-display { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.02em; }
+  .gradient-text {
+    background: linear-gradient(135deg, #34d399 0%, #fbbf24 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .glass {
+    background: rgba(20, 25, 33, 0.55);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .glass-strong {
+    background: rgba(10, 13, 18, 0.85);
+    backdrop-filter: blur(30px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+
+  .hero-glow::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(600px circle at 30% 20%, rgba(16, 185, 129, 0.15), transparent 50%),
+      radial-gradient(500px circle at 70% 60%, rgba(251, 191, 36, 0.08), transparent 50%);
+    pointer-events: none;
+  }
+
+  #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+  .animate-float { animation: float 6s ease-in-out infinite; }
+  .animate-float-delayed { animation: float 7s ease-in-out infinite; animation-delay: 1.5s; }
+
+  @keyframes pulse-ring { 0% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(2.4); opacity: 0; } }
+
+  .btn-primary {
+    position: relative;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.6); }
+  .btn-primary::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform: translateX(-100%); transition: transform 0.6s;
+  }
+  .btn-primary:hover::before { transform: translateX(100%); }
+
+  .btn-ghost { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(16, 185, 129, 0.4); }
+
+  .card-hover { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+  .card-hover:hover { transform: translateY(-6px); border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 30px 60px -20px rgba(16, 185, 129, 0.25); }
+
+  .cat-card { position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+  .cat-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(16,185,129,0.15), transparent 50%);
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .cat-card:hover::before { opacity: 1; }
+  .cat-card:hover { transform: translateY(-4px); border-color: rgba(16, 185, 129, 0.3); }
+  .cat-card:hover .cat-icon { transform: scale(1.1) rotate(-5deg); }
+  .cat-icon { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  .search-box { background: rgba(20, 25, 33, 0.6); border: 1px solid rgba(255,255,255,0.08); transition: all 0.3s; }
+  .search-box:focus-within { border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+
+  .map-dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; cursor: pointer; transform: translate(-50%, -50%); z-index: 5; }
+  .map-dot::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: currentColor; box-shadow: 0 0 20px currentColor; }
+  .map-dot::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid currentColor; animation: pulse-ring 2.5s ease-out infinite; }
+  .map-dot:hover .map-tooltip { opacity: 1; transform: translate(-50%, -10px); pointer-events: auto; }
+  .map-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translate(-50%, 0); opacity: 0; transition: all 0.3s; pointer-events: none; margin-bottom: 8px; white-space: nowrap; }
+
+  .reveal { opacity: 0; transform: translateY(40px); }
+
+  @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .marquee-track { animation: marquee 40s linear infinite; }
+
+  .badge-premium { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%); background-size: 200% 100%; animation: shimmer 3s linear infinite; }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+  .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.3), transparent); }
+
+  .stat-number { font-variant-numeric: tabular-nums; }
+
+  .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+{% endblock %}
+
+
+{# ══════════════════════════════════════════
+   CONTENU
+══════════════════════════════════════════ #}
+{% block content %}
+
+{% set user_logged_in = session.get('id') %}
+{% set orgs_list = structures|default([])|list %}
+{% set events_future = evenements_futurs|default([]) %}
+{% set events_past = evenements_passes|default([]) %}
+{% set testimonials = temoignages|default([]) %}
+
+
+{# ══════════ HERO ══════════ #}
+<section id="hero" class="relative min-h-screen flex items-center overflow-hidden hero-glow">
+    <canvas id="hero-canvas"></canvas>
+    <div class="absolute inset-0 grid-bg z-[2]"></div>
+    <div class="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent z-[3]"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 w-full">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass mb-8">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                    </span>
+                    <span class="text-xs font-medium text-gray-300">+{{ structures_count|default(0) }} entreprises connectées</span>
+                </div>
+
+                <div class="inline-block px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-6">
+                    <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Plateforme nationale</span>
+                </div>
+
+                <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6">
+                    Découvrez les entreprises qui
+                    <span class="gradient-text"> construisent le Burundi</span>
+                </h1>
+
+                <p class="text-lg lg:text-xl text-gray-400 max-w-xl mb-10 leading-relaxed">
+                    TURIHO connecte startups, PME, investisseurs et institutions pour créer un écosystème entrepreneurial visible et dynamique.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3 mb-12">
+                    <a href="{{ url_for('public.decouvrir') }}" class="btn-primary px-7 py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2">
+                        Explorer les entreprises
+                        <i class="fas fa-arrow-right text-sm"></i>
+                    </a>
+                    <a href="{{ url_for('auth.demande_inscription') }}" class="btn-ghost px-7 py-4 rounded-xl font-semibold flex items-center justify-center gap-2">
+                        <i class="fas fa-plus text-brand-400"></i>
+                        Créer votre profil
+                    </a>
+                </div>
+
+                {# Stats dynamiques #}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-8 border-t border-white/5">
+                    <div>
+                        <div class="font-display text-3xl font-bold stat-number gradient-text" data-target="{{ structures_count|default(0) }}">0</div>
+                        <div class="text-xs text-gray-500 mt-1 uppercase tracking-wider">Entreprises</div>
+                    </div>
+                    <div>
+                        <div class="font-display text-3xl font-bold stat-number gradient-text" data-target="{{ provinces_count|default(18) }}">0</div>
+                        <div class="text-xs text-gray-500 mt-1 uppercase tracking-wider">Provinces</div>
+                    </div>
+                    <div>
+                        <div class="font-display text-3xl font-bold stat-number gradient-text" data-target="{{ categories_count|default(45) }}">0</div>
+                        <div class="text-xs text-gray-500 mt-1 uppercase tracking-wider">Secteurs</div>
+                    </div>
+                    <div>
+                        <div class="font-display text-3xl font-bold stat-number gradient-text" data-target="{{ connections_count|default(12400) }}">0</div>
+                        <div class="text-xs text-gray-500 mt-1 uppercase tracking-wider">Connexions/mois</div>
+                    </div>
+                </div>
+            </div>
+
+            {# Right side: Floating cards #}
+            <div class="relative hidden lg:block h-[560px]">
+                {% if orgs_list|length > 0 %}
+                    {% set featured = orgs_list[:3] %}
+                {% else %}
+                    {% set featured = [] %}
+                {% endif %}
+
+                {% if featured|length > 0 %}
+                <div class="absolute top-10 right-0 w-80 glass rounded-2xl p-5 animate-float">
+                    <div class="flex items-start gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {% if featured[0].logo %}
+                                <img src="{{ get_url(featured[0].logo) }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <span class="font-bold text-white">{{ featured[0].org_name[:2]|upper|e }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-semibold truncate">{{ featured[0].org_name|e }}</h4>
+                                <i class="fas fa-check-circle text-brand-400 text-xs"></i>
+                            </div>
+                            <p class="text-xs text-gray-500">{{ featured[0].category|e if featured[0].category else 'Entreprise' }} · {{ featured[0].province|e if featured[0].province else 'Burundi' }}</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-400 mb-4 line-clamp-2">{{ featured[0].description|truncate(80)|e if featured[0].description else 'Entreprise membre de l\'écosystème TURIHO.' }}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-brand-400">Visibilité 92%</span>
+                        <a href="{{ url_for('public.profil_token', token=featured[0].token) }}" class="text-xs text-gray-400 hover:text-white">Voir →</a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="absolute top-60 left-0 w-64 glass rounded-2xl p-5 animate-float-delayed">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs text-gray-500 uppercase tracking-wider">Score écosystème</span>
+                        <span class="text-xs font-semibold text-brand-400">+5 pts</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <svg class="progress-ring" width="64" height="64">
+                            <circle cx="32" cy="32" r="28" stroke="rgba(255,255,255,0.08)" stroke-width="6" fill="none"/>
+                            <circle cx="32" cy="32" r="28" stroke="url(#grad1)" stroke-width="6" fill="none" stroke-dasharray="175.9" stroke-dashoffset="14" stroke-linecap="round" transform="rotate(-90 32 32)"/>
+                            <defs>
+                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#34d399"/>
+                                    <stop offset="100%" stop-color="#fbbf24"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div>
+                            <div class="font-display text-3xl font-bold gradient-text">92%</div>
+                            <div class="text-xs text-gray-500">Excellent</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if events_future|length > 0 %}
+                <div class="absolute bottom-20 right-10 w-72 glass rounded-2xl p-4 animate-float" style="animation-delay: 2s;">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-bolt text-gold-400"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-semibold truncate">{{ events_future[0].nom|e }}</div>
+                            <div class="text-xs text-gray-500 truncate">{{ events_future[0].date_debut.strftime('%d/%m/%Y') if events_future[0].date_debut else 'Bientôt' }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="absolute bottom-0 left-10 glass rounded-2xl p-4 animate-float-delayed">
+                    <div class="flex items-center gap-3">
+                        <div class="badge-premium w-10 h-10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-crown text-ink-900"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold">Premium</div>
+                            <div class="text-xs text-gray-500">Entreprise vérifiée</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+        <span class="text-xs text-gray-500 uppercase tracking-widest">Scroll</span>
+        <div class="w-px h-12 bg-gradient-to-b from-brand-500 to-transparent"></div>
+    </div>
+</section>
+
+
+{# ══════════ LOGOS MARQUEE ══════════ #}
+{% if orgs_list|length > 0 %}
+<section class="py-12 border-y border-white/5 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+        <p class="text-center text-xs text-gray-500 uppercase tracking-widest">Ils font confiance à TURIHO</p>
+    </div>
+    <div class="relative">
+        <div class="flex gap-16 marquee-track w-max">
+            {% for org in orgs_list[:12] %}
+            <span class="font-display text-2xl font-bold text-gray-600 whitespace-nowrap">{{ org.org_name|e }}</span>
+            {% endfor %}
+            {% for org in orgs_list[:12] %}
+            <span class="font-display text-2xl font-bold text-gray-600 whitespace-nowrap" aria-hidden="true">{{ org.org_name|e }}</span>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+{# ══════════ PROBLÈME ══════════ #}
+<section class="py-24 lg:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal max-w-3xl mb-16">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 mb-5">
+                <i class="fas fa-exclamation text-red-400 text-xs"></i>
+                <span class="text-xs font-semibold text-red-400 tracking-wider uppercase">Le problème</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Les entreprises existent<br>
+                <span class="text-gray-600">mais restent invisibles.</span>
+            </h2>
+            <p class="text-lg text-gray-400 leading-relaxed">
+                Au Burundi, des milliers d'entreprises dynamiques manquent de visibilité. Pas de plateforme centrale, pas de référencement, pas de connexion entre acteurs économiques.
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-5">
+            <div class="reveal glass rounded-2xl p-7 card-hover">
+                <div class="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-5">
+                    <i class="fas fa-eye-slash text-xl text-red-400"></i>
+                </div>
+                <h3 class="font-display text-xl font-bold mb-2">Aucune présence numérique structurée</h3>
+                <p class="text-sm text-gray-400 leading-relaxed">78% des PME burundaises n'ont pas de profil professionnel en ligne vérifié.</p>
+            </div>
+            <div class="reveal glass rounded-2xl p-7 card-hover" style="transition-delay: 0.1s;">
+                <div class="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center mb-5">
+                    <i class="fas fa-unlink text-xl text-orange-400"></i>
+                </div>
+                <h3 class="font-display text-xl font-bold mb-2">Difficulté à trouver des partenaires</h3>
+                <p class="text-sm text-gray-400 leading-relaxed">Les opportunités de partenariat restent informelles, locales et difficiles d'accès.</p>
+            </div>
+            <div class="reveal glass rounded-2xl p-7 card-hover" style="transition-delay: 0.2s;">
+                <div class="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center mb-5">
+                    <i class="fas fa-chart-line text-xl text-yellow-400"></i>
+                </div>
+                <h3 class="font-display text-xl font-bold mb-2">Pas de données centralisées</h3>
+                <p class="text-sm text-gray-400 leading-relaxed">Impossible de mesurer sa visibilité ou d'accéder à des insights sur l'écosystème.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider max-w-7xl mx-auto"></div>
+
+
+{# ══════════ SOLUTION ══════════ #}
+<section class="py-24 lg:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+            <div class="reveal">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                    <i class="fas fa-check text-brand-400 text-xs"></i>
+                    <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">La solution</span>
+                </div>
+                <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                    TURIHO rend l'écosystème<br>
+                    <span class="gradient-text">visible et connecté.</span>
+                </h2>
+                <p class="text-lg text-gray-400 mb-10 leading-relaxed">
+                    Une plateforme qui transforme chaque entreprise en acteur connecté de l'économie burundaise.
+                </p>
+
+                <div class="grid sm:grid-cols-2 gap-4">
+                    {% set features = [
+                        ('fa-id-card', 'Profils Premium', 'Mini-site professionnel complet'),
+                        ('fa-search', 'Recherche Intelligente', 'Trouvez en instantané'),
+                        ('fa-map-marked-alt', 'Carte Interactive', 'Visualisez par région'),
+                        ('fa-chart-bar', 'Analytics Avancés', 'Mesurez votre impact'),
+                        ('fa-handshake', 'Matching Intelligent', 'Connexions automatiques'),
+                        ('fa-shield-alt', 'Badge Vérifié', 'Confiance & crédibilité')
+                    ] %}
+                    {% for icon, title, desc in features %}
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fas {{ icon }} text-brand-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-1">{{ title }}</h4>
+                            <p class="text-sm text-gray-500">{{ desc }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="reveal relative">
+                <div class="relative rounded-3xl overflow-hidden glass p-1">
+                    <div class="rounded-[22px] overflow-hidden bg-gradient-to-br from-ink-800 to-ink-900 aspect-[4/5] relative">
+                        <svg viewBox="0 0 400 500" class="w-full h-full">
+                            <defs>
+                                <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#10b981" stop-opacity="0.6"/>
+                                    <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.2"/>
+                                </linearGradient>
+                                <radialGradient id="nodeGrad">
+                                    <stop offset="0%" stop-color="#34d399"/>
+                                    <stop offset="100%" stop-color="#059669"/>
+                                </radialGradient>
+                            </defs>
+                            <g stroke="url(#lineGrad)" stroke-width="1" fill="none" opacity="0.5">
+                                <line x1="100" y1="120" x2="250" y2="180"/>
+                                <line x1="250" y1="180" x2="180" y2="300"/>
+                                <line x1="180" y1="300" x2="320" y2="350"/>
+                                <line x1="100" y1="120" x2="180" y2="300"/>
+                                <line x1="250" y1="180" x2="320" y2="350"/>
+                                <line x1="80" y1="400" x2="180" y2="300"/>
+                            </g>
+                            <g>
+                                <circle cx="100" cy="120" r="14" fill="url(#nodeGrad)"/>
+                                <circle cx="250" cy="180" r="20" fill="url(#nodeGrad)"/>
+                                <circle cx="180" cy="300" r="16" fill="url(#nodeGrad)"/>
+                                <circle cx="320" cy="350" r="18" fill="url(#nodeGrad)"/>
+                                <circle cx="80" cy="400" r="12" fill="url(#nodeGrad)"/>
+                                <circle cx="320" cy="100" r="10" fill="#fbbf24"/>
+                            </g>
+                            <g fill="white" font-family="Inter" font-size="10" opacity="0.7">
+                                <text x="100" y="150" text-anchor="middle">Bujumbura</text>
+                                <text x="250" y="210" text-anchor="middle">Gitega</text>
+                                <text x="180" y="330" text-anchor="middle">Ngozi</text>
+                                <text x="320" y="380" text-anchor="middle">Ruyigi</text>
+                            </g>
+                        </svg>
+                        <div class="absolute inset-0 bg-gradient-to-t from-ink-900 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-xs text-gray-400 uppercase tracking-widest">Réseau actif</span>
+                                <span class="text-xs text-brand-400 font-semibold">En temps réel</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="bg-white/5 rounded-lg p-3">
+                                    <div class="font-display text-xl font-bold">{{ structures_count|default(0) }}</div>
+                                    <div class="text-[10px] text-gray-500 uppercase">Entreprises</div>
+                                </div>
+                                <div class="bg-white/5 rounded-lg p-3">
+                                    <div class="font-display text-xl font-bold">{{ provinces_count|default(18) }}</div>
+                                    <div class="text-[10px] text-gray-500 uppercase">Provinces</div>
+                                </div>
+                                <div class="bg-white/5 rounded-lg p-3">
+                                    <div class="font-display text-xl font-bold text-gold-400">95%</div>
+                                    <div class="text-[10px] text-gray-500 uppercase">Satisfaction</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{# ══════════ ÉCOSYSTÈME ══════════ #}
+<section id="ecosystem" class="py-24 lg:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal text-center mb-16 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                <i class="fas fa-th-large text-brand-400 text-xs"></i>
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Écosystème</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                L'écosystème<br>
+                <span class="gradient-text">entrepreneurial</span>
+            </h2>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {% set categories = [
+                ('fa-rocket', 'from-purple-500 to-pink-500', 'shadow-purple-500/30', 'Startups', 'Innovation et technologies émergentes', 'association'),
+                ('fa-store', 'from-blue-500 to-cyan-500', 'shadow-blue-500/30', 'PME', 'Le pilier de l\'économie locale', 'company'),
+                ('fa-users', 'from-brand-500 to-teal-500', 'shadow-brand-500/30', 'Associations', 'Impact social et communautaire', 'association'),
+                ('fa-handshake', 'from-gold-500 to-orange-500', 'shadow-gold-500/30', 'Coopératives', 'Économie solidaire et agriculture', 'cooperative'),
+                ('fa-chart-pie', 'from-red-500 to-pink-500', 'shadow-red-500/30', 'Investisseurs', 'Capital, financement et business angels', ''),
+                ('fa-seedling', 'from-indigo-500 to-purple-500', 'shadow-indigo-500/30', 'Incubateurs', 'Accompagnement et accélération', '')
+            ] %}
+
+            {% for icon, gradient, shadow, title, desc, filter_type in categories %}
+            <a href="{{ url_for('public.decouvrir') }}{% if filter_type %}?type={{ filter_type }}{% endif %}" class="reveal cat-card glass rounded-2xl p-7 cursor-pointer block">
+                <div class="flex items-start justify-between mb-6">
+                    <div class="cat-icon w-14 h-14 rounded-2xl bg-gradient-to-br {{ gradient }} flex items-center justify-center shadow-lg {{ shadow }}">
+                        <i class="fas {{ icon }} text-2xl text-white"></i>
+                    </div>
+                </div>
+                <h3 class="font-display text-2xl font-bold mb-2">{{ title }}</h3>
+                <p class="text-sm text-gray-400 mb-5">{{ desc }}</p>
+                <div class="flex items-center justify-between pt-5 border-t border-white/5">
+                    <span class="text-sm font-semibold text-brand-400">Explorer</span>
+                    <i class="fas fa-arrow-right text-sm text-gray-600"></i>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+{# ══════════ ENTREPRISES EN VEDETTE ══════════ #}
+<section id="profiles" class="py-24 lg:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-6">
+            <div class="max-w-2xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                    <i class="fas fa-building text-brand-400 text-xs"></i>
+                    <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Entreprises à découvrir</span>
+                </div>
+                <h2 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-4">
+                    Profils <span class="gradient-text">premium</span>
+                </h2>
+                <p class="text-lg text-gray-400">Chaque entreprise mérite une présence professionnelle digne de ce nom.</p>
+            </div>
+            <a href="{{ url_for('public.decouvrir') }}" class="btn-ghost px-6 py-3 rounded-xl font-semibold flex items-center gap-2 self-start">
+                Voir toutes
+                <i class="fas fa-arrow-right text-sm"></i>
+            </a>
+        </div>
+
+        {% if orgs_list|length > 0 %}
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for org in orgs_list[:6] %}
+                {{ org_card(org, loop.index0) }}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="reveal glass rounded-3xl p-12 text-center">
+            <div class="w-20 h-20 rounded-2xl bg-brand-500/10 flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-building text-3xl text-brand-400"></i>
+            </div>
+            <h3 class="font-display text-xl font-bold mb-2">Aucune entreprise pour le moment</h3>
+            <p class="text-gray-400 mb-6 max-w-md mx-auto">Soyez la première organisation à rejoindre l'écosystème TURIHO.</p>
+            <a href="{{ url_for('auth.demande_inscription') }}" class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white">
+                <i class="fas fa-plus"></i> Inscrire mon organisation
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+
+{# ══════════ RECHERCHE INTELLIGENTE ══════════ #}
+<section id="search-section" class="py-24 lg:py-32 relative overflow-hidden">
+    <div class="absolute inset-0 hero-glow"></div>
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div class="reveal text-center mb-12">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                <i class="fas fa-search text-brand-400 text-xs"></i>
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Recherche intelligente</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Trouvez en <span class="gradient-text">un instant</span>
+            </h2>
+        </div>
+
+        <div class="reveal">
+            <form action="{{ url_for('public.decouvrir') }}" method="GET" class="search-box rounded-2xl p-2 mb-6">
+                <div class="flex items-center gap-3 px-4">
+                    <i class="fas fa-search text-gray-500"></i>
+                    <input type="text" name="q" placeholder="Restaurants à Bujumbura, startups fintech, ONG environnement..."
+                           class="flex-1 bg-transparent py-4 text-base text-white placeholder-gray-500 focus:outline-none">
+                    <kbd class="hidden sm:inline-flex px-2 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-gray-500 font-mono">Ctrl+K</kbd>
+                    <button type="submit" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold text-white">Rechercher</button>
+                </div>
+            </form>
+
+            <div class="flex flex-wrap gap-2 mb-8">
+                <span class="text-xs text-gray-500 uppercase tracking-wider self-center mr-2">Populaire :</span>
+                <a href="{{ url_for('public.decouvrir') }}?q=restaurant" class="px-3.5 py-1.5 rounded-full glass text-xs hover:border-brand-500/40 transition-colors">🍽️ Restaurants</a>
+                <a href="{{ url_for('public.decouvrir') }}?q=startup" class="px-3.5 py-1.5 rounded-full glass text-xs hover:border-brand-500/40 transition-colors">🚀 Startups</a>
+                <a href="{{ url_for('public.decouvrir') }}?q=ong" class="px-3.5 py-1.5 rounded-full glass text-xs hover:border-brand-500/40 transition-colors">🌱 ONG</a>
+                <a href="{{ url_for('public.decouvrir') }}?q=agriculture" class="px-3.5 py-1.5 rounded-full glass text-xs hover:border-brand-500/40 transition-colors">☕ Agriculture</a>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
+                <div class="glass rounded-xl p-4">
+                    <label class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Secteur</label>
+                    <select class="w-full bg-transparent text-sm text-white mt-2 focus:outline-none cursor-pointer">
+                        <option class="bg-ink-800">Tous</option>
+                        <option class="bg-ink-800">Technologie</option>
+                        <option class="bg-ink-800">Agriculture</option>
+                        <option class="bg-ink-800">Finance</option>
+                    </select>
+                </div>
+                <div class="glass rounded-xl p-4">
+                    <label class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Province</label>
+                    <select class="w-full bg-transparent text-sm text-white mt-2 focus:outline-none cursor-pointer">
+                        <option class="bg-ink-800">Toutes</option>
+                        <option class="bg-ink-800">Bujumbura</option>
+                        <option class="bg-ink-800">Gitega</option>
+                        <option class="bg-ink-800">Ngozi</option>
+                    </select>
+                </div>
+                <div class="glass rounded-xl p-4">
+                    <label class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Type</label>
+                    <select class="w-full bg-transparent text-sm text-white mt-2 focus:outline-none cursor-pointer">
+                        <option class="bg-ink-800">Tous</option>
+                        <option class="bg-ink-800">Startup</option>
+                        <option class="bg-ink-800">PME</option>
+                        <option class="bg-ink-800">Association</option>
+                    </select>
+                </div>
+                <div class="glass rounded-xl p-4">
+                    <label class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Taille</label>
+                    <select class="w-full bg-transparent text-sm text-white mt-2 focus:outline-none cursor-pointer">
+                        <option class="bg-ink-800">Toutes</option>
+                        <option class="bg-ink-800">1-10</option>
+                        <option class="bg-ink-800">11-50</option>
+                        <option class="bg-ink-800">50+</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{# ══════════ ÉVÉNEMENTS ══════════ #}
+{% if events_future|length > 0 or events_past|length > 0 %}
+<section class="py-24 lg:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-6">
+            <div class="max-w-2xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 mb-5">
+                    <i class="fas fa-calendar-alt text-gold-400 text-xs"></i>
+                    <span class="text-xs font-semibold text-gold-400 tracking-wider uppercase">Événements</span>
+                </div>
+                <h2 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-4">
+                    Ne manquez aucun <span class="gradient-text">événement</span>
+                </h2>
+                <p class="text-lg text-gray-400">Formations, conférences, networking et rencontres professionnelles.</p>
+            </div>
+        </div>
+
+        {% if events_future|length > 0 %}
+        <div class="mb-12">
+            <h3 class="font-display text-xl font-bold mb-6 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+                À venir
+            </h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for ev in events_future[:6] %}
+                    {{ event_card(ev, loop.index0) }}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if events_past|length > 0 %}
+        <div>
+            <h3 class="font-display text-xl font-bold mb-6 flex items-center gap-2 text-gray-500">
+                <i class="fas fa-history text-sm"></i>
+                Événements passés
+            </h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-70">
+                {% for ev in events_past[:3] %}
+                <div class="reveal glass rounded-2xl overflow-hidden">
+                    <div class="relative h-32 overflow-hidden">
+                        <img src="{{ get_url(ev.image or 'sta_img/Untitled2.png') }}" alt="{{ ev.nom|e }}" class="w-full h-full object-cover grayscale">
+                        <div class="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-ink-900/80 text-xs text-gray-400">Terminé</div>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="font-semibold text-sm mb-1">{{ ev.nom|e }}</h4>
+                        <p class="text-xs text-gray-500">{{ ev.date_fin.strftime('%d/%m/%Y') if ev.date_fin else '—' }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+
+{# ══════════ DASHBOARD PREVIEW ══════════ #}
+<section id="dashboard" class="py-24 lg:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+            <div class="reveal order-2 lg:order-1">
+                <div class="glass rounded-3xl p-2 shadow-2xl shadow-brand-500/10">
+                    <div class="rounded-[20px] bg-ink-900 overflow-hidden">
+                        <div class="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+                            <div class="flex gap-1.5">
+                                <div class="w-2.5 h-2.5 rounded-full bg-red-500/70"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/70"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-green-500/70"></div>
+                            </div>
+                            <div class="flex-1 flex justify-center">
+                                <div class="px-3 py-1 rounded-md bg-white/5 text-[10px] text-gray-500 font-mono">dashboard.turiho.bi</div>
+                            </div>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex items-center justify-between mb-5">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-xs font-semibold text-white">Vue d'ensemble</span>
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] badge-premium text-ink-900 font-bold">PREMIUM</span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-500">30 derniers jours</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2.5 mb-4">
+                                <div class="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                                    <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Visiteurs</div>
+                                    <div class="font-display text-xl font-bold">1 247</div>
+                                    <div class="text-[10px] text-brand-400 font-semibold">↑ 18%</div>
+                                </div>
+                                <div class="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                                    <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Recherches</div>
+                                    <div class="font-display text-xl font-bold">389</div>
+                                    <div class="text-[10px] text-brand-400 font-semibold">↑ 12%</div>
+                                </div>
+                                <div class="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                                    <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Contacts</div>
+                                    <div class="font-display text-xl font-bold">24</div>
+                                    <div class="text-[10px] text-brand-400 font-semibold">↑ 8%</div>
+                                </div>
+                                <div class="bg-gradient-to-br from-brand-500/10 to-gold-500/10 border border-brand-500/20 rounded-xl p-3">
+                                    <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Score</div>
+                                    <div class="font-display text-xl font-bold gradient-text">92%</div>
+                                    <div class="text-[10px] text-gold-400 font-semibold">+5 pts</div>
+                                </div>
+                            </div>
+                            <div class="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-[11px] font-semibold">Évolution de la visibilité</span>
+                                    <span class="text-[10px] text-gray-500">30j</span>
+                                </div>
+                                <svg viewBox="0 0 300 80" class="w-full h-20">
+                                    <defs>
+                                        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.4"/>
+                                            <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M 0 60 L 30 50 L 60 55 L 90 40 L 120 45 L 150 30 L 180 35 L 210 20 L 240 25 L 270 15 L 300 10 L 300 80 L 0 80 Z" fill="url(#chartGrad)"/>
+                                    <path d="M 0 60 L 30 50 L 60 55 L 90 40 L 120 45 L 150 30 L 180 35 L 210 20 L 240 25 L 270 15 L 300 10" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                    <circle cx="300" cy="10" r="3" fill="#10b981"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reveal order-1 lg:order-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                    <i class="fas fa-chart-line text-brand-400 text-xs"></i>
+                    <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Dashboard SaaS</span>
+                </div>
+                <h2 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-6">
+                    Votre tableau de bord<br>
+                    <span class="gradient-text">en temps réel</span>
+                </h2>
+                <p class="text-lg text-gray-400 mb-8 leading-relaxed">
+                    Suivez votre visibilité, analysez vos performances et optimisez votre présence sur TURIHO.
+                </p>
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fas fa-eye text-brand-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-0.5">Visiteurs et vues</h4>
+                            <p class="text-sm text-gray-500">Suivez qui visite votre profil.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fas fa-robot text-brand-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-0.5">Recommandations IA</h4>
+                            <p class="text-sm text-gray-500">"Ajoutez une galerie pour augmenter votre visibilité de +23%"</p>
+                        </div>
+                    </div>
+                </div>
+                {% if user_logged_in %}
+                <a href="{{ url_for('dashboard.dashboard') }}" class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white">
+                    Accéder au dashboard
+                    <i class="fas fa-arrow-right text-sm"></i>
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.demande_inscription') }}" class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white">
+                    Créer mon compte
+                    <i class="fas fa-arrow-right text-sm"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{# ══════════ TÉMOIGNAGES ══════════ #}
+{% if testimonials|length > 0 %}
+<section class="py-24 lg:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal text-center mb-16 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                <i class="fas fa-quote-left text-brand-400 text-xs"></i>
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Témoignages</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Ils nous font <span class="gradient-text">confiance</span>
+            </h2>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-5">
+            {% for t in testimonials[:6] %}
+            <div class="reveal glass rounded-2xl p-7 card-hover">
+                <div class="flex items-center gap-0.5 mb-4">
+                    {{ star_rating(t.rating|default(5)) }}
+                </div>
+                <p class="text-gray-300 mb-6 leading-relaxed">"{{ t.message|e }}"</p>
+                <div class="flex items-center gap-3 pt-5 border-t border-white/5">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center font-bold text-white">
+                        {{ t.nom[:1]|upper|e if t.nom else '?' }}
+                    </div>
+                    <div>
+                        <div class="font-semibold text-sm">{{ t.nom|e }}</div>
+                        <div class="text-xs text-gray-500">{{ t.role|e if t.role else 'Membre' }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-10">
+            <a href="{{ url_for('public.ajouter_temoignage') }}" class="btn-ghost inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold">
+                <i class="fas fa-plus text-brand-400"></i>
+                Ajouter mon témoignage
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+
+{# ══════ NEWSLETTER ══════ #}
+<section class="py-20 relative" aria-label="Newsletter">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="glass rounded-3xl overflow-hidden relative">
+            {# Background décoratif #}
+            <div class="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-brand-500/10 blur-3xl"></div>
+            <div class="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-gold-500/10 blur-3xl"></div>
+            
+            <div class="relative grid md:grid-cols-2 gap-0">
+                {# Côté gauche — Illustration #}
+                <div class="relative p-8 md:p-10 bg-gradient-to-br from-brand-600/20 to-brand-900/40 flex flex-col justify-center overflow-hidden">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(16,185,129,0.2),transparent_50%)]"></div>
+                    
+                    <div class="relative">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 mb-4">
+                            <i class="fas fa-envelope-open-text text-brand-400 text-xs"></i>
+                            <span class="text-xs font-semibold text-white uppercase tracking-wider">Newsletter</span>
+                        </div>
+                        
+                        <h2 class="font-display text-2xl md:text-3xl font-bold text-white mb-3">
+                            Restez informé
+                        </h2>
+                        <p class="text-gray-300 mb-6 leading-relaxed">
+                            Recevez les dernières opportunités, formations et actualités de l'écosystème entrepreneurial burundais.
+                        </p>
+                        
+                        <div class="flex gap-3" aria-hidden="true">
+                            <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-brand-400">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-gold-400">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-blue-400">
+                                <i class="fas fa-newspaper"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# Côté droit — Formulaire #}
+                <div class="p-8 md:p-10">
+                    <form id="newsletterForm" class="space-y-4" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div>
+                            <label for="newsletter-name" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                Votre nom
+                            </label>
+                            <div class="relative">
+                                <i class="fas fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                                <input type="text" id="newsletter-name" name="name" autocomplete="name"
+                                       class="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-brand-500/50 focus:bg-brand-500/5 transition-all"
+                                       placeholder="Jean Ndayisaba">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="newsletter-email" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                Email <span class="text-red-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <i class="fas fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                                <input type="email" id="newsletter-email" name="email" required autocomplete="email"
+                                       class="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-brand-500/50 focus:bg-brand-500/5 transition-all"
+                                       placeholder="jean@exemple.bi">
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-3 pt-2">
+                            <input type="checkbox" id="newsletter-consent" name="consent" required
+                                   class="mt-1 w-4 h-4 rounded border-white/20 bg-white/5 text-brand-500 focus:ring-brand-500/50 focus:ring-offset-0 cursor-pointer">
+                            <label for="newsletter-consent" class="text-sm text-gray-400 leading-relaxed cursor-pointer">
+                                J'accepte de recevoir des emails de TURIHO <span class="text-red-400">*</span>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" id="btn-newsletter"
+                                class="w-full btn-primary py-3.5 px-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="btn-text">
+                                <i class="fas fa-paper-plane"></i>
+                                S'abonner
+                            </span>
+                            <span class="btn-loader hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        </button>
+                    </form>
+                    
+                    <div id="newsletterMessage" class="mt-4 text-center text-sm hidden" role="status" aria-live="polite"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+{# ══════════ CTA FINAL ══════════ #}
+<section class="py-24 lg:py-32 relative overflow-hidden">
+    <div class="absolute inset-0 hero-glow"></div>
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div class="reveal glass rounded-3xl p-10 md:p-16 text-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-brand-500/10 via-transparent to-gold-500/10"></div>
+            <div class="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-brand-500/20 blur-3xl"></div>
+            <div class="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-gold-500/20 blur-3xl"></div>
+
+            <div class="relative">
+                <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                    Rejoignez l'écosystème<br>
+                    <span class="gradient-text">entrepreneurial du Burundi</span>
+                </h2>
+                <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
+                    Que vous soyez startup, PME, investisseur ou institution, TURIHO est votre passerelle vers l'opportunité.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center mb-10">
+                    <a href="{{ url_for('auth.demande_inscription') }}" class="btn-primary px-8 py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2">
+                        Créer mon profil entreprise
+                        <i class="fas fa-arrow-right text-sm"></i>
+                    </a>
+                    <a href="{{ url_for('public.decouvrir') }}" class="btn-ghost px-8 py-4 rounded-xl font-semibold">
+                        Explorer la plateforme
+                    </a>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-500">
+                    <div class="flex items-center gap-2"><i class="fas fa-shield-alt text-brand-400"></i><span>Données sécurisées</span></div>
+                    <div class="flex items-center gap-2"><i class="fas fa-headset text-brand-400"></i><span>Support 24/7</span></div>
+                    <div class="flex items-center gap-2"><i class="fas fa-bolt text-brand-400"></i><span>Activation instantanée</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+
+{# ══════════════════════════════════════════
+   SCRIPTS
+══════════════════════════════════════════ #}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('newsletterForm');
+    const btn = document.getElementById('btn-newsletter');
+    const message = document.getElementById('newsletterMessage');
+    
+    if (!form) return;
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('newsletter-email').value.trim();
+        const consent = document.getElementById('newsletter-consent').checked;
+        
+        // Validation
+        if (!email) {
+            showMessage('Veuillez saisir votre email.', 'error');
+            return;
+        }
+        if (!consent) {
+            showMessage('Veuillez accepter de recevoir les emails.', 'error');
+            return;
+        }
+        
+        // Loader
+        btn.disabled = true;
+        btn.querySelector('.btn-text').classList.add('hidden');
+        btn.querySelector('.btn-loader').classList.remove('hidden');
+        
+        try {
+            const formData = new FormData(form);
+            const response = await fetch('{{ url_for("public.envoyer_newsletter") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                showMessage(data.message || 'Inscription réussie ! 🎉', 'success');
+                form.reset();
+            } else {
+                showMessage(data.message || 'Une erreur est survenue.', 'error');
+            }
+        } catch (error) {
+            showMessage('Erreur de connexion. Réessayez.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.querySelector('.btn-text').classList.remove('hidden');
+            btn.querySelector('.btn-loader').classList.add('hidden');
+        }
+    });
+    
+    function showMessage(text, type) {
+        message.textContent = text;
+        message.className = 'mt-4 text-center text-sm p-3 rounded-xl';
+        
+        if (type === 'success') {
+            message.classList.add('bg-brand-500/10', 'border', 'border-brand-500/30', 'text-brand-300');
+        } else {
+            message.classList.add('bg-red-500/10', 'border', 'border-red-500/30', 'text-red-300');
+        }
+        
+        message.classList.remove('hidden');
+        
+        setTimeout(() => {
+            message.classList.add('hidden');
+        }, 5000);
+    }
+});
+
+
+/* ============================================
+   THREE.JS - HERO 3D
+   ============================================ */
+(function() {
+    const canvas = document.getElementById('hero-canvas');
+    if (!canvas) return;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const shape = new THREE.Shape();
+    const pts = [
+        [0, 2.2], [0.8, 2.6], [1.8, 2.5], [2.6, 2.1], [3.2, 1.5],
+        [3.5, 0.8], [3.4, 0], [3.0, -0.7], [2.4, -1.3], [1.7, -1.9],
+        [1.0, -2.4], [0.3, -2.8], [-0.4, -2.5], [-1.1, -2.0], [-1.7, -1.3],
+        [-2.2, -0.5], [-2.4, 0.3], [-2.2, 1.0], [-1.7, 1.6], [-1.0, 2.0], [-0.4, 2.2]
+    ];
+    shape.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], pts[i][1]);
+    shape.closePath();
+
+    const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.25, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.04, bevelSegments: 3 });
+    const material = new THREE.MeshPhongMaterial({ color: 0x10b981, emissive: 0x047857, emissiveIntensity: 0.4, shininess: 80, transparent: true, opacity: 0.75 });
+    const map = new THREE.Mesh(geometry, material);
+    map.position.set(0, 0, -2);
+    map.scale.set(1.2, 1.2, 1.2);
+    scene.add(map);
+
+    const edges = new THREE.EdgesGeometry(geometry);
+    const wireframe = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.6 }));
+    wireframe.position.copy(map.position);
+    wireframe.scale.copy(map.scale);
+    scene.add(wireframe);
+
+    const cities = [{ x: 0.5, y: 0.5 }, { x: 1.5, y: 0 }, { x: 1, y: 1.5 }, { x: 0, y: -1 }, { x: 2, y: 1 }, { x: 1, y: -1.5 }, { x: -1, y: 0.5 }];
+    const cityGeo = new THREE.SphereGeometry(0.08, 16, 16);
+    const cityMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    const cityMeshes = cities.map(c => {
+        const m = new THREE.Mesh(cityGeo, cityMat);
+        m.position.set(c.x * 1.2, c.y * 1.2, 0.5);
+        scene.add(m);
+        return m;
+    });
+
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.35 });
+    for (let i = 0; i < cities.length; i++) {
+        for (let j = i + 1; j < cities.length; j++) {
+            if (Math.random() > 0.5) continue;
+            const geo = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(cities[i].x * 1.2, cities[i].y * 1.2, 0.5),
+                new THREE.Vector3(cities[j].x * 1.2, cities[j].y * 1.2, 0.5)
+            ]);
+            scene.add(new THREE.Line(geo, lineMat));
+        }
+    }
+
+    const pGeo = new THREE.BufferGeometry();
+    const pCount = 400;
+    const pPos = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount * 3; i++) pPos[i] = (Math.random() - 0.5) * 14;
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ size: 0.025, color: 0x10b981, transparent: true, opacity: 0.5 })));
+
+    scene.add(new THREE.AmbientLight(0x404040, 2));
+    const pl1 = new THREE.PointLight(0x10b981, 2, 100); pl1.position.set(5, 5, 5); scene.add(pl1);
+    const pl2 = new THREE.PointLight(0xfbbf24, 1, 100); pl2.position.set(-5, -5, 5); scene.add(pl2);
+
+    camera.position.z = 7;
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', e => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+        map.rotation.y += 0.003;
+        wireframe.rotation.y = map.rotation.y;
+        map.rotation.x += (mouseY * 0.2 - map.rotation.x) * 0.05;
+        map.rotation.z += (mouseX * 0.1 - map.rotation.z) * 0.05;
+        wireframe.rotation.x = map.rotation.x;
+        wireframe.rotation.z = map.rotation.z;
+        cityMeshes.forEach((m, i) => m.scale.setScalar(1 + Math.sin(Date.now() * 0.003 + i) * 0.3));
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+})();
+
+/* ============================================
+   GSAP ANIMATIONS
+   ============================================ */
+if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+
+    document.querySelectorAll('.reveal').forEach((el, i) => {
+        gsap.fromTo(el,
+            { opacity: 0, y: 40 },
+            {
+                opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+                scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' },
+                delay: (i % 4) * 0.08
+            }
+        );
+    });
+
+    // Stat counters
+    document.querySelectorAll('.stat-number').forEach(stat => {
+        const target = parseInt(stat.dataset.target);
+        if (isNaN(target) || target === 0) { stat.innerText = '0'; return; }
+        gsap.fromTo(stat,
+            { innerText: 0 },
+            {
+                innerText: target, duration: 2, ease: 'power2.out',
+                snap: { innerText: 1 },
+                scrollTrigger: { trigger: stat, start: 'top 85%' },
+                onUpdate: function() {
+                    const val = Math.round(this.targets()[0].innerText);
+                    stat.innerText = val.toLocaleString('fr-FR');
+                }
+            }
+        );
+    });
+}
+
+/* ============================================
+   CATEGORY CARDS MOUSE TRACKING
+   ============================================ */
+document.querySelectorAll('.cat-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width) * 100 + '%');
+        card.style.setProperty('--my', ((e.clientY - rect.top) / rect.height) * 100 + '%');
+    });
+});
+
+/* ============================================
+   CTRL+K SEARCH SHORTCUT
+   ============================================ */
+document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const input = document.querySelector('#search-section input[name="q"]');
+        if (input) {
+            input.focus();
+            document.getElementById('search-section').scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+});
+
+/* ============================================
+   CLOSE EVENT MODALS ON ESC
+   ============================================ */
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('[id^="event-modal-"]').forEach(m => m.classList.add('hidden'));
+    }
+});
+</script>
+{% endblock %}

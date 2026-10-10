@@ -1,0 +1,56 @@
+{# ═══════════════════════════════════════════════════════════
+   MACROS GLOBALES TURIHO
+   ═══════════════════════════════════════════════════════════ #}
+
+{# ——— Macro : Lien de navigation ——— #}
+{% macro nav_link(endpoint, icon, label, mobile=false) %}
+{% set is_active = request.endpoint == endpoint %}
+{% if mobile %}
+<a href="{{ url_for(endpoint) }}" 
+   class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-colors {{ 'bg-white/5 text-brand-400' if is_active else 'text-gray-300' }}"
+   {% if is_active %}aria-current="page"{% endif %}>
+    <i class="fas {{ icon }} w-5"></i>
+    <span>{{ label }}</span>
+</a>
+{% else %}
+<a href="{{ url_for(endpoint) }}" 
+   class="flex items-center gap-2 text-sm font-medium transition-colors {{ 'text-brand-400' if is_active else 'text-gray-300 hover:text-white' }}"
+   {% if is_active %}aria-current="page"{% endif %}>
+    <i class="fas {{ icon }}"></i>
+    <span>{{ label }}</span>
+</a>
+{% endif %}
+{% endmacro %}
+
+{# ——— Macro : Étoiles de notation ——— #}
+{% macro star_rating(rating) %}
+{% set full_stars = rating|int %}
+{% set has_half = (rating - full_stars) >= 0.5 %}
+{% set empty_stars = 5 - full_stars - (1 if has_half else 0) %}
+
+<div class="flex items-center gap-0.5" aria-label="Note : {{ rating }} sur 5">
+    {% for i in range(full_stars) %}<i class="fas fa-star text-gold-500"></i>{% endfor %}
+    {% if has_half %}<i class="fas fa-star-half-alt text-gold-500"></i>{% endif %}
+    {% for i in range(empty_stars) %}<i class="far fa-star text-gray-600"></i>{% endfor %}
+</div>
+{% endmacro %}
+
+{# ——— Macro : Badge vérifié ——— #}
+{% macro verified_badge() %}
+<span class="inline-flex items-center gap-1 px-2 py-1 bg-brand-500/20 text-brand-400 rounded-full text-xs font-medium">
+    <i class="fas fa-check-circle"></i> Vérifié
+</span>
+{% endmacro %}
+
+{# ——— Macro : Icône de catégorie ——— #}
+{% macro category_icon(category) %}
+{% set icons = {
+    'association': 'fa-users',
+    'cooperative': 'fa-handshake',
+    'company': 'fa-building',
+    'startup': 'fa-rocket',
+    'ong': 'fa-globe',
+    'default': 'fa-briefcase'
+} %}
+<i class="fas {{ icons.get(category, icons['default']) }}"></i>
+{% endmacro %}

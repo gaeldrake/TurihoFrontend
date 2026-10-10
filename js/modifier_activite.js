@@ -1,0 +1,158 @@
+    (function () {
+        "use strict";
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var form = document.getElementById("edit-activity-form");
+            var submitBtn = document.getElementById("submit-btn");
+            var imageInput = document.getElementById("image");
+
+            // ——— FIX 16: Track unsaved changes ———
+            // On edit forms, users may accidentally navigate away and lose work.
+            // This warns them before leaving if they've made changes.
+            var formChanged = false;
+
+            if (form) {
+                form.addEventListener("input", function () {
+                    formChanged = true;
+                });
+                form.addEventListener("change", function () {
+                    formChanged = true;
+                });
+
+                // Don't warn on actual form submission
+                form.addEventListener("submit", function () {
+                    formChanged = false;
+                });
+            }
+
+            window.addEventListener("beforeunload", function (e) {
+                if (formChanged) {
+                    e.preventDefault();
+                    // Modern browsers show a generic message regardless of returnValue
+                    e.returnValue = "";
+                }
+            });
+
+            // ——— FIX 17: Image preview + validation ———
+            if (imageInput) {
+                imageInput.addEventListener("change", function () {
+                    var existing = document.getElementById("new-image-preview");
+                    if (existing) existing.remove();
+                    clearFieldError(imageInput);
+
+                    var file = imageInput.files[0];
+                    if (!file) return;
+
+                    // File size
+                    var maxSize = 5 * 1024 * 1024;
+                    if (file.size > maxSize) {
+                        showFieldError(
+                            imageInput,
+                            "Fichier trop volumineux (max 5 Mo)."
+                        );
+                        imageInput.value = "";
+                        return;
+                    }
+
+                    // File type
+                    var allowed = [
+                        "image/jpeg", "image/png", "image/gif", "image/webp"
+                    ];
+                    if (allowed.indexOf(file.type) === -1) {
+                        showFieldError(
+                            imageInput,
+                            "Format non accepté. Utilisez JPG, PNG, GIF ou WebP."
+                        );
+                        imageInput.value = "";
+                        return;
+                    }
+
+                    // Show new image preview
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        // FIX 18: Hide current image when new one is selected
+                        // so user can compare / see what they're replacing
+                        var currentContainer =
+                            document.getElementById("current-image-container");
+                        if (currentContainer) {
+                            currentContainer.style.opacity = "0.4";
+                        }
+
+                        var preview = document.createElement("div");
+                        preview.id = "new-image-preview";
+                        preview.className = "mt-3 flex items-center gap-3";
+                        preview.innerHTML =
+                            '<img src="' + e.target.result + '" ' +
+                            'alt="Aperçu de la nouvelle image" ' +
+                            'class="w-24 h-24 object-cover rounded-lg border-2 border-blue-400">' +
+                            '<span class="text-sm text-blue-600 font-medium">' +
+                            'Nouvelle image (non enregistrée)</span>';
+                        imageInput.parentNode.appendChild(preview);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // ——— FIX 19: Prevent double submission ———
+            if (form && submitBtn) {
+                form.addEventListener("submit", function () {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML =
+                        '<i class="fas fa-spinner fa-spin mr-2" aria-hidden="true"></i>' +
+                        "Enregistrement…";
+
+                    setTimeout(function () {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML =
+                            '<i class="fas fa-save mr-2" aria-hidden="true"></i>' +
+                            "Enregistrer les modifications";
+                    }, 10000);
+                });
+            }
+
+            // ——— FIX 20: Character counter for description ———
+            var descField = document.getElementById("description");
+            var descHelp = document.getElementById("desc-help");
+            if (descField && descHelp) {
+                // Show initial count
+                updateDescCounter();
+                descField.addEventListener("input", updateDescCounter);
+
+                function updateDescCounter() {
+                    var remaining = 2000 - descField.value.length;
+                    if (remaining < 200) {
+                        descHelp.textContent = remaining + " caractères restants.";
+                        descHelp.classList.remove(
+                            "text-gray-500", "text-yellow-600", "text-red-500"
+                        );
+                        descHelp.classList.add(
+                            remaining < 50 ? "text-red-500" : "text-yellow-600"
+                        );
+                    } else {
+                        descHelp.textContent = "Maximum 2000 caractères.";
+                        descHelp.className = "mt-1 text-xs text-gray-500";
+                    }
+                }
+            }
+
+            // ——— Helpers ———
+            function showFieldError(input, message) {
+                clearFieldError(input);
+                var errorEl = document.createElement("p");
+                errorEl.className = "mt-1 text-xs text-red-600 field-error";
+                errorEl.setAttribute("role", "alert");
+                errorEl.textContent = message;
+                input.parentNode.appendChild(errorEl);
+                input.classList.add("border-red-500");
+                input.setAttribute("aria-invalid", "true");
+            }
+
+            function clearFieldError(input) {
+                var parent = input.parentNode;
+                var errors = parent.querySelectorAll(".field-error");
+                errors.forEach(function (el) { el.remove(); });
+                input.classList.remove("border-red-500");
+                input.removeAttribute("aria-invalid");
+            }
+        });
+    })();

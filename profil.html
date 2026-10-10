@@ -1,0 +1,1136 @@
+{% extends "base.html" %}
+
+{% block title %}{{ org.org_name|e }} — Entreprise vérifiée | TURIHO{% endblock %}
+{% block meta_description %}{{ org.description|truncate(160)|e if org.description else 'Découvrez ' ~ org.org_name|e ~ ' sur TURIHO, la plateforme des entreprises du Burundi.' }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== HERO COVER ===== */
+  .profile-hero {
+    position: relative;
+    min-height: 480px;
+    overflow: hidden;
+  }
+  .profile-hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(5,7,10,0.2) 0%, rgba(5,7,10,0.6) 50%, #05070a 100%);
+  }
+  .cover-img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scale(1.1);
+    transition: transform 10s ease-out;
+  }
+  .profile-hero.loaded .cover-img { transform: scale(1); }
+
+  /* ===== LOGO PREMIUM ===== */
+  .logo-premium {
+    width: 120px; height: 120px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: 4px solid #05070a;
+    box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.4);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .logo-premium:hover {
+    transform: scale(1.05) rotate(-2deg);
+    box-shadow: 0 30px 60px -10px rgba(16, 185, 129, 0.5);
+  }
+  .logo-premium img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  /* ===== BADGES ===== */
+  .badge-verified {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.1));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+
+  /* ===== STICKY NAV ===== */
+  .profile-nav {
+    position: sticky; top: 80px; z-index: 30;
+    background: rgba(10, 13, 18, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .nav-tab {
+    position: relative;
+    padding: 1rem 1.5rem;
+    font-size: 14px; font-weight: 600;
+    color: #94a3b8;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .nav-tab:hover { color: white; }
+  .nav-tab.active { color: #34d399; }
+  .nav-tab.active::after {
+    content: '';
+    position: absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 60%; height: 3px;
+    background: linear-gradient(90deg, #10b981, #fbbf24);
+    border-radius: 3px 3px 0 0;
+  }
+
+  /* ===== SECTION ===== */
+  .profile-section {
+    padding: 3rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .profile-section:last-child { border-bottom: none; }
+
+  .section-title {
+    display: flex; align-items: center; gap: 0.75rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.5rem; font-weight: 700;
+    margin-bottom: 1.5rem;
+  }
+  .section-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    display: flex; align-items: center; justify-content: center;
+    color: #34d399;
+  }
+
+  /* ===== GALLERY ===== */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .gallery-item {
+    aspect-ratio: 1;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .gallery-item:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.3);
+  }
+  .gallery-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s;
+  }
+  .gallery-item:hover img { transform: scale(1.1); }
+  .gallery-item::after {
+    content: '\f00e';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.5);
+    color: white; font-size: 2rem;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .gallery-item:hover::after { opacity: 1; }
+
+  /* ===== LIGHTBOX ===== */
+  .lightbox {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.95);
+    display: none; align-items: center; justify-content: center;
+    padding: 2rem;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img {
+    max-width: 90vw; max-height: 90vh;
+    border-radius: 12px;
+    box-shadow: 0 40px 80px -20px rgba(0,0,0,0.8);
+  }
+  .lightbox-close {
+    position: absolute; top: 2rem; right: 2rem;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .lightbox-close:hover {
+    background: rgba(255,255,255,0.2);
+    transform: rotate(90deg);
+  }
+
+  /* ===== STATS ===== */
+  .stat-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .stat-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.03);
+    transform: translateY(-4px);
+  }
+  .stat-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 1rem;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+    display: flex; align-items: center; justify-content: center;
+    color: #34d399; font-size: 1.25rem;
+  }
+  .stat-value {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 2rem; font-weight: 800;
+    background: linear-gradient(135deg, #34d399, #fbbf24);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.25rem;
+  }
+  .stat-label {
+    font-size: 12px; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+
+  /* ===== TIMELINE ===== */
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, #10b981, transparent);
+  }
+  .timeline-item {
+    position: relative;
+    padding-bottom: 2rem;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute; left: -2.5rem; top: 0.5rem;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #fbbf24);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+  }
+
+  /* ===== SERVICE CARD ===== */
+  .service-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .service-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.2);
+  }
+  .service-img {
+    aspect-ratio: 16/9;
+    overflow: hidden;
+  }
+  .service-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s;
+  }
+  .service-card:hover .service-img img { transform: scale(1.1); }
+
+  /* ===== DOCUMENT CARD ===== */
+  .doc-card {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    transition: all 0.3s;
+  }
+  .doc-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.03);
+  }
+  .doc-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  /* ===== REVIEW CARD ===== */
+  .review-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+  }
+  .review-card:hover {
+    border-color: rgba(251, 191, 36, 0.3);
+    background: rgba(251, 191, 36, 0.03);
+  }
+
+  /* ===== CONTACT FORM ===== */
+  .contact-input {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+    color: white;
+    font-size: 14px;
+    transition: all 0.25s;
+  }
+  .contact-input:focus {
+    outline: none;
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.03);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+  }
+
+  /* ===== MAP ===== */
+  .map-container {
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    aspect-ratio: 16/9;
+  }
+
+  /* ===== FLOATING CTA ===== */
+  .floating-cta {
+    position: fixed; bottom: 2rem; right: 2rem;
+    z-index: 40;
+    display: flex; flex-direction: column; gap: 0.75rem;
+  }
+  .floating-btn {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1.25rem;
+    box-shadow: 0 10px 30px -5px rgba(0,0,0,0.5);
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .floating-btn:hover {
+    transform: scale(1.1);
+  }
+  .floating-btn.whatsapp { background: #25d366; }
+  .floating-btn.contact { background: linear-gradient(135deg, #10b981, #059669); }
+
+  /* ===== SIMILAR COMPANIES ===== */
+  .similar-card {
+    display: flex; gap: 1rem;
+    padding: 1rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .similar-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.03);
+    transform: translateX(4px);
+  }
+
+  /* ===== REVEAL ===== */
+  .reveal { opacity: 0; transform: translateY(30px); }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 768px) {
+    .profile-hero { min-height: 360px; }
+    .logo-premium { width: 96px; height: 96px; }
+    .floating-cta { bottom: 1rem; right: 1rem; }
+    .floating-btn { width: 48px; height: 48px; font-size: 1rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% set user_logged_in = session.get('id') %}
+{% set cover_image = org.cover_image or org.photos[0].url if org.photos else 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80' %}
+{% set logo_image = org.logo or 'sta_img/Untitled2.png' %}
+
+{# ============================================================
+   HERO IMMERSIF
+   ============================================================ #}
+<section class="profile-hero" id="profile-hero">
+  <img src="{{ cover_image }}" alt="Couverture {{ org.org_name|e }}" class="cover-img" loading="eager">
+
+  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12 h-full flex flex-col justify-end">
+    <div class="flex flex-col md:flex-row md:items-end gap-6">
+      {# Logo #}
+      <div class="logo-premium -mb-16 md:-mb-20">
+        {% if org.logo %}
+          <img src="{{ logo_image }}" alt="{{ org.org_name|e }}">
+        {% else %}
+          <span class="font-display text-4xl font-bold text-white">{{ org.org_name[0]|upper }}</span>
+        {% endif %}
+      </div>
+
+      {# Infos #}
+      <div class="flex-1">
+        <div class="flex flex-wrap items-center gap-3 mb-3">
+          <span class="badge-verified">
+            <i class="fas fa-check-circle text-[10px]"></i>
+            Entreprise vérifiée
+          </span>
+          {% if org.type %}
+          <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300 font-medium">
+            {{ org.type|e }}
+          </span>
+          {% endif %}
+        </div>
+
+        <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3">
+          {{ org.org_name|e }}
+        </h1>
+
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-300">
+          {% if full_address %}
+          <div class="flex items-center gap-2">
+            <i class="fas fa-map-marker-alt text-brand-400 text-xs"></i>
+            <span>{{ full_address|e }}</span>
+          </div>
+          {% endif %}
+          {% if org.creation_date %}
+          <div class="flex items-center gap-2">
+            <i class="fas fa-calendar text-brand-400 text-xs"></i>
+            <span>Fondée en {{ org.creation_date.strftime('%Y') }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Actions #}
+      <div class="flex flex-wrap gap-3">
+        <a href="#contact" class="btn-primary px-6 py-3 rounded-xl font-semibold text-white flex items-center gap-2">
+          <i class="fas fa-envelope"></i>
+          Contacter
+        </a>
+        {% if org.website %}
+        <a href="{{ org.website|e }}" target="_blank" class="btn-ghost px-6 py-3 rounded-xl font-semibold flex items-center gap-2">
+          <i class="fas fa-external-link-alt"></i>
+          Site web
+        </a>
+        {% endif %}
+        <button onclick="openShareMenu()" class="btn-ghost px-4 py-3 rounded-xl font-semibold">
+          <i class="fas fa-share-alt"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ============================================================
+   NAVIGATION STICKY
+   ============================================================ #}
+<nav class="profile-nav">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center gap-1 overflow-x-auto no-scrollbar">
+      <a href="#about" class="nav-tab active">À propos</a>
+      <a href="#gallery" class="nav-tab">Galerie</a>
+      <a href="#services" class="nav-tab">Services</a>
+      <a href="#stats" class="nav-tab">Statistiques</a>
+      <a href="#news" class="nav-tab">Actualités</a>
+      <a href="#events" class="nav-tab">Événements</a>
+      <a href="#documents" class="nav-tab">Documents</a>
+      <a href="#reviews" class="nav-tab">Avis</a>
+      <a href="#contact" class="nav-tab">Contact</a>
+    </div>
+  </div>
+</nav>
+
+{# ============================================================
+   CONTENU PRINCIPAL
+   ============================================================ #}
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+
+  {# ─── À PROPOS ─── #}
+  <section id="about" class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-info-circle"></i></div>
+      À propos
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="text-gray-300 leading-relaxed text-lg mb-6">
+          {{ org.description|e if org.description else "Pas de description disponible." }}
+        </div>
+
+        {% if org.mission or org.vision %}
+        <div class="grid sm:grid-cols-2 gap-4 mt-8">
+          {% if org.mission %}
+          <div class="glass rounded-2xl p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-bullseye text-brand-400"></i>
+              <h3 class="font-semibold">Mission</h3>
+            </div>
+            <p class="text-sm text-gray-400">{{ org.mission|e }}</p>
+          </div>
+          {% endif %}
+          {% if org.vision %}
+          <div class="glass rounded-2xl p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-eye text-gold-400"></i>
+              <h3 class="font-semibold">Vision</h3>
+            </div>
+            <p class="text-sm text-gray-400">{{ org.vision|e }}</p>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="space-y-4">
+        <div class="glass rounded-2xl p-5">
+          <h3 class="font-semibold mb-4 flex items-center gap-2">
+            <i class="fas fa-building text-brand-400"></i>
+            Informations
+          </h3>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-500">Type</span>
+              <span class="font-semibold">{{ org.type|e if org.type else '—' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Secteur</span>
+              <span class="font-semibold">{{ org.category|e if org.category else '—' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Fondée</span>
+              <span class="font-semibold">{{ org.creation_date.strftime('%Y') if org.creation_date else '—' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Zone</span>
+              <span class="font-semibold">{{ org.province|e if org.province else '—' }}</span>
+            </div>
+          </div>
+        </div>
+
+        {% if org.links %}
+        <div class="glass rounded-2xl p-5">
+          <h3 class="font-semibold mb-4 flex items-center gap-2">
+            <i class="fas fa-share-alt text-brand-400"></i>
+            Réseaux sociaux
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            {% set social_config = {
+              'facebook':  {'icon': 'fa-facebook-f',     'bg': 'bg-blue-600'},
+              'x':         {'icon': 'fa-x-twitter',      'bg': 'bg-gray-900'},
+              'instagram': {'icon': 'fa-instagram',      'bg': 'bg-pink-500'},
+              'youtube':   {'icon': 'fa-youtube',        'bg': 'bg-red-600'},
+              'linkedin':  {'icon': 'fa-linkedin-in',    'bg': 'bg-blue-800'},
+              'tiktok':    {'icon': 'fa-tiktok',         'bg': 'bg-black'},
+              'telegram':  {'icon': 'fa-telegram-plane', 'bg': 'bg-blue-500'}
+            } %}
+            {% for link in org.links %}
+              {% set platform = link.platform|lower %}
+              {% set config = social_config.get(platform, {'icon': 'fa-link', 'bg': 'bg-gray-500'}) %}
+              <a href="{{ link.url|e }}" target="_blank" class="w-10 h-10 rounded-lg {{ config.bg }} flex items-center justify-center text-white hover:scale-110 transition-transform">
+                <i class="fab {{ config.icon }}"></i>
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  {# ─── GALERIE ─── #}
+  {% if org.photos %}
+  <section id="gallery" class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-images"></i></div>
+      Galerie
+      <span class="text-sm text-gray-500 font-normal">({{ org.photos|length }} photos)</span>
+    </div>
+
+    <div class="gallery-grid">
+      {% for photo in org.photos %}
+      <div class="gallery-item" onclick="openLightbox('{{ photo.url }}')">
+        <img src="{{ photo.url }}" alt="Photo {{ loop.index }}" loading="lazy">
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# ─── SERVICES ─── #}
+  {% if org.services %}
+  <section id="services" class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-concierge-bell"></i></div>
+      Services & Produits
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for service in org.services %}
+      <div class="service-card">
+        {% if service.image %}
+        <div class="service-img">
+          <img src="{{ service.image }}" alt="{{ service.nom|e }}" loading="lazy">
+        </div>
+        {% endif %}
+        <div class="p-5">
+          <h3 class="font-display font-bold text-lg mb-2">{{ service.nom|e }}</h3>
+          <p class="text-sm text-gray-400 mb-3 line-clamp-2">{{ service.description|e }}</p>
+          {% if service.prix %}
+          <div class="text-brand-400 font-bold">{{ service.prix }} FBU</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# ─── STATISTIQUES ─── #}
+  <section id="stats" class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-chart-line"></i></div>
+      Visibilité
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-eye"></i></div>
+        <div class="stat-value stat-counter" data-target="{{ org.views_count|default(247) }}">0</div>
+        <div class="stat-label">Vues du profil</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-envelope"></i></div>
+        <div class="stat-value stat-counter" data-target="{{ org.contacts_count|default(18) }}">0</div>
+        <div class="stat-label">Contacts reçus</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-search"></i></div>
+        <div class="stat-value stat-counter" data-target="{{ org.searches_count|default(89) }}">0</div>
+        <div class="stat-label">Recherches</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-heart"></i></div>
+        <div class="stat-value stat-counter" data-target="{{ org.favorites_count|default(34) }}">0</div>
+        <div class="stat-label">Favoris</div>
+      </div>
+    </div>
+  </section>
+
+  {# ─── ACTUALITÉS ─── #}
+  {% if org.actualites %}
+  <section id="news" class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-newspaper"></i></div>
+      Actualités
+    </div>
+
+    <div class="timeline">
+      {% for news in org.actualites %}
+      <div class="timeline-item">
+        <div class="glass rounded-2xl p-5">
+          <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+            <i class="fas fa-calendar"></i>
+            <span>{{ news.date.strftime('%d %B %Y') }}</span>
+          </div>
+          <h3 class="font-display font-bold text-lg mb-2">{{ news.titre|e }}</h3>
+          <p class="text-sm text-gray-400">{{ news.contenu|e }}</p>
+          {% if news.image %}
+          <img src="{{ news.image }}" alt="{{ news.titre|e }}" class="mt-4 rounded-xl w-full" loading="lazy">
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# ─── ÉVÉNEMENTS ─── #}
+  {% if evenements %}
+  <section id="events" class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-calendar-alt"></i></div>
+      Événements à venir
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-5">
+      {% for e in evenements %}
+      <div class="glass rounded-2xl overflow-hidden hover:border-brand-500/30 transition-all">
+        {% if e.image %}
+        <img src="{{ e.image }}" alt="{{ e.nom|e }}" class="w-full h-48 object-cover" loading="lazy">
+        {% endif %}
+        <div class="p-5">
+          <div class="flex items-center gap-2 text-xs text-brand-400 mb-2">
+            <i class="fas fa-tag"></i>
+            <span>{{ e.categorie|capitalize|e }}</span>
+          </div>
+          <h3 class="font-display font-bold text-lg mb-2">{{ e.nom|e }}</h3>
+          <div class="flex items-center gap-4 text-xs text-gray-500 mb-3">
+            <span><i class="fas fa-calendar mr-1"></i>{{ e.date_debut.strftime('%d/%m/%Y') }}</span>
+            <span><i class="fas fa-clock mr-1"></i>{{ e.date_debut.strftime('%Hh') }} - {{ e.date_fin.strftime('%Hh') }}</span>
+          </div>
+          <p class="text-sm text-gray-400 mb-4 line-clamp-2">{{ e.description[:120]|e }}{% if e.description|length > 120 %}…{% endif %}</p>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-500"><i class="fas fa-map-marker-alt mr-1"></i>{{ e.lieu|e }}</span>
+            <button class="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white">S'inscrire</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# ─── DOCUMENTS ─── #}
+  {% if documents %}
+  <section id="documents" class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-file-alt"></i></div>
+      Documents
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      {% set icon_config = {
+        'pdf':        {'icon': 'fa-file-pdf',        'color': 'text-red-500',    'bg': 'bg-red-500/10'},
+        'word':       {'icon': 'fa-file-word',       'color': 'text-blue-500',   'bg': 'bg-blue-500/10'},
+        'excel':      {'icon': 'fa-file-excel',      'color': 'text-green-500',  'bg': 'bg-green-500/10'},
+        'image':      {'icon': 'fa-file-image',      'color': 'text-purple-500', 'bg': 'bg-purple-500/10'},
+        'powerpoint': {'icon': 'fa-file-powerpoint', 'color': 'text-orange-500', 'bg': 'bg-orange-500/10'}
+      } %}
+      {% for doc in documents %}
+        {% set ic = icon_config.get(doc.icon, {'icon': 'fa-file', 'color': 'text-gray-500', 'bg': 'bg-gray-500/10'}) %}
+        <a href="{{ url_for('dashboard.telecharger_document', id=doc.id) }}" class="doc-card group">
+          <div class="doc-icon {{ ic.bg }} {{ ic.color }}">
+            <i class="fas {{ ic.icon }}"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold truncate group-hover:text-brand-400 transition-colors">{{ doc.nom|e }}</div>
+            <div class="text-xs text-gray-500">{{ doc.type|e }} · {{ "%.1f"|format(doc.taille / 1024 / 1024) }} MB</div>
+          </div>
+          <i class="fas fa-download text-gray-500 group-hover:text-brand-400 transition-colors"></i>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# ─── AVIS ─── #}
+  <section id="reviews" class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-star"></i></div>
+      Avis & Confiance
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+      <div class="glass rounded-2xl p-6 text-center">
+        <div class="text-5xl font-bold gradient-text mb-2">4.8</div>
+        <div class="flex items-center justify-center gap-1 mb-3">
+          {% for i in range(5) %}
+          <i class="fas fa-star text-gold-400"></i>
+          {% endfor %}
+        </div>
+        <div class="text-sm text-gray-400">Basé sur 127 avis</div>
+      </div>
+
+      <div class="lg:col-span-2 space-y-4">
+        {% for review in (org.reviews|default([]))[:3] %}
+        <div class="review-card">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-gold-500 flex items-center justify-center font-bold text-white">
+              {{ review.nom[0]|upper if review.nom else '?' }}
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold">{{ review.nom|e }}</div>
+              <div class="flex items-center gap-1 text-xs text-gold-400">
+                {% for i in range(review.rating|default(5)) %}
+                <i class="fas fa-star text-[10px]"></i>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="text-xs text-gray-500">{{ review.date.strftime('%d/%m/%Y') }}</div>
+          </div>
+          <p class="text-sm text-gray-300">"{{ review.message|e }}"</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {# ─── CONTACT ─── #}
+  <section id="contact" class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-envelope"></i></div>
+      Nous contacter
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+      <form method="POST" action="{{ url_for('public.contact', token=org.token) }}" class="space-4">
+        {% if csrf_token is defined %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% endif %}
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <input type="text" name="prenom" placeholder="Prénom *" required class="contact-input">
+          <input type="text" name="nom" placeholder="Nom *" required class="contact-input">
+        </div>
+        <input type="email" name="email" placeholder="Email *" required class="contact-input">
+        <select name="sujet" class="contact-input">
+          <option value="">Sélectionnez un sujet</option>
+          <option value="Adhésion">Adhésion</option>
+          <option value="Partenariat">Partenariat</option>
+          <option value="Information">Demande d'information</option>
+          <option value="Autre">Autre</option>
+        </select>
+        <textarea name="message" placeholder="Votre message *" required rows="5" class="contact-input resize-none"></textarea>
+        <button type="submit" class="btn-primary w-full py-3 rounded-xl font-semibold text-white">
+          <i class="fas fa-paper-plane mr-2"></i>
+          Envoyer le message
+        </button>
+      </form>
+
+      <div class="space-y-4">
+        <div class="glass rounded-2xl p-5">
+          <h3 class="font-semibold mb-4">Coordonnées</h3>
+          <div class="space-y-3 text-sm">
+            {% if org.telephone %}
+            <div class="flex items-center gap-3">
+              <i class="fas fa-phone text-brand-400 w-5"></i>
+              <a href="tel:{{ org.telephone }}" class="hover:text-brand-400 transition-colors">{{ org.telephone|e }}</a>
+            </div>
+            {% endif %}
+            {% if org.email %}
+            <div class="flex items-center gap-3">
+              <i class="fas fa-envelope text-brand-400 w-5"></i>
+              <a href="mailto:{{ org.email }}" class="hover:text-brand-400 transition-colors">{{ org.email|e }}</a>
+            </div>
+            {% endif %}
+            {% if full_address %}
+            <div class="flex items-start gap-3">
+              <i class="fas fa-map-marker-alt text-brand-400 w-5 mt-1"></i>
+              <span>{{ full_address|e }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if org.telephone %}
+        <a href="https://wa.me/{{ org.telephone|replace(' ', '')|replace('+', '') }}" target="_blank" class="block w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-center transition-colors">
+          <i class="fab fa-whatsapp mr-2"></i>
+          Contacter sur WhatsApp
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  {# ─── LOCALISATION ─── #}
+  {% if encoded_address and api_key %}
+  <section class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-map-marked-alt"></i></div>
+      Localisation
+    </div>
+
+    <div class="map-container">
+      <iframe
+        src="https://www.google.com/maps/embed/v1/place?key={{ api_key }}&q={{ encoded_address }}&zoom=15"
+        width="100%" height="100%"
+        style="border:0;"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+
+    <div class="mt-4 text-center">
+      <a href="https://www.google.com/maps/dir/?api=1&destination={{ encoded_address }}" target="_blank" class="btn-ghost inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold">
+        <i class="fas fa-directions"></i>
+        Itinéraire
+      </a>
+    </div>
+  </section>
+  {% endif %}
+
+  {# ─── ENTREPRISES SIMILAIRES ─── #}
+  {% if similar_orgs %}
+  <section class="profile-section reveal">
+    <div class="section-title">
+      <div class="section-icon"><i class="fas fa-lightbulb"></i></div>
+      Vous pourriez aussi aimer
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for similar in similar_orgs %}
+      <a href="{{ url_for('public.profil_token', token=similar.token) }}" class="similar-card">
+        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-500 to-gold-500 flex items-center justify-center font-bold text-white flex-shrink-0">
+          {{ similar.org_name[0]|upper }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold truncate">{{ similar.org_name|e }}</div>
+          <div class="text-xs text-gray-500">{{ similar.type|e }} · {{ similar.province|e }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</main>
+
+{# ============================================================
+   FLOATING CTA
+   ============================================================ #}
+<div class="floating-cta">
+  {% if org.telephone %}
+  <a href="https://wa.me/{{ org.telephone|replace(' ', '')|replace('+', '') }}" target="_blank" class="floating-btn whatsapp" title="WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+  </a>
+  {% endif %}
+  <a href="#contact" class="floating-btn contact" title="Contacter">
+    <i class="fas fa-envelope"></i>
+  </a>
+</div>
+
+{# ============================================================
+   LIGHTBOX
+   ============================================================ #}
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">
+    <i class="fas fa-times"></i>
+  </button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+{# ============================================================
+   SHARE MENU (modal)
+   ============================================================ #}
+<div id="share-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);">
+  <div class="glass rounded-3xl p-8 max-w-md w-full">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-display text-xl font-bold">Partager</h3>
+      <button onclick="closeShareMenu()" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-colors">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    {% set share_url = request.url|urlencode %}
+    {% set share_title = org.org_name|urlencode %}
+
+    <div class="grid grid-cols-4 gap-3">
+      <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}" target="_blank" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/5 transition-colors">
+        <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white">
+          <i class="fab fa-facebook-f"></i>
+        </div>
+        <span class="text-xs">Facebook</span>
+      </a>
+      <a href="https://twitter.com/intent/tweet?url={{ share_url }}&text={{ share_title }}" target="_blank" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/5 transition-colors">
+        <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center text-white">
+          <i class="fab fa-x-twitter"></i>
+        </div>
+        <span class="text-xs">X</span>
+      </a>
+      <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url }}" target="_blank" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/5 transition-colors">
+        <div class="w-12 h-12 rounded-full bg-blue-800 flex items-center justify-center text-white">
+          <i class="fab fa-linkedin-in"></i>
+        </div>
+        <span class="text-xs">LinkedIn</span>
+      </a>
+      <a href="https://api.whatsapp.com/send?text={{ share_url }}" target="_blank" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/5 transition-colors">
+        <div class="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center text-white">
+          <i class="fab fa-whatsapp"></i>
+        </div>
+        <span class="text-xs">WhatsApp</span>
+      </a>
+    </div>
+
+    <button onclick="navigator.clipboard.writeText('{{ request.url }}')" class="w-full mt-4 py-3 rounded-xl glass font-semibold flex items-center justify-center gap-2 hover:bg-white/10 transition-colors">
+      <i class="fas fa-link text-brand-400"></i>
+      Copier le lien
+    </button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Hero load animation
+const hero = document.getElementById('profile-hero');
+if (hero) {
+  const img = hero.querySelector('.cover-img');
+  if (img.complete) hero.classList.add('loaded');
+  else img.addEventListener('load', () => hero.classList.add('loaded'));
+}
+
+// GSAP animations
+if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+
+  document.querySelectorAll('.reveal').forEach(el => {
+    gsap.fromTo(el,
+      { opacity: 0, y: 30 },
+      {
+        opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 88%' }
+      }
+    );
+  });
+
+  // Stat counters
+  document.querySelectorAll('.stat-counter').forEach(stat => {
+    const target = parseInt(stat.dataset.target);
+    gsap.fromTo(stat,
+      { innerText: 0 },
+      {
+        innerText: target, duration: 2, ease: 'power2.out',
+        snap: { innerText: 1 },
+        scrollTrigger: { trigger: stat, start: 'top 85%' },
+        onUpdate: function() {
+          stat.innerText = Math.round(this.targets()[0].innerText).toLocaleString('fr-FR');
+        }
+      }
+    );
+  });
+}
+
+// Sticky nav active state
+const navTabs = document.querySelectorAll('.nav-tab');
+const sections = document.querySelectorAll('.profile-section');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop;
+    if (window.scrollY >= sectionTop - 200) {
+      current = section.getAttribute('id');
+    }
+  });
+
+  navTabs.forEach(tab => {
+    tab.classList.remove('active');
+    if (tab.getAttribute('href') === '#' + current) {
+      tab.classList.add('active');
+    }
+  });
+}, { passive: true });
+
+// Smooth scroll for nav tabs
+navTabs.forEach(tab => {
+  tab.addEventListener('click', e => {
+    e.preventDefault();
+    const targetId = tab.getAttribute('href').substring(1);
+    const target = document.getElementById(targetId);
+    if (target) {
+      const offset = 160;
+      const top = target.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  });
+});
+
+// Parallax cover image
+window.addEventListener('scroll', () => {
+  const cover = document.querySelector('.cover-img');
+  if (cover && window.scrollY < 800) {
+    cover.style.transform = `scale(1.1) translateY(${window.scrollY * 0.15}px)`;
+  }
+}, { passive: true });
+}
+
+// ══════════ LIGHTBOX ══════════
+function openLightbox(src) {
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  img.src = src;
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  lb.classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+// ══════════ SHARE MENU ══════════
+function openShareMenu() {
+  const modal = document.getElementById('share-modal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.body.style.overflow = 'hidden';
+}
+function closeShareMenu() {
+  const modal = document.getElementById('share-modal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+  document.body.style.overflow = '';
+}
+document.getElementById('share-modal')?.addEventListener('click', e => {
+  if (e.target.id === 'share-modal') closeShareMenu();
+});
+
+// ══════════ CHAR COUNTER (contact form) ══════════
+const msgInput = document.querySelector('textarea[name="message"]');
+const msgCounter = document.getElementById('msg-counter');
+if (msgInput && msgCounter) {
+  msgInput.addEventListener('input', () => {
+    const len = msgInput.value.length;
+    msgCounter.textContent = `${len} / 2000`;
+    msgCounter.classList.remove('text-yellow-500', 'text-red-500');
+    if (len > 1800) msgCounter.classList.add('text-red-500');
+    else if (len > 1500) msgCounter.classList.add('text-yellow-500');
+  });
+}
+
+// ══════════ COPY LINK FEEDBACK ══════════
+document.querySelectorAll('[data-copy-link]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check text-brand-400"></i> Copié !';
+      setTimeout(() => btn.innerHTML = original, 2000);
+    });
+  });
+});
+
+// ══════════ FLOATING CTA VISIBILITY ══════════
+const floatingCta = document.querySelector('.floating-cta');
+if (floatingCta) {
+  floatingCta.style.opacity = '0';
+  floatingCta.style.transform = 'translateY(20px)';
+  floatingCta.style.transition = 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 600) {
+      floatingCta.style.opacity = '1';
+      floatingCta.style.transform = 'translateY(0)';
+    } else {
+      floatingCta.style.opacity = '0';
+      floatingCta.style.transform = 'translateY(20px)';
+    }
+  }, { passive: true });
+}
+})();
+</script>
+{% endblock %}

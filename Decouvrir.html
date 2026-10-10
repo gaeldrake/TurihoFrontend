@@ -1,0 +1,880 @@
+{% extends "base.html" %}
+{% from "macros/_cards.html" import org_card %}
+
+{% block title %}Découvrir — TURIHO | Écosystème entrepreneurial du Burundi{% endblock %}
+{% block meta_description %}Explorez les entreprises, startups, organisations et opportunités qui construisent l'avenir du Burundi. La plateforme nationale de l'écosystème entrepreneurial.{% endblock %}
+{% block og_title %}Découvrir — TURIHO | Écosystème entrepreneurial du Burundi{% endblock %}
+{% block og_description %}Explorez les entreprises, startups, organisations et opportunités qui construisent l'avenir du Burundi.{% endblock %}
+
+{# ══════════════════════════════════════════
+   VARIABLES & FILTRES
+══════════════════════════════════════════ #}
+{% set filter_types = [
+    {"value": "",            "icon": "",             "label": "Toutes"},
+    {"value": "association", "icon": "fa-users",     "label": "Associations"},
+    {"value": "cooperative", "icon": "fa-handshake", "label": "Coopératives"},
+    {"value": "company",     "icon": "fa-building",  "label": "Sociétés"}
+] %}
+
+{% set orgs_list = structures|default([]) %}
+{% set pag = pagination|default(none) %}
+
+{# ══════════════════════════════════════════
+   STYLES PREMIUM (Identique à votre version)
+══════════════════════════════════════════ #}
+{% block extra_css %}
+<style>
+  :root { --emerald-glow: rgba(16, 185, 129, 0.35); --gold-glow: rgba(251, 191, 36, 0.25); }
+  * { -webkit-font-smoothing: antialiased; }
+  html, body { background: #05070a; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+  body { overflow-x: hidden; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #05070a; }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #10b981, #059669); border-radius: 4px; }
+
+  .font-display { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.02em; }
+  .gradient-text {
+    background: linear-gradient(135deg, #34d399 0%, #fbbf24 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .glass {
+    background: rgba(20, 25, 33, 0.55);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .glass-strong {
+    background: rgba(10, 13, 18, 0.85);
+    backdrop-filter: blur(30px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+
+  .hero-glow::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(600px circle at 30% 20%, rgba(16, 185, 129, 0.15), transparent 50%),
+      radial-gradient(500px circle at 70% 60%, rgba(251, 191, 36, 0.08), transparent 50%);
+    pointer-events: none;
+  }
+
+  #discover-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+  .animate-float { animation: float 6s ease-in-out infinite; }
+
+  @keyframes pulse-ring { 0% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(2.4); opacity: 0; } }
+
+  .btn-primary {
+    position: relative;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.6); }
+  .btn-primary::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform: translateX(-100%); transition: transform 0.6s;
+  }
+  .btn-primary:hover::before { transform: translateX(100%); }
+
+  .btn-ghost { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(16, 185, 129, 0.4); }
+
+  .card-hover { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+  .card-hover:hover { transform: translateY(-6px); border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 30px 60px -20px rgba(16, 185, 129, 0.25); }
+
+  .sector-card { position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+  .sector-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(16,185,129,0.15), transparent 50%);
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .sector-card:hover::before { opacity: 1; }
+  .sector-card:hover { transform: translateY(-4px); border-color: rgba(16, 185, 129, 0.3); }
+  .sector-card:hover .sector-icon { transform: scale(1.1) rotate(-5deg); }
+  .sector-icon { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  .search-box { background: rgba(20, 25, 33, 0.6); border: 1px solid rgba(255,255,255,0.08); transition: all 0.3s; }
+  .search-box:focus-within { border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+
+  .map-dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; cursor: pointer; transform: translate(-50%, -50%); z-index: 5; }
+  .map-dot::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: currentColor; box-shadow: 0 0 20px currentColor; }
+  .map-dot::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid currentColor; animation: pulse-ring 2.5s ease-out infinite; }
+  .map-dot:hover .map-tooltip { opacity: 1; transform: translate(-50%, -10px); pointer-events: auto; }
+  .map-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translate(-50%, 0); opacity: 0; transition: all 0.3s; pointer-events: none; margin-bottom: 8px; white-space: nowrap; }
+
+  .filter-chip {
+    transition: all 0.25s;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+  }
+  .filter-chip:hover { border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); }
+  .filter-chip.active { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.5); color: #34d399; }
+
+  .reveal { opacity: 0; transform: translateY(40px); }
+  .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.3), transparent); }
+
+  .ai-bubble {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(251, 191, 36, 0.05));
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+  .ai-typing span {
+    display: inline-block; width: 6px; height: 6px; margin: 0 2px;
+    background: #34d399; border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+  }
+  .ai-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .ai-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  .opportunity-card { position: relative; overflow: hidden; transition: all 0.3s; }
+  .opportunity-card::after {
+    content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+    background: linear-gradient(180deg, #10b981, #fbbf24);
+    transform: scaleY(0); transform-origin: top; transition: transform 0.3s;
+  }
+  .opportunity-card:hover::after { transform: scaleY(1); }
+  .opportunity-card:hover { border-color: rgba(16, 185, 129, 0.3); }
+
+  .stat-number { font-variant-numeric: tabular-nums; }
+
+  .pagination-btn { transition: all 0.2s; }
+  .pagination-btn:hover:not(.active):not(:disabled) { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.4); }
+  .pagination-btn.active { background: linear-gradient(135deg, #10b981, #059669); border-color: transparent; color: white; }
+
+  .loader { display: none; }
+  .loader.active { display: flex; }
+</style>
+{% endblock %}
+
+
+{# ══════════════════════════════════════════
+   CONTENU
+══════════════════════════════════════════ #}
+{% block content %}
+
+{# ══════════ HERO (Identique) ══════════ #}
+<section id="hero" class="relative min-h-screen flex items-center overflow-hidden hero-glow">
+    <canvas id="discover-canvas"></canvas>
+    <div class="absolute inset-0 grid-bg z-[2]"></div>
+    <div class="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent z-[3]"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 w-full">
+        <div class="text-center max-w-4xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass mb-8">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                </span>
+                <span class="text-xs font-medium text-gray-300">+{{ structures_count|default(0) }} entreprises · {{ province_count|default(18) }} provinces · {{ sector_count|default(156) }} secteurs</span>
+            </div>
+
+            <div class="inline-block px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-6">
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Page Découvrir</span>
+            </div>
+
+            <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6">
+                Découvrez l'écosystème<br>
+                <span class="gradient-text">entrepreneurial du Burundi</span>
+            </h1>
+
+            <p class="text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                Explorez les entreprises, startups, organisations et opportunités qui construisent l'avenir.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="#search-section" class="btn-primary px-7 py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2">
+                    <i class="fas fa-compass"></i>
+                    Explorer les entreprises
+                </a>
+                <a href="{{ url_for('auth.demande_inscription') }}" class="btn-ghost px-7 py-4 rounded-xl font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-plus text-brand-400"></i>
+                    Créer mon profil
+                </a>
+            </div>
+
+            {# Stats dynamiques #}
+            <div class="grid grid-cols-3 gap-4 mt-16 max-w-2xl mx-auto">
+                <div class="glass rounded-2xl p-4">
+                    <div class="font-display text-2xl sm:text-3xl font-bold gradient-text stat-number" data-target="{{ structures_count|default(0) }}">0</div>
+                    <div class="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mt-1">Entreprises</div>
+                </div>
+                <div class="glass rounded-2xl p-4">
+                    <div class="font-display text-2xl sm:text-3xl font-bold gradient-text stat-number" data-target="{{ province_count|default(18) }}">0</div>
+                    <div class="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mt-1">Provinces</div>
+                </div>
+                <div class="glass rounded-2xl p-4">
+                    <div class="font-display text-2xl sm:text-3xl font-bold gradient-text stat-number" data-target="{{ connections_count|default(12400) }}">0</div>
+                    <div class="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mt-1">Connexions/mois</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+        <span class="text-xs text-gray-500 uppercase tracking-widest">Scroll</span>
+        <div class="w-px h-12 bg-gradient-to-b from-brand-500 to-transparent"></div>
+    </div>
+</section>
+
+
+{# ══════════ RECHERCHE INTELLIGENTE (AJAX) ══════════ #}
+<section id="search-section" class="py-20 lg:py-28 relative">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal text-center mb-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                <i class="fas fa-search text-brand-400 text-xs"></i>
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Recherche intelligente</span>
+            </div>
+            <h2 class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
+                Que recherchez-vous <span class="gradient-text">aujourd'hui</span> ?
+            </h2>
+        </div>
+
+        <div class="reveal">
+            {# Search Box avec AJAX #}
+            <div class="search-box rounded-2xl p-2 mb-5" data-ajax-url="{{ url_for('public.ajax_search') }}">
+                <div class="flex items-center gap-3 px-4">
+                    <i class="fas fa-search text-gray-500"></i>
+                    <input id="search-input" type="text" name="q" placeholder="Rechercher une entreprise, un service, un secteur..."
+                           class="flex-1 bg-transparent py-4 text-base text-white placeholder-gray-500 focus:outline-none"
+                           autocomplete="off">
+                    <kbd class="hidden sm:inline-flex px-2 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-gray-500 font-mono">Ctrl+K</kbd>
+                    <button type="button" id="search-btn" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold text-white">Rechercher</button>
+                </div>
+            </div>
+
+            
+
+            {# Suggestions populaires #}
+            <div class="flex flex-wrap gap-2 mb-8">
+                <span class="text-xs text-gray-500 uppercase tracking-wider self-center mr-2">Populaire :</span>
+                <button class="search-chip px-3.5 py-1.5 rounded-full glass text-xs hover:border-brand-500/40 transition-colors" data-query="restaurant">🍽️ Restaurants</button>
+                <button class="search-chip px-3.5 py-1.5 rounded-full glass text-xs hover:border-brand-500/40 transition-colors" data-query="startup">🚀 Startups</button>
+                <button class="search-chip px-3.5 py-1.5 rounded-full glass text-xs hover:border-brand-500/40 transition-colors" data-query="ong">🌱 ONG</button>
+                <button class="search-chip px-3.5 py-1.5 rounded-full glass text-xs hover:border-brand-500/40 transition-colors" data-query="agriculture">☕ Agriculture</button>
+            </div>
+
+            {# Filtres #}
+            <div class="space-y-4">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-layer-group text-brand-400 text-sm"></i>
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Type d'organisation</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 no-scrollbar" id="type-filters">
+                        {% for filter in filter_types %}
+                        <button class="filter-chip {% if loop.first %}active{% endif %} px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5"
+                                data-filter="type" data-value="{{ filter.value }}">
+                            {% if filter.icon %}<i class="fas {{ filter.icon }} text-[10px]"></i>{% endif %}
+                            {{ filter.label }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-map-marker-alt text-brand-400 text-sm"></i>
+                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Localisation</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 no-scrollbar" id="location-filters">
+                            <button class="filter-chip active px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="">Toutes</button>
+                            <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="Bujumbura">Bujumbura</button>
+                            <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="Gitega">Gitega</button>
+                            <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="Ngozi">Ngozi</button>
+                            <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="Bururi">Bururi</button>
+                            <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="Ruyigi">Ruyigi</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-th-large text-brand-400 text-sm"></i>
+                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Secteur</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 no-scrollbar" id="sector-filters">
+                            <button class="filter-chip active px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="">Tous</button>
+                            <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="tech">💻 Technologie</button>
+                            <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="agri">🌾 Agriculture</button>
+                            <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="finance">💳 Finance</button>
+                            <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="sante">🏥 Santé</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Loader #}
+            <div class="loader items-center justify-center py-8 glass rounded-2xl mb-5">
+                <div class="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                <span class="ml-3 text-sm text-gray-400">Recherche en cours…</span>
+            </div>
+
+            {# Résultats dynamiques (Injectés par AJAX) #}
+            <div id="search-results" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"></div>
+            
+        </div>
+    </div>
+</section>
+
+<div class="section-divider max-w-7xl mx-auto"></div>
+
+{# ══════════ ENTREPRISES (Initiales, masquées si recherche active) ══════════ #}
+<section id="companies" class="py-20 lg:py-28 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-6">
+            <div class="max-w-2xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                    <i class="fas fa-building text-brand-400 text-xs"></i>
+                    <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Entreprises à découvrir</span>
+                </div>
+                <h2 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-4">
+                    Profils <span class="gradient-text">premium</span>
+                </h2>
+                <p class="text-lg text-gray-400">Chaque entreprise mérite une présence professionnelle digne de ce nom.</p>
+            </div>
+            <a href="{{ url_for('public.decouvrir') }}" class="btn-ghost px-6 py-3 rounded-xl font-semibold flex items-center gap-2 self-start">
+                Voir toutes
+                <i class="fas fa-arrow-right text-sm"></i>
+            </a>
+        </div>
+
+        {% if orgs_list|length > 0 %}
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for org in orgs_list[:9] %}
+                {{ org_card(org, loop.index0) }}
+            {% endfor %}
+        </div>
+
+        {# Pagination #}
+        {% if pag and pag.pages > 1 %}
+        <nav class="mt-12 flex items-center justify-center gap-2">
+            {% if pag.has_prev %}
+            <a href="{{ url_for('public.decouvrir', page=pag.prev_num) }}" class="pagination-btn px-4 py-2 rounded-lg glass text-sm font-medium flex items-center gap-2">
+                <i class="fas fa-chevron-left text-xs"></i> Précédent
+            </a>
+            {% endif %}
+
+            {% for page_num in pag.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                    {% if page_num == pag.page %}
+                    <span class="pagination-btn active px-4 py-2 rounded-lg text-sm font-bold">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('public.decouvrir', page=page_num) }}" class="pagination-btn px-4 py-2 rounded-lg glass text-sm font-medium">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                <span class="px-2 text-gray-600">…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if pag.has_next %}
+            <a href="{{ url_for('public.decouvrir', page=pag.next_num) }}" class="pagination-btn px-4 py-2 rounded-lg glass text-sm font-medium flex items-center gap-2">
+                Suivant <i class="fas fa-chevron-right text-xs"></i>
+            </a>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="reveal glass rounded-3xl p-12 text-center">
+            <div class="w-20 h-20 rounded-2xl bg-brand-500/10 flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-building text-3xl text-brand-400"></i>
+            </div>
+            <h3 class="font-display text-xl font-bold mb-2">Aucune entreprise pour le moment</h3>
+            <p class="text-gray-400 mb-6 max-w-md mx-auto">Soyez la première organisation à rejoindre l'écosystème TURIHO.</p>
+            <a href="{{ url_for('auth.demande_inscription') }}" class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white">
+                <i class="fas fa-plus"></i> Inscrire mon organisation
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+
+
+{# ══════════ CARTE INTERACTIVE (Identique) ══════════ #}
+<section id="map-section" class="py-20 lg:py-28 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal text-center mb-12 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                <i class="fas fa-map-marked-alt text-brand-400 text-xs"></i>
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Explorer par région</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                L'écosystème <span class="gradient-text">géolocalisé</span>
+            </h2>
+            <p class="text-lg text-gray-400">Cliquez sur une province pour découvrir les entreprises locales.</p>
+        </div>
+
+        <div class="reveal grid lg:grid-cols-3 gap-6">
+            {# Carte #}
+            <div class="lg:col-span-2 glass rounded-3xl overflow-hidden relative" style="aspect-ratio: 4/3;">
+                <div class="absolute inset-0 bg-gradient-to-br from-ink-800 via-ink-850 to-ink-900">
+                    <svg viewBox="0 0 1000 750" class="w-full h-full opacity-20" preserveAspectRatio="xMidYMid slice">
+                        <defs>
+                            <pattern id="mapGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(16,185,129,0.3)" stroke-width="0.5"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#mapGrid)"/>
+                    </svg>
+                </div>
+
+                {# Burundi outline #}
+                <svg viewBox="0 0 1000 750" class="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <linearGradient id="burundiFill" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.15"/>
+                            <stop offset="100%" stop-color="#059669" stop-opacity="0.05"/>
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                    </defs>
+                    <path d="M 420 180 L 480 160 L 540 170 L 590 200 L 620 250 L 630 310 L 610 370 L 570 420 L 520 450 L 460 460 L 410 440 L 380 400 L 370 340 L 380 280 L 400 230 Z"
+                          fill="url(#burundiFill)" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.5" filter="url(#glow)"/>
+                </svg>
+
+                {# Province dots dynamiques #}
+                {% set provinces_data = [
+                    ('Bujumbura', 40, 55, 'Capitale économique'),
+                    ('Gitega', 55, 48, 'Capitale politique'),
+                    ('Ngozi', 50, 32, 'Pôle du nord'),
+                    ('Rutana', 58, 65, 'Centre-est'),
+                    ('Ruyigi', 65, 42, 'Province de l\'est'),
+                    ('Bururi', 45, 72, 'Province du sud'),
+                    ('Kayanza', 40, 28, 'Région du café'),
+                    ('Bubanza', 35, 50, 'Nord-ouest')
+                ] %}
+
+                {% for name, x, y, desc in provinces_data %}
+                <div class="map-dot text-brand-400" style="top: {{ y }}%; left: {{ x }}%;"
+                     data-province="{{ name }}" data-count="{{ province_counts[name]|default(0) if province_counts is defined else 0 }}">
+                    <div class="map-tooltip glass rounded-lg px-3 py-2">
+                        <div class="text-sm font-semibold">{{ name }}</div>
+                        <div class="text-xs text-brand-400">{{ province_counts[name]|default(0) if province_counts is defined else 0 }} entreprises</div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {# Legend #}
+                <div class="absolute bottom-4 right-4 glass rounded-xl p-3 hidden sm:block">
+                    <div class="flex items-center gap-4 text-xs">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-brand-400 shadow-lg shadow-brand-400/50"></div>
+                            <span class="text-gray-400">Province</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-gold-400 shadow-lg shadow-gold-400/50"></div>
+                            <span class="text-gray-400">Sélectionnée</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Province info panel #}
+            <div id="province-panel" class="glass rounded-3xl p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-map-marker-alt text-brand-400"></i>
+                    <span class="text-xs text-gray-500 uppercase tracking-wider">Province sélectionnée</span>
+                </div>
+                <h3 id="province-name" class="font-display text-3xl font-bold mb-2">Bujumbura</h3>
+                <p id="province-desc" class="text-sm text-gray-400 mb-6">Capitale économique du Burundi</p>
+
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div class="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                        <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Entreprises</div>
+                        <div id="province-count" class="font-display text-2xl font-bold gradient-text">0</div>
+                    </div>
+                    <div class="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                        <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Secteurs</div>
+                        <div id="province-sectors" class="font-display text-2xl font-bold gradient-text">0</div>
+                    </div>
+                </div>
+
+                <a href="#" id="province-link" class="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2">
+                    Voir toutes les entreprises
+                    <i class="fas fa-arrow-right text-xs"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+{# ══════════ SECTEURS, OPPORTUNITÉS, IA, CTA (Identiques à votre version) ══════════ #}
+{# ... Copiez-collez ici le reste de votre template original (Secteurs, Opportunités, IA Assistant, CTA Final) ... #}
+
+
+{% endblock %}
+
+
+{# ══════════════════════════════════════════
+   SCRIPTS
+══════════════════════════════════════════ #}
+{% block extra_js %}
+<script src="{{ get_url('js/search.js') }}"></script>
+<script>
+/* ============================================
+   THREE.JS - 3D NETWORK HERO (Identique)
+   ============================================ */
+(function() {
+    const canvas = document.getElementById('discover-canvas');
+    if (!canvas) return;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const shape = new THREE.Shape();
+    const pts = [
+        [0, 2.2], [0.8, 2.6], [1.8, 2.5], [2.6, 2.1], [3.2, 1.5],
+        [3.5, 0.8], [3.4, 0], [3.0, -0.7], [2.4, -1.3], [1.7, -1.9],
+        [1.0, -2.4], [0.3, -2.8], [-0.4, -2.5], [-1.1, -2.0], [-1.7, -1.3],
+        [-2.2, -0.5], [-2.4, 0.3], [-2.2, 1.0], [-1.7, 1.6], [-1.0, 2.0], [-0.4, 2.2]
+    ];
+    shape.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], pts[i][1]);
+    shape.closePath();
+
+    const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.25, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.04, bevelSegments: 3 });
+    const material = new THREE.MeshPhongMaterial({ color: 0x10b981, emissive: 0x047857, emissiveIntensity: 0.4, shininess: 80, transparent: true, opacity: 0.75 });
+    const map = new THREE.Mesh(geometry, material);
+    map.position.set(0, 0, -2);
+    map.scale.set(1.2, 1.2, 1.2);
+    scene.add(map);
+
+    const edges = new THREE.EdgesGeometry(geometry);
+    const wireframe = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.6 }));
+    wireframe.position.copy(map.position);
+    wireframe.scale.copy(map.scale);
+    scene.add(wireframe);
+
+    const cities = [{ x: 0.5, y: 0.5 }, { x: 1.5, y: 0 }, { x: 1, y: 1.5 }, { x: 0, y: -1 }, { x: 2, y: 1 }, { x: 1, y: -1.5 }, { x: -1, y: 0.5 }];
+    const cityGeo = new THREE.SphereGeometry(0.08, 16, 16);
+    const cityMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    const cityMeshes = cities.map(c => {
+        const m = new THREE.Mesh(cityGeo, cityMat);
+        m.position.set(c.x * 1.2, c.y * 1.2, 0.5);
+        scene.add(m);
+        return m;
+    });
+
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.35 });
+    for (let i = 0; i < cities.length; i++) {
+        for (let j = i + 1; j < cities.length; j++) {
+            if (Math.random() > 0.5) continue;
+            const geo = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(cities[i].x * 1.2, cities[i].y * 1.2, 0.5),
+                new THREE.Vector3(cities[j].x * 1.2, cities[j].y * 1.2, 0.5)
+            ]);
+            scene.add(new THREE.Line(geo, lineMat));
+        }
+    }
+
+    const pGeo = new THREE.BufferGeometry();
+    const pCount = 400;
+    const pPos = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount * 3; i++) pPos[i] = (Math.random() - 0.5) * 14;
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ size: 0.025, color: 0x10b981, transparent: true, opacity: 0.5 })));
+
+    scene.add(new THREE.AmbientLight(0x404040, 2));
+    const pl1 = new THREE.PointLight(0x10b981, 2, 100); pl1.position.set(5, 5, 5); scene.add(pl1);
+    const pl2 = new THREE.PointLight(0xfbbf24, 1, 100); pl2.position.set(-5, -5, 5); scene.add(pl2);
+
+    camera.position.z = 6;
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', e => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+        map.rotation.y += 0.003;
+        wireframe.rotation.y = map.rotation.y;
+        map.rotation.x += (mouseY * 0.2 - map.rotation.x) * 0.05;
+        map.rotation.z += (mouseX * 0.1 - map.rotation.z) * 0.05;
+        wireframe.rotation.x = map.rotation.x;
+        wireframe.rotation.z = map.rotation.z;
+        cityMeshes.forEach((m, i) => m.scale.setScalar(1 + Math.sin(Date.now() * 0.003 + i) * 0.3));
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+})();
+
+/* ============================================
+   GSAP ANIMATIONS (Identique)
+   ============================================ */
+if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+
+    document.querySelectorAll('.reveal').forEach((el, i) => {
+        gsap.fromTo(el,
+            { opacity: 0, y: 40 },
+            {
+                opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+                scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' },
+                delay: (i % 4) * 0.08
+            }
+        );
+    });
+
+    document.querySelectorAll('.stat-number').forEach(stat => {
+        const target = parseInt(stat.dataset.target);
+        if (isNaN(target) || target === 0) { stat.innerText = '0'; return; }
+        gsap.fromTo(stat,
+            { innerText: 0 },
+            {
+                innerText: target, duration: 2, ease: 'power2.out',
+                snap: { innerText: 1 },
+                scrollTrigger: { trigger: stat, start: 'top 85%' },
+                onUpdate: function() {
+                    const val = Math.round(this.targets()[0].innerText);
+                    stat.innerText = val.toLocaleString('fr-FR');
+                }
+            }
+        );
+    });
+}
+
+/* ============================================
+   🔥 AJAX SEARCH & FILTERS (OPTIMISÉ)
+   ============================================ */
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('search-btn');
+const searchResults = document.getElementById('search-results');
+const companiesSection = document.getElementById('companies');
+const loader = document.querySelector('.loader');
+const ajaxUrl = document.querySelector('.search-box')?.dataset.ajaxUrl;
+
+let debounceTimer;
+let currentController = null; // Pour annuler les requêtes précédentes
+
+function getActiveFilter(filterName) {
+    const activeChip = document.querySelector(`.filter-chip[data-filter="${filterName}"].active`);
+    return activeChip ? activeChip.dataset.value : '';
+}
+
+function performSearch() {
+    const q = searchInput.value.trim();
+    const type = getActiveFilter('type');
+    const location = getActiveFilter('location');
+    const sector = getActiveFilter('sector');
+
+    const isSearching = q || type || location || sector;
+
+    // Si rien n'est recherché, on réaffiche la section initiale
+    if (!isSearching) {
+        searchResults.innerHTML = '';
+        if (companiesSection) companiesSection.style.display = 'block';
+        return;
+    }
+
+    // Annuler la requête précédente si elle existe
+    if (currentController) {
+        currentController.abort();
+    }
+    currentController = new AbortController();
+
+    // Masquer la section initiale et afficher le loader
+    if (companiesSection) companiesSection.style.display = 'none';
+    loader.classList.add('active');
+    searchResults.innerHTML = '';
+
+    const params = new URLSearchParams();
+    if (q) params.append('q', q);
+    if (type) params.append('type', type);
+    if (location) params.append('location', location);
+    if (sector) params.append('sector', sector);
+
+    fetch(`${ajaxUrl}?${params.toString()}`, { signal: currentController.signal })
+        .then(response => response.text())
+        .then(html => {
+            searchResults.innerHTML = html;
+            
+            // 🔥 FIX : Supprimer la classe "reveal" des cartes injectées dynamiquement
+            // Sinon elles restent en opacity: 0 à cause du CSS
+            searchResults.querySelectorAll('.reveal').forEach(el => {
+                el.classList.remove('reveal');
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            });
+
+            // Animation d'entrée fluide pour les nouvelles cartes
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(searchResults.children, 
+                    { opacity: 0, y: 30 }, 
+                    { 
+                        opacity: 1, 
+                        y: 0, 
+                        duration: 0.6, 
+                        stagger: 0.08, 
+                        ease: 'power3.out' 
+                    }
+                );
+            }
+        })
+        .catch(error => {
+            if (error.name === 'AbortError') return;
+            console.error('Erreur AJAX:', error);
+            searchResults.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">Erreur lors de la recherche.</div>';
+        })
+        .finally(() => {
+            loader.classList.remove('active');
+            currentController = null;
+        });
+}
+
+// 🔥 DEBOUNCE UNIVERSEL (300ms)
+function debouncedSearch() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(performSearch, 300);
+}
+
+// Input de recherche avec debounce
+searchInput.addEventListener('input', debouncedSearch);
+
+// Bouton Rechercher (appel immédiat)
+searchBtn.addEventListener('click', performSearch);
+
+// Chips de suggestions populaires avec debounce
+document.querySelectorAll('.search-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        searchInput.value = chip.dataset.query;
+        debouncedSearch(); // ← debounce au lieu de performSearch()
+    });
+});
+
+/* ============================================
+   FILTER CHIPS (avec DEBOUNCE)
+   ============================================ */
+document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        const filterType = chip.dataset.filter;
+        const parent = chip.parentElement;
+        parent.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        
+        // 🔥 Déclencher la recherche avec DEBOUNCE
+        debouncedSearch();
+    });
+});
+
+/* ============================================
+   MAP INTERACTION (avec DEBOUNCE)
+   ============================================ */
+document.querySelectorAll('.map-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+        document.querySelectorAll('.map-dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+
+        const province = dot.dataset.province;
+        const count = dot.dataset.count;
+
+        document.getElementById('province-name').textContent = province;
+        document.getElementById('province-count').textContent = count;
+        
+        searchInput.value = province;
+        debouncedSearch(); // ← debounce
+        
+        document.getElementById('search-section').scrollIntoView({ behavior: 'smooth' });
+
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo('#province-panel', { opacity: 0.5, y: 10 }, { opacity: 1, y: 0, duration: 0.4 });
+        }
+    });
+});
+
+/* ============================================
+   AI ASSISTANT (inchangé)
+   ============================================ */
+const aiChat = document.getElementById('ai-chat');
+const aiInput = document.getElementById('ai-input');
+const aiSend = document.getElementById('ai-send');
+
+function addAIMessage(content, isUser = false) {
+    const msg = document.createElement('div');
+    if (isUser) {
+        msg.className = 'flex justify-end';
+        msg.innerHTML = `<div class="bg-brand-500/20 border border-brand-500/30 rounded-2xl rounded-tr-sm p-4 max-w-[85%]"><p class="text-sm text-gray-200">${content}</p></div>`;
+    } else {
+        msg.className = 'ai-bubble rounded-2xl rounded-tl-sm p-4 max-w-[85%]';
+        msg.innerHTML = `<div class="flex items-start gap-3"><div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-gold-500 flex items-center justify-center flex-shrink-0"><i class="fas fa-robot text-white text-xs"></i></div><div class="flex-1"><div class="text-xs text-brand-400 font-semibold mb-1">TURIHO AI</div>${content}</div></div>`;
+    }
+    aiChat.appendChild(msg);
+    aiChat.scrollTop = aiChat.scrollHeight;
+}
+
+function handleAI() {
+    const query = aiInput.value.trim();
+    if (!query) return;
+    addAIMessage(query, true);
+    aiInput.value = '';
+
+    setTimeout(() => {
+        searchInput.value = query;
+        performSearch(); // Appel immédiat pour l'IA
+        document.getElementById('search-section').scrollIntoView({ behavior: 'smooth' });
+        addAIMessage(`<p class="text-sm text-gray-200 leading-relaxed">J'ai lancé la recherche pour "<strong>${query}</strong>". Les résultats s'affichent ci-dessus !</p>`);
+    }, 800);
+}
+
+aiSend.addEventListener('click', handleAI);
+aiInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleAI(); });
+
+document.querySelectorAll('.ai-suggestion').forEach(btn => {
+    btn.addEventListener('click', () => {
+        aiInput.value = btn.dataset.query;
+        handleAI();
+    });
+});
+
+/* ============================================
+   CTRL+K SHORTCUT (Identique)
+   ============================================ */
+document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const input = document.getElementById('search-input');
+        if (input) {
+            input.focus();
+            document.getElementById('search-section').scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+});
+</script>
+{% endblock %}

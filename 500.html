@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Erreur serveur — TURIHO{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .error-bg {
+        position: absolute;
+        inset: 0;
+        background: 
+            radial-gradient(600px circle at 30% 30%, rgba(239, 68, 68, 0.06), transparent 50%),
+            radial-gradient(500px circle at 70% 70%, rgba(16, 185, 129, 0.04), transparent 50%);
+        pointer-events: none;
+    }
+    
+    .error-content {
+        max-width: 560px;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .error-icon {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 2rem;
+        border-radius: 24px;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(16, 185, 129, 0.08));
+        border: 1px solid rgba(239, 68, 68, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #f87171;
+        position: relative;
+    }
+    
+    .error-icon::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), transparent);
+        opacity: 0;
+        animation: pulse-ring 3s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-ring {
+        0%, 100% { opacity: 0; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.05); }
+    }
+    
+    .error-code {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: clamp(5rem, 15vw, 8rem);
+        font-weight: 800;
+        line-height: 1;
+        background: linear-gradient(135deg, #f87171 0%, #34d399 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        letter-spacing: -0.02em;
+    }
+    
+    .error-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.75rem;
+    }
+    
+    .error-message {
+        font-size: 1rem;
+        color: #94a3b8;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .error-status {
+        background: rgba(16, 185, 129, 0.05);
+        border: 1px solid rgba(16, 185, 129, 0.15);
+        border-radius: 14px;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-align: left;
+    }
+    
+    .error-status-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(16, 185, 129, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #34d399;
+        flex-shrink: 0;
+    }
+    
+    .error-status-content {
+        flex: 1;
+    }
+    
+    .error-status-title {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #34d399;
+        margin-bottom: 0.25rem;
+    }
+    
+    .error-status-text {
+        font-size: 0.8125rem;
+        color: #94a3b8;
+        line-height: 1.5;
+    }
+    
+    .error-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+    
+    .error-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+    }
+    
+    .error-btn.primary {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 4px 12px -4px rgba(16, 185, 129, 0.4);
+    }
+    
+    .error-btn.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.5);
+    }
+    
+    .error-btn.ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+    
+    .error-btn.ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .error-help {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        font-size: 0.8125rem;
+        color: #64748b;
+    }
+    
+    .error-help a {
+        color: #34d399;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    
+    .error-help a:hover {
+        color: #10b981;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-bg"></div>
+    
+    <div class="error-content">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <div class="error-code">500</div>
+        
+        <h1 class="error-title">Erreur interne</h1>
+        
+        <p class="error-message">
+            Une erreur inattendue s'est produite sur notre serveur. 
+            Nos équipes ont été informées et travaillent à résoudre le problème.
+        </p>
+        
+        <div class="error-status">
+            <div class="error-status-icon">
+                <i class="fas fa-wrench"></i>
+            </div>
+            <div class="error-status-content">
+                <div class="error-status-title">Incident signalé</div>
+                <div class="error-status-text">
+                    Notre équipe technique a été notifiée automatiquement. 
+                    Nous vous prions de nous excuser pour la gêne occasionnée.
+                </div>
+            </div>
+        </div>
+        
+        <div class="error-actions">
+            <a href="{{ url_for('public.index') }}" class="error-btn primary">
+                <i class="fas fa-home"></i>
+                Retour à l'accueil
+            </a>
+            <button onclick="location.reload()" class="error-btn ghost">
+                <i class="fas fa-redo"></i>
+                Réessayer
+            </button>
+        </div>
+        
+        <div class="error-help">
+            <p>
+                Le problème persiste ? 
+                <a href="mailto:info@turiho.org">Contactez notre support</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animation d'entrée
+if (typeof gsap !== 'undefined') {
+    gsap.from('.error-icon', {
+        scale: 0,
+        rotation: -90,
+        duration: 0.8,
+        ease: 'back.out(1.7)'
+    });
+    
+    gsap.from('.error-code', {
+        y: 30,
+        opacity: 0,
+        duration: 0.6,
+        delay: 0.3,
+        ease: 'power3.out'
+    });
+    
+    gsap.from('.error-title, .error-message', {
+        y: 20,
+        opacity: 0,
+        duration: 0.5,
+        delay: 0.5,
+        stagger: 0.1,
+        ease: 'power3.out'
+    });
+    
+    gsap.from('.error-status', {
+        y: 15,
+        opacity: 0,
+        duration: 0.5,
+        delay: 0.7,
+        ease: 'power3.out'
+    });
+    
+    gsap.from('.error-btn', {
+        y: 15,
+        opacity: 0,
+        duration: 0.5,
+        delay: 0.9,
+        stagger: 0.1,
+        ease: 'power3.out'
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier — {{ membre.prenom|e }} {{ membre.nom|e }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container { max-width: 640px; margin: 0 auto; padding: 2rem 1rem; }
+    .form-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .form-header-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        display: flex; align-items: center; justify-content: center;
+        color: #34d399; font-size: 1.25rem;
+    }
+    .form-card {
+        background: rgba(20, 25, 33, 0.55);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 2rem;
+    }
+    .form-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .form-section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.9375rem; font-weight: 700;
+        margin-bottom: 1.25rem;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .form-section-title i { color: #34d399; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-size: 0.75rem; font-weight: 600; color: #94a3b8;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .form-label .required { color: #ef4444; font-size: 0.875rem; }
+    .form-label .optional {
+        color: #64748b; text-transform: none;
+        letter-spacing: normal; font-weight: 400;
+    }
+    .form-input, .form-select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        color: white; font-size: 0.875rem;
+        transition: all 0.2s; font-family: inherit;
+    }
+    .form-input:focus, .form-select:focus {
+        outline: none;
+        border-color: rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.03);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+    }
+    .form-select option { background: #141921; color: white; }
+    .form-hint { font-size: 0.7rem; color: #64748b; margin-top: 0.375rem; }
+
+    /* Photo upload */
+    .photo-upload-wrapper { display: flex; align-items: center; gap: 1.5rem; }
+    .photo-preview {
+        width: 80px; height: 80px; border-radius: 16px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+        border: 2px dashed rgba(255, 255, 255, 0.1);
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden; flex-shrink: 0;
+        transition: all 0.3s;
+    }
+    .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-preview.has-image { border-style: solid; border-color: rgba(16, 185, 129, 0.3); }
+
+    .form-actions {
+        display: flex; justify-content: flex-end; gap: 0.75rem;
+        margin-top: 2rem; padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .btn-form {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        padding: 0.75rem 1.5rem; border-radius: 12px;
+        font-size: 0.875rem; font-weight: 600;
+        transition: all 0.2s; border: none; cursor: pointer;
+    }
+    .btn-form.primary {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 4px 12px -4px rgba(16, 185, 129, 0.4);
+    }
+    .btn-form.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.5);
+    }
+    .btn-form.ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+    .btn-form.ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    .btn-form.sm { padding: 0.5rem 1rem; font-size: 0.8125rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn-form ghost" style="padding: 0.5rem;">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="form-header-icon">
+            <i class="fas fa-user-edit"></i>
+        </div>
+        <div>
+            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 800; margin: 0;">
+                Modifier le membre
+            </h1>
+            <p style="font-size: 0.8125rem; color: #64748b; margin: 0;">
+                {{ membre.prenom|e }} {{ membre.nom|e }}
+            </p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('dashboard.modifier_membre', id=membre.id) }}" enctype="multipart/form-data" class="form-card">
+        {% if csrf_token is defined %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% endif %}
+
+        {# ═══ Identité ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-id-card"></i>
+                Identité
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="nom">
+                        Nom <span class="required">*</span>
+                    </label>
+                    <input type="text" id="nom" name="nom" class="form-input"
+                           value="{{ membre.nom|e }}" required maxlength="100"
+                           placeholder="Ex: Ndayisaba">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="prenom">
+                        Prénom <span class="optional">(optionnel)</span>
+                    </label>
+                    <input type="text" id="prenom" name="prenom" class="form-input"
+                           value="{{ membre.prenom|e }}" maxlength="100"
+                           placeholder="Ex: Jean">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="role">
+                    Rôle <span class="optional">(optionnel)</span>
+                </label>
+                <select id="role" name="role" class="form-select">
+                    <option value="">— Aucun rôle —</option>
+                    {% set roles = [
+                        ('Président', 'Président'),
+                        ('Vice-Président', 'Vice-Président'),
+                        ('Secrétaire', 'Secrétaire'),
+                        ('Trésorier', 'Trésorier'),
+                        ('Bénévole', 'Bénévole'),
+                        ('Membre', 'Membre')
+                    ] %}
+                    {% for value, display in roles %}
+                    <option value="{{ value }}" {% if membre.role == value %}selected{% endif %}>
+                        {{ display }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        {# ═══ Date & Photo ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-calendar-plus"></i>
+                Informations complémentaires
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="date_adhesion">
+                    Date d'adhésion <span class="optional">(optionnel)</span>
+                </label>
+                <input type="date" id="date_adhesion" name="date_adhesion" class="form-input"
+                       value="{{ membre.date_adhesion.strftime('%Y-%m-%d') if membre.date_adhesion else '' }}"
+                       max="{{ now.strftime('%Y-%m-%d') if now is defined else '' }}">
+                <div class="form-hint">La date ne peut pas être dans le futur</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Photo <span class="optional">(optionnel)</span>
+                </label>
+                <div class="photo-upload-wrapper">
+                    <div class="photo-preview {% if membre.photo %}has-image{% endif %}" id="photo-preview">
+                        {% if membre.photo %}
+                            <img src="{{ get_url(membre.photo) }}" alt="Photo actuelle">
+                        {% else %}
+                            <i class="fas fa-user" style="font-size: 1.5rem; color: #34d399;"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="photo" class="btn-form ghost sm" style="cursor: pointer;">
+                            <i class="fas fa-camera"></i>
+                            {% if membre.photo %}Changer la photo{% else %}Ajouter une photo{% endif %}
+                        </label>
+                        <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;">
+                        <div class="form-hint">JPG, PNG, GIF, WebP — max 5 Mo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ═══ Actions ═══ #}
+        <div class="form-actions">
+            <a href="{{ url_for('dashboard.dashboard') }}" class="btn-form ghost">
+                Annuler
+            </a>
+            <button type="submit" class="btn-form primary">
+                <i class="fas fa-check"></i>
+                Enregistrer les modifications
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Preview photo
+document.getElementById('photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('photo-preview');
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
+            preview.classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

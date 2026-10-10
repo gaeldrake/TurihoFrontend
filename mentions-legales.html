@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Mentions Légales — TURIHO{% endblock %}
+{% block meta_description %}Mentions légales du site TURIHO, plateforme de l'écosystème entrepreneurial du Burundi.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legal-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 3rem;
+        align-items: start;
+    }
+    @media (max-width: 1024px) {
+        .legal-layout { grid-template-columns: 1fr; }
+        .legal-sidebar { position: static !important; }
+    }
+
+    .legal-sidebar {
+        position: sticky; top: 100px;
+    }
+    .legal-nav-item {
+        display: block;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #94a3b8;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+    }
+    .legal-nav-item:hover {
+        color: white;
+        background: rgba(255,255,255,0.03);
+    }
+    .legal-nav-item.active {
+        color: #34d399;
+        background: rgba(16, 185, 129, 0.08);
+        border-left-color: #10b981;
+    }
+
+    .legal-section {
+        padding: 2.5rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        scroll-margin-top: 100px;
+    }
+    .legal-section:last-child { border-bottom: none; }
+
+    .legal-title {
+        display: flex; align-items: center; gap: 0.75rem;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.75rem; font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    .legal-title-icon {
+        width: 40px; height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        display: flex; align-items: center; justify-content: center;
+        color: #34d399;
+    }
+
+    .legal-content p {
+        color: #cbd5e1;
+        font-size: 15px;
+        line-height: 1.8;
+        margin-bottom: 1rem;
+    }
+    .legal-content strong { color: white; }
+
+    .info-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin: 1rem 0;
+    }
+    .info-card-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+    .info-card-value {
+        font-weight: 600;
+        color: white;
+    }
+
+    .reveal { opacity: 0; transform: translateY(30px); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ============================================================
+   HERO
+   ============================================================ #}
+<section class="relative pt-32 pb-12 overflow-hidden">
+    <div class="absolute inset-0" style="background: radial-gradient(600px circle at 20% 30%, rgba(16, 185, 129, 0.08), transparent 50%);"></div>
+    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex items-center gap-2 text-xs text-gray-500 mb-6">
+            <a href="{{ url_for('public.index') }}" class="hover:text-white transition-colors">Accueil</a>
+            <i class="fas fa-chevron-right text-[8px]"></i>
+            <span class="text-brand-400">Mentions légales</span>
+        </nav>
+
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+            <i class="fas fa-gavel text-brand-400 text-xs"></i>
+            <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Informations légales</span>
+        </div>
+
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-4">
+            Mentions <span class="gradient-text">Légales</span>
+        </h1>
+        <p class="text-lg text-gray-400 max-w-2xl">
+            Informations relatives à l'éditeur, l'hébergement et la propriété intellectuelle du site TURIHO.
+        </p>
+    </div>
+</section>
+
+{# ============================================================
+   CONTENT
+   ============================================================ #}
+<section class="pb-24">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="legal-layout">
+
+            {# SIDEBAR #}
+            <aside class="legal-sidebar hidden lg:block">
+                <div class="glass rounded-2xl p-5">
+                    <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-4 px-3">Sommaire</div>
+                    <nav class="space-y-1">
+                        <a href="#editeur" class="legal-nav-item active" data-section="editeur">
+                            <i class="fas fa-building text-xs mr-2 text-brand-400"></i>Éditeur du site
+                        </a>
+                        <a href="#hebergement" class="legal-nav-item" data-section="hebergement">
+                            <i class="fas fa-server text-xs mr-2 text-brand-400"></i>Hébergement
+                        </a>
+                        <a href="#propriete" class="legal-nav-item" data-section="propriete">
+                            <i class="fas fa-copyright text-xs mr-2 text-brand-400"></i>Propriété intellectuelle
+                        </a>
+                        <a href="#cookies" class="legal-nav-item" data-section="cookies">
+                            <i class="fas fa-cookie-bite text-xs mr-2 text-brand-400"></i>Cookies
+                        </a>
+                    </nav>
+                </div>
+            </aside>
+
+            {# MAIN CONTENT #}
+            <div class="legal-content">
+
+                <div id="editeur" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-building"></i></div>
+                        Éditeur du site
+                    </div>
+                    <p>Le site <strong>TURIHO</strong> est édité par l'organisation TURIHO, plateforme dédiée à la mise en réseau de l'écosystème entrepreneurial du Burundi.</p>
+
+                    <div class="grid sm:grid-cols-2 gap-3 mt-4">
+                        <div class="info-card">
+                            <div class="info-card-label">Responsable de la publication</div>
+                            <div class="info-card-value">Gaël Ishimwe</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">Contact</div>
+                            <div class="info-card-value">
+                                <a href="mailto:gaelishimwe2007@gmail.com" class="text-brand-400 hover:text-brand-300 transition-colors">
+                                    gaelishimwe2007@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="hebergement" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-server"></i></div>
+                        Hébergement
+                    </div>
+                    <p>Ce site est hébergé par <strong>Vercel Inc.</strong>, fournisseur de solutions cloud de haute performance.</p>
+
+                    <div class="info-card">
+                        <div class="info-card-label">Adresse</div>
+                        <div class="info-card-value">340 S Lemon Ave #4133, Walnut, CA 91789, USA</div>
+                    </div>
+                </div>
+
+                <div id="propriete" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-copyright"></i></div>
+                        Propriété intellectuelle
+                    </div>
+                    <p>L'ensemble de ce site relève de la législation <strong>burundaise et internationale</strong> sur le droit d'auteur et la propriété intellectuelle.</p>
+                    <p>Tous les droits de reproduction sont réservés, y compris pour les documents téléchargeables et les représentations iconographiques et photographiques.</p>
+                    <p>Toute reproduction totale ou partielle, par quelque procédé que ce soit, sans l'autorisation préalable de TURIHO est strictement interdite et constituerait une contrefaçon sanctionnée par les articles L.335-2 et suivants du Code de la propriété intellectuelle.</p>
+                </div>
+
+                <div id="cookies" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-cookie-bite"></i></div>
+                        Utilisation de cookies
+                    </div>
+                    <p>Le site TURIHO peut être amené à vous demander l'acceptation des cookies pour des besoins de <strong>statistiques et d'affichage</strong>.</p>
+                    <p>Un cookie est une information déposée sur votre disque dur par le serveur du site que vous visitez. Il contient des données relatives à votre navigation qui ne permettent pas de vous identifier personnellement.</p>
+
+                    <div class="glass rounded-2xl p-5 mt-4">
+                        <h4 class="font-semibold mb-3 flex items-center gap-2">
+                            <i class="fas fa-info-circle text-brand-400 text-sm"></i>
+                            Types de cookies utilisés
+                        </h4>
+                        <ul class="space-y-2 text-sm text-gray-400">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-brand-400 text-xs mt-1"></i>
+                                <span><strong class="text-white">Cookies essentiels</strong> — nécessaires au fonctionnement du site</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-brand-400 text-xs mt-1"></i>
+                                <span><strong class="text-white">Cookies analytiques</strong> — mesure d'audience et performance</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-brand-400 text-xs mt-1"></i>
+                                <span><strong class="text-white">Cookies de préférence</strong> — personnalisation de l'expérience</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Active nav tracking
+const sections = document.querySelectorAll('.legal-section');
+const navItems = document.querySelectorAll('.legal-nav-item');
+
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            navItems.forEach(item => item.classList.remove('active'));
+            const active = document.querySelector(`.legal-nav-item[data-section="${entry.target.id}"]`);
+            if (active) active.classList.add('active');
+        }
+    });
+}, { rootMargin: '-100px 0px -60% 0px' });
+
+sections.forEach(section => observer.observe(section));
+
+// Smooth scroll
+navItems.forEach(item => {
+    item.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(item.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+});
+</script>
+{% endblock %}

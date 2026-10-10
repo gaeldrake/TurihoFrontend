@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier {{ programme.titre|truncate(30) }} | TURIHO{% endblock %}
+{% block meta_description %}Modifiez les détails de votre formation sur TURIHO.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .form-grid { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; }
+  @media (max-width: 1024px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .sidebar-sticky { position: static !important; }
+  }
+
+  .form-section { transition: all 0.3s; }
+  .form-section:hover { border-color: rgba(59, 130, 246, 0.15); }
+
+  .section-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 20px -8px rgba(59, 130, 246, 0.5);
+    flex-shrink: 0;
+  }
+
+  .input-premium {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+    color: white;
+    font-size: 14px;
+    transition: all 0.25s;
+    font-family: inherit;
+  }
+  .input-premium::placeholder { color: #64748b; }
+  .input-premium:focus {
+    outline: none;
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(59, 130, 246, 0.03);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+  }
+  textarea.input-premium { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+  .label-premium {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: #94a3b8; margin-bottom: 0.5rem;
+  }
+  .label-premium .required { color: #ef4444; font-size: 14px; }
+  .label-hint { font-size: 11px; color: #64748b; margin-top: 0.375rem; }
+
+  .input-with-suffix { position: relative; }
+  .input-suffix {
+    position: absolute; right: 1rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px; color: #64748b; font-weight: 600;
+    pointer-events: none;
+  }
+  .input-with-suffix .input-premium { padding-right: 4rem; }
+  input[type="date"].input-premium, input[type="number"].input-premium { color-scheme: dark; }
+
+  .field-group { display: grid; gap: 1.25rem; }
+  .field-row-2 { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 640px) { .field-row-2 { grid-template-columns: 1fr; } }
+
+  .btn-submit {
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.6);
+  }
+  .btn-submit::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform: translateX(-100%); transition: transform 0.6s;
+  }
+  .btn-submit:hover::before { transform: translateX(100%); }
+
+  .char-counter { font-size: 11px; color: #64748b; text-align: right; margin-top: 0.25rem; }
+  .char-counter.warning { color: #f59e0b; }
+  .char-counter.danger { color: #ef4444; }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 999px;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .status-published { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399; }
+  .status-draft { background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2); color: #fbbf24; }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up { animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+  .preview-card {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(6, 182, 212, 0.04));
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    border-radius: 16px;
+    padding: 1.25rem;
+  }
+
+  .tip-card {
+    padding: 1.25rem; border-radius: 16px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(6, 182, 212, 0.04));
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    position: relative; overflow: hidden;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="relative pt-28 pb-10 overflow-hidden">
+  <div class="absolute inset-0" style="background: radial-gradient(600px circle at 20% 30%, rgba(59, 130, 246, 0.08), transparent 50%);"></div>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="flex items-center gap-2 text-xs text-gray-500 mb-6">
+      <a href="{{ url_for('public.index') }}" class="hover:text-white transition-colors">Accueil</a>
+      <i class="fas fa-chevron-right text-[8px]"></i>
+      <a href="{{ url_for('opportunites.afficher_opportunites') }}" class="hover:text-white transition-colors">Opportunités</a>
+      <i class="fas fa-chevron-right text-[8px]"></i>
+      <span class="text-blue-400">Modifier</span>
+    </nav>
+
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-4">
+          <i class="fas fa-graduation-cap text-blue-400 text-[10px]"></i>
+          <span class="text-[11px] font-semibold text-blue-400 tracking-wider uppercase">Formation</span>
+        </div>
+        <h1 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-3">
+          Modifier la <span class="gradient-text">formation</span>
+        </h1>
+        <p class="text-gray-400 max-w-2xl">Mettez à jour les informations de votre programme de formation.</p>
+      </div>
+
+      <span class="status-badge {% if programme.is_published %}status-published{% else %}status-draft{% endif %}">
+        <i class="fas fa-{% if programme.is_published %}check-circle{% else %}edit{% endif %} text-[10px]"></i>
+        {% if programme.is_published %}Publiée{% else %}Brouillon{% endif %}
+      </span>
+    </div>
+  </div>
+</section>
+
+<section class="pb-24">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <form method="POST" action="{{ url_for('opportunites.edit_formation', id=programme.id) }}" class="form-grid">
+
+      <div class="space-y-6">
+
+        {# ─── APERÇU RAPIDE ─── #}
+        <div class="preview-card animate-slide-up">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
+              <i class="fas fa-graduation-cap text-white"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-[10px] text-blue-400 uppercase tracking-wider font-semibold">Aperçu actuel</div>
+              <div class="font-display font-bold truncate">{{ programme.titre }}</div>
+            </div>
+            <a href="{{ url_for('opportunites.detail_programme', id=programme.id) }}"
+               class="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1">
+              Voir <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
+          </div>
+          <div class="flex flex-wrap gap-3 text-xs text-gray-400 pt-3 border-t border-white/5">
+            {% if programme.lieu %}
+              <span><i class="fas fa-map-marker-alt text-blue-400 mr-1"></i>{{ programme.lieu }}</span>
+            {% endif %}
+            {% if programme.date_debut %}
+              <span><i class="fas fa-calendar text-blue-400 mr-1"></i>{{ programme.date_debut|format_date }}</span>
+            {% endif %}
+            {% if programme.prix %}
+              <span><i class="fas fa-tag text-gold-400 mr-1"></i>{{ programme.prix }} FBU</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {# ─── CONTENU ─── #}
+        <div class="form-section glass rounded-2xl p-6 lg:p-8 animate-slide-up">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="section-icon"><i class="fas fa-file-alt text-white"></i></div>
+            <div class="flex-1">
+              <h2 class="font-display text-xl font-bold mb-1">Contenu de la formation</h2>
+              <p class="text-sm text-gray-400">Titre, description et type de formation.</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div>
+              <label class="label-premium">
+                <i class="fas fa-heading text-blue-400 text-[10px]"></i>
+                Titre de la formation <span class="required">*</span>
+              </label>
+              <input type="text" name="titre" value="{{ programme.titre }}" required maxlength="150"
+                     class="input-premium" data-counter="titre-counter" data-max="150">
+              <div class="flex justify-between mt-1">
+                <div class="label-hint">Clair, précis et attractif.</div>
+                <div id="titre-counter" class="char-counter">{{ programme.titre|length }} / 150</div>
+              </div>
+            </div>
+
+            <div>
+              <label class="label-premium">
+                <i class="fas fa-align-left text-blue-400 text-[10px]"></i>
+                Description <span class="required">*</span>
+              </label>
+              <textarea name="description" required maxlength="2000" rows="8"
+                        class="input-premium" data-counter="desc-counter" data-max="2000">{{ programme.description }}</textarea>
+              <div class="flex justify-between mt-1">
+                <div class="label-hint">Programme, objectifs, public cible, prérequis.</div>
+                <div id="desc-counter" class="char-counter">{{ programme.description|length }} / 2000</div>
+              </div>
+            </div>
+
+            <div class="field-row-2">
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-tag text-blue-400 text-[10px]"></i>
+                  Type de formation
+                </label>
+                <select name="type" class="input-premium">
+                  <option value="">Sélectionner...</option>
+                  <option value="Atelier" {% if programme.type == 'Atelier' %}selected{% endif %}>Atelier</option>
+                  <option value="Séminaire" {% if programme.type == 'Séminaire' %}selected{% endif %}>Séminaire</option>
+                  <option value="Certification" {% if programme.type == 'Certification' %}selected{% endif %}>Certification</option>
+                  <option value="Cours en ligne" {% if programme.type == 'Cours en ligne' %}selected{% endif %}>Cours en ligne</option>
+                  <option value="Bootcamp" {% if programme.type == 'Bootcamp' %}selected{% endif %}>Bootcamp</option>
+                  <option value="Masterclass" {% if programme.type == 'Masterclass' %}selected{% endif %}>Masterclass</option>
+                </select>
+              </div>
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-map-marker-alt text-blue-400 text-[10px]"></i>
+                  Lieu
+                </label>
+                <input type="text" name="lieu" value="{{ programme.lieu }}" class="input-premium" placeholder="Bujumbura, En ligne...">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# ─── DATES & PRIX ─── #}
+        <div class="form-section glass rounded-2xl p-6 lg:p-8 animate-slide-up" style="animation-delay: 0.1s;">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="section-icon"><i class="fas fa-calendar-alt text-white"></i></div>
+            <div class="flex-1">
+              <h2 class="font-display text-xl font-bold mb-1">Planification</h2>
+              <p class="text-sm text-gray-400">Dates et tarifs de la formation.</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-row-2">
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-calendar-plus text-blue-400 text-[10px]"></i>
+                  Date de début
+                </label>
+                <input type="date" name="date_debut" value="{{ programme.date_debut.strftime('%Y-%m-%d') if programme.date_debut else '' }}" class="input-premium">
+              </div>
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-calendar-check text-blue-400 text-[10px]"></i>
+                  Date de fin
+                </label>
+                <input type="date" name="date_fin" value="{{ programme.date_fin.strftime('%Y-%m-%d') if programme.date_fin else '' }}" class="input-premium">
+              </div>
+            </div>
+
+            <div>
+              <label class="label-premium">
+                <i class="fas fa-tag text-gold-400 text-[10px]"></i>
+                Prix de la formation
+              </label>
+              <div class="input-with-suffix">
+                <input type="number" name="prix" value="{{ programme.prix }}" min="0" class="input-premium" placeholder="0">
+                <span class="input-suffix">FBU</span>
+              </div>
+              <div class="label-hint">Mettez 0 pour une formation gratuite.</div>
+            </div>
+          </div>
+        </div>
+
+        {# ─── ACTIONS ─── #}
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+          <a href="{{ url_for('opportunites.detail_programme', id=programme.id) }}"
+             class="btn-ghost px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 order-2 sm:order-1">
+            <i class="fas fa-arrow-left text-xs"></i> Retour
+          </a>
+
+          <div class="flex items-center gap-3 order-1 sm:order-2">
+            <button type="submit" name="action" value="draft"
+                    class="px-6 py-3 rounded-xl font-semibold text-sm border border-white/10 hover:bg-white/5 transition-colors">
+              <i class="fas fa-save mr-2 text-xs"></i> Brouillon
+            </button>
+            <button type="submit" class="btn-submit px-8 py-3 rounded-xl font-semibold text-white text-sm flex items-center gap-2">
+              <i class="fas fa-check text-xs"></i> Mettre à jour
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {# ══════════ SIDEBAR ══════════ #}
+      <aside>
+        <div class="sidebar-sticky space-y-5" style="position: sticky; top: 100px;">
+
+          <div class="glass rounded-2xl p-5">
+            <h3 class="font-display font-bold text-sm mb-4">Statistiques</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-eye text-blue-400 text-xs"></i>
+                  <span class="text-sm text-gray-300">Vues totales</span>
+                </div>
+                <span class="font-display font-bold gradient-text">{{ programme.views_count|default(0) }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-user-plus text-blue-400 text-xs"></i>
+                  <span class="text-sm text-gray-300">Inscriptions</span>
+                </div>
+                <span class="font-display font-bold gradient-text">{{ programme.applications_count|default(0) }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-calendar text-gold-400 text-xs"></i>
+                  <span class="text-sm text-gray-300">Créée le</span>
+                </div>
+                <span class="text-xs text-gray-400">{{ programme.created_at|format_date if programme.created_at else '—' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                <i class="fas fa-lightbulb text-white text-xs"></i>
+              </div>
+              <div class="font-semibold text-sm">Conseil</div>
+            </div>
+            <p class="text-xs text-gray-300 leading-relaxed">
+              Ajoutez un <span class="text-blue-400 font-semibold">programme détaillé</span> jour par jour pour augmenter les inscriptions de <span class="text-blue-400 font-semibold">+65%</span>.
+            </p>
+          </div>
+
+          <div class="glass rounded-2xl p-5">
+            <h3 class="font-display font-bold text-sm mb-3">Actions rapides</h3>
+            <div class="space-y-2">
+              <a href="{{ url_for('opportunites.detail_programme', id=programme.id) }}"
+                 class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/5 transition-colors text-sm">
+                <i class="fas fa-eye text-blue-400 text-xs"></i>
+                Voir la page publique
+              </a>
+              <button type="button" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/5 transition-colors text-sm w-full text-left">
+                <i class="fas fa-share-alt text-blue-400 text-xs"></i>
+                Partager
+              </button>
+              <button type="button" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-red-500/5 transition-colors text-sm w-full text-left text-red-400">
+                <i class="fas fa-trash text-xs"></i>
+                Supprimer
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+    </form>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('[data-counter]').forEach(input => {
+  const counterId = input.dataset.counter;
+  const max = parseInt(input.dataset.max);
+  const counter = document.getElementById(counterId);
+  if (!counter) return;
+  const update = () => {
+    const len = input.value.length;
+    counter.textContent = `${len} / ${max}`;
+    counter.classList.remove('warning', 'danger');
+    if (len > max * 0.9) counter.classList.add('danger');
+    else if (len > max * 0.75) counter.classList.add('warning');
+  };
+  input.addEventListener('input', update);
+});
+</script>
+{% endblock %}

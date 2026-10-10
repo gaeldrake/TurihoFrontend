@@ -1,0 +1,1056 @@
+{% extends "base.html" %}
+
+{% block title %}Opportunités — Formations, Financements, Projets | TURIHO{% endblock %}
+{% block meta_description %}Accédez à des formations, financements, partenariats et appels à projets au Burundi. La plateforme qui connecte entrepreneurs et investisseurs.{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --emerald-glow: rgba(16, 185, 129, 0.35); --gold-glow: rgba(251, 191, 36, 0.25); }
+
+  /* ===== HERO 3D ===== */
+  #opportunities-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+  .hero-glow::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(600px circle at 30% 20%, rgba(16, 185, 129, 0.15), transparent 50%),
+      radial-gradient(500px circle at 70% 60%, rgba(251, 191, 36, 0.08), transparent 50%);
+    pointer-events: none;
+  }
+
+  /* ===== FLOATING CARDS ===== */
+  @keyframes float-slow { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-14px) rotate(1deg); } }
+  @keyframes float-medium { 0%, 100% { transform: translateY(0) rotate(2deg); } 50% { transform: translateY(-10px) rotate(-1deg); } }
+  @keyframes float-fast { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+  .float-slow { animation: float-slow 7s ease-in-out infinite; }
+  .float-medium { animation: float-medium 6s ease-in-out infinite; }
+  .float-fast { animation: float-fast 5s ease-in-out infinite; }
+
+  /* ===== OPPORTUNITY CARD ===== */
+  .opp-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    position: relative;
+  }
+  .opp-card:hover {
+    transform: translateY(-6px) rotateX(1deg);
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 30px 60px -20px rgba(16, 185, 129, 0.25);
+  }
+  .opp-card::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+    background: linear-gradient(180deg, var(--accent-from, #10b981), var(--accent-to, #fbbf24));
+    border-radius: 3px 0 0 3px;
+    transform: scaleY(0); transform-origin: top;
+    transition: transform 0.3s;
+  }
+  .opp-card:hover::before { transform: scaleY(1); }
+
+  /* Color variants */
+  .opp-card[data-color="blue"]   { --accent-from: #3b82f6; --accent-to: #06b6d4; }
+  .opp-card[data-color="green"]  { --accent-from: #10b981; --accent-to: #34d399; }
+  .opp-card[data-color="purple"] { --accent-from: #8b5cf6; --accent-to: #ec4899; }
+  .opp-card[data-color="gold"]   { --accent-from: #f59e0b; --accent-to: #fbbf24; }
+  .opp-card[data-color="red"]    { --accent-from: #ef4444; --accent-to: #f97316; }
+
+  /* ===== BADGES ===== */
+  .badge-new {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    position: relative; overflow: hidden;
+  }
+  .badge-new::after {
+    content: ''; position: absolute; top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: badge-shimmer 2.5s infinite;
+  }
+  @keyframes badge-shimmer { 0% { left: -100%; } 100% { left: 100%; } }
+
+  .badge-urgent {
+    background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+    animation: badge-pulse 2s infinite;
+  }
+  @keyframes badge-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  }
+
+  .badge-popular {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+  /* ===== FILTERS ===== */
+  .filter-chip {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .filter-chip:hover { border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); }
+  .filter-chip.active {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #34d399;
+  }
+
+  /* ===== STAT CARD ===== */
+  .stat-card {
+    position: relative; overflow: hidden;
+    transition: all 0.3s;
+  }
+  .stat-card:hover { transform: translateY(-4px); border-color: rgba(16, 185, 129, 0.3); }
+  .stat-card::before {
+    content: ''; position: absolute; top: -50%; right: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.08), transparent 60%);
+    opacity: 0; transition: opacity 0.4s;
+  }
+  .stat-card:hover::before { opacity: 1; }
+
+  /* ===== CATEGORY NAV ===== */
+  .cat-nav-item {
+    position: relative; transition: all 0.3s;
+  }
+  .cat-nav-item::after {
+    content: ''; position: absolute; bottom: -1px; left: 50%;
+    width: 0; height: 2px;
+    background: linear-gradient(90deg, #10b981, #fbbf24);
+    transition: all 0.3s;
+    transform: translateX(-50%);
+  }
+  .cat-nav-item:hover::after, .cat-nav-item.active::after { width: 100%; }
+  .cat-nav-item.active { color: #34d399; }
+
+  /* ===== SEARCH ===== */
+  .search-premium {
+    background: rgba(20, 25, 33, 0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.3s;
+  }
+  .search-premium:focus-within {
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1), 0 20px 40px -10px rgba(0,0,0,0.5);
+  }
+
+  /* ===== CTA SECTION ===== */
+  .cta-immersive {
+    position: relative; overflow: hidden;
+    background:
+      radial-gradient(800px circle at 20% 30%, rgba(16, 185, 129, 0.15), transparent 50%),
+      radial-gradient(600px circle at 80% 70%, rgba(251, 191, 36, 0.1), transparent 50%),
+      linear-gradient(135deg, rgba(20, 25, 33, 0.8), rgba(10, 13, 18, 0.9));
+  }
+  .cta-immersive::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  }
+
+  /* ===== REVEAL ===== */
+  .reveal { opacity: 0; transform: translateY(40px); }
+
+  /* ===== SECTION DIVIDER ===== */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.3), transparent);
+  }
+
+  /* ===== COUNTDOWN ===== */
+  .countdown-ring {
+    background: conic-gradient(#10b981 var(--progress, 0%), rgba(255,255,255,0.08) 0);
+    border-radius: 50%;
+  }
+
+  /* ===== PAGINATION ===== */
+  .pagination-btn {
+    transition: all 0.2s;
+  }
+  .pagination-btn:hover:not(.active):not(:disabled) {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.4);
+  }
+  .pagination-btn.active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: transparent;
+    color: white;
+  }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 768px) {
+    .hero-floating { display: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ============================================================
+   VARIABLES GLOBALES
+   ============================================================ #}
+{% set user_logged_in = session.get('id') %}
+
+{# ============================================================
+   MACROS
+   ============================================================ #}
+
+{# ---------- Badge ---------- #}
+{% macro badge(text, icon, color) %}
+{% set color_map = {
+    'blue':   {'bg': 'bg-blue-500/10',   'border': 'border-blue-500/20',   'text': 'text-blue-400',   'icon': 'text-blue-400'},
+    'green':  {'bg': 'bg-brand-500/10',  'border': 'border-brand-500/20',  'text': 'text-brand-400',  'icon': 'text-brand-400'},
+    'purple': {'bg': 'bg-purple-500/10', 'border': 'border-purple-500/20', 'text': 'text-purple-400', 'icon': 'text-purple-400'},
+    'gold':   {'bg': 'bg-gold-500/10',   'border': 'border-gold-500/20',   'text': 'text-gold-400',   'icon': 'text-gold-400'},
+    'red':    {'bg': 'bg-red-500/10',    'border': 'border-red-500/20',    'text': 'text-red-400',    'icon': 'text-red-400'}
+} %}
+{% set c = color_map.get(color, color_map.blue) %}
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full {{ c.bg }} border {{ c.border }} {{ c.text }} text-[11px] font-semibold">
+    <i class="fas fa-{{ icon }} text-[9px] {{ c.icon }}"></i>
+    {{ text }}
+</span>
+{% endmacro %}
+
+{# ---------- Métadonnée ---------- #}
+{% macro meta_item(icon, text, color, extra_class="") %}
+{% set color_map = {
+    'blue':   'text-blue-400',
+    'green':  'text-brand-400',
+    'purple': 'text-purple-400',
+    'gold':   'text-gold-400',
+    'red':    'text-red-400'
+} %}
+<div class="flex items-center gap-2 text-xs text-gray-400 {{ extra_class }}">
+    <i class="fas fa-{{ icon }} {{ color_map.get(color, 'text-gray-500') }} text-[10px]"></i>
+    <span>{{ text }}</span>
+</div>
+{% endmacro %}
+
+{# ---------- Carte programme ---------- #}
+{% macro programme_card(p, color="blue") %}
+{% set color_map = {
+    'blue':   {'from': '#3b82f6', 'to': '#06b6d4', 'bg': 'from-blue-600 to-cyan-700'},
+    'green':  {'from': '#10b981', 'to': '#34d399', 'bg': 'from-brand-600 to-emerald-700'},
+    'purple': {'from': '#8b5cf6', 'to': '#ec4899', 'bg': 'from-purple-600 to-pink-700'},
+    'gold':   {'from': '#f59e0b', 'to': '#fbbf24', 'bg': 'from-gold-600 to-amber-700'},
+    'red':    {'from': '#ef4444', 'to': '#f97316', 'bg': 'from-red-600 to-orange-700'}
+} %}
+{% set c = color_map.get(color, color_map.blue) %}
+
+<article class="opp-card glass rounded-2xl overflow-hidden" data-color="{{ color }}">
+    {# Header avec gradient subtil #}
+    <div class="relative h-20 bg-gradient-to-br {{ c.bg }} opacity-80">
+        <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.3), transparent 50%);"></div>
+
+        {# Badge dynamique #}
+        <div class="absolute top-3 right-3 flex gap-1.5">
+            {% if p.is_new %}
+            <span class="badge-new px-2 py-0.5 rounded-full text-[10px] font-bold text-white flex items-center gap-1">
+                <i class="fas fa-sparkles text-[8px]"></i> Nouveau
+            </span>
+            {% endif %}
+            {% if p.is_urgent %}
+            <span class="badge-urgent px-2 py-0.5 rounded-full text-[10px] font-bold text-white flex items-center gap-1">
+                <i class="fas fa-bolt text-[8px]"></i> Urgent
+            </span>
+            {% endif %}
+            {% if p.is_popular %}
+            <span class="badge-popular px-2 py-0.5 rounded-full text-[10px] font-bold text-ink-900 flex items-center gap-1">
+                <i class="fas fa-fire text-[8px]"></i> Populaire
+            </span>
+            {% endif %}
+        </div>
+
+        {# Logo organisation #}
+        {% if p.organisation_logo %}
+        <div class="absolute -bottom-6 left-5 w-14 h-14 rounded-xl bg-ink-800 border-2 border-ink-700 flex items-center justify-center shadow-xl">
+            <img src="{{ p.organisation_logo }}" alt="" class="w-full h-full object-cover rounded-[10px]">
+        </div>
+        {% else %}
+        <div class="absolute -bottom-6 left-5 w-14 h-14 rounded-xl bg-gradient-to-br {{ c.bg }} flex items-center justify-center shadow-xl">
+            <i class="fas fa-{{ p.icon if p.icon else 'briefcase' }} text-white text-lg"></i>
+        </div>
+        {% endif %}
+
+        {# Actions propriétaire #}
+        {% if user_logged_in and p.structure_id == user_logged_in %}
+        <div class="absolute top-3 left-3">
+            <button class="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition-colors">
+                <i class="fas fa-ellipsis text-white text-xs"></i>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    {# Body #}
+    <div class="p-5 pt-10">
+        {# Catégorie badge #}
+        <div class="mb-3">
+            {{ badge(p.type or p.categorie|capitalize, p.icon if p.icon else 'tag', color) }}
+        </div>
+
+        {# Titre #}
+        <a href="{{ url_for('opportunites.detail_programme', id=p.id) }}" class="block group">
+            <h3 class="font-display text-lg font-bold mb-2 group-hover:text-brand-400 transition-colors leading-tight">
+                {{ p.titre }}
+            </h3>
+        </a>
+
+        {# Description #}
+        {% if p.description %}
+        <p class="text-sm text-gray-400 mb-4 leading-relaxed line-clamp-2">
+            {{ p.description|truncate(140) }}
+        </p>
+        {% endif %}
+
+        {# Métadonnées #}
+        <div class="space-y-2 mb-5">
+            {% if p.lieu %}
+                {{ meta_item("map-marker-alt", p.lieu, color) }}
+            {% endif %}
+
+            {% if p.date_debut %}
+                {{ meta_item("calendar", p.date_debut|format_date, color) }}
+            {% endif %}
+
+            {% if p.date_fin %}
+                {{ meta_item("clock", "Clôture : " ~ (p.date_fin|format_date), color) }}
+            {% else %}
+                {{ meta_item("infinity", "En continu", "green", "text-brand-400") }}
+            {% endif %}
+
+            {% if p.prix %}
+                {{ meta_item("tag", (p.prix|string) ~ " FBU", color) }}
+            {% endif %}
+
+            {% if p.montant_max %}
+                {{ meta_item("money-bill", "Jusqu'à " ~ (p.montant_max|string) ~ " FBU", "gold") }}
+            {% endif %}
+        </div>
+
+        {# Footer CTA #}
+        <div class="flex items-center justify-between pt-4 border-t border-white/5">
+            {% if p.organisation_nom %}
+            <div class="flex items-center gap-2 min-w-0">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br {{ c.bg }} flex items-center justify-center flex-shrink-0">
+                    <span class="text-[9px] font-bold text-white">{{ p.organisation_nom[0]|upper }}</span>
+                </div>
+                <span class="text-xs text-gray-500 truncate">{{ p.organisation_nom }}</span>
+            </div>
+            {% else %}
+            <div></div>
+            {% endif %}
+
+            <a href="{{ url_for('opportunites.detail_programme', id=p.id) }}"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-brand-500/10 border border-white/10 hover:border-brand-500/30 text-xs font-semibold transition-all group">
+                Voir
+                <i class="fas fa-arrow-right text-[9px] group-hover:translate-x-0.5 transition-transform"></i>
+            </a>
+        </div>
+    </div>
+</article>
+{% endmacro %}
+
+{# ---------- Section catégorie ---------- #}
+{% macro programme_section(section_id, title, data, color, categorie, bg, icon, feminine=false) %}
+{% set color_map = {
+    'blue':   {'gradient': 'from-blue-500 to-cyan-500',   'bg': 'bg-blue-500/10',   'text': 'text-blue-400',   'border': 'border-blue-500/20'},
+    'green':  {'gradient': 'from-brand-500 to-emerald-500', 'bg': 'bg-brand-500/10', 'text': 'text-brand-400', 'border': 'border-brand-500/20'},
+    'purple': {'gradient': 'from-purple-500 to-pink-500', 'bg': 'bg-purple-500/10', 'text': 'text-purple-400', 'border': 'border-purple-500/20'}
+} %}
+{% set c = color_map.get(color, color_map.blue) %}
+
+<section id="{{ section_id }}" class="py-16 lg:py-20 relative scroll-mt-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {# Section header #}
+        <div class="reveal flex flex-col md:flex-row md:items-end md:justify-between mb-10 gap-6">
+            <div class="flex items-start gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br {{ c.gradient }} flex items-center justify-center shadow-lg flex-shrink-0">
+                    <i class="fas fa-{{ icon }} text-2xl text-white"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <h2 class="font-display text-3xl sm:text-4xl font-bold">{{ title }}</h2>
+                        {# Compteur #}
+                        {% if data is iterable and data is not string and data is not mapping %}
+                            {% if data.total is defined %}
+                                <span class="px-2.5 py-0.5 rounded-full {{ c.bg }} border {{ c.border }} {{ c.text }} text-xs font-bold">{{ data.total }}</span>
+                            {% else %}
+                                <span class="px-2.5 py-0.5 rounded-full {{ c.bg }} border {{ c.border }} {{ c.text }} text-xs font-bold">{{ data|list|length }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="px-2.5 py-0.5 rounded-full {{ c.bg }} border {{ c.border }} {{ c.text }} text-xs font-bold">0</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-gray-400">
+                        {% if section_id == 'formations' %}
+                        Développez vos compétences avec les meilleures formations.
+                        {% elif section_id == 'financements' %}
+                        Accédez aux financements pour concrétiser vos projets.
+                        {% else %}
+                        Découvrez les appels à projets et partenariats disponibles.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            {% if user_logged_in %}
+            <a href="{{ url_for('opportunites.create') }}?categorie={{ categorie }}"
+               class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center gap-2 self-start">
+                <i class="fas fa-plus text-xs"></i>
+                Ajouter
+            </a>
+            {% endif %}
+        </div>
+
+        {# Déterminer la liste d'éléments #}
+        {% if data is iterable and data is not string and data is not mapping %}
+            {% if data.items is defined and data.total is defined %}
+                {% set item_list = data.items %}
+                {% set pagination = data %}
+            {% else %}
+                {% set item_list = data|list %}
+                {% set pagination = none %}
+            {% endif %}
+        {% else %}
+            {% set item_list = [] %}
+            {% set pagination = none %}
+        {% endif %}
+
+        {% if item_list|length > 0 %}
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {% for item in item_list %}
+                <div class="reveal" style="transition-delay: {{ (loop.index0 % 6) * 0.05 }}s;">
+                    {{ programme_card(item, color=color) }}
+                </div>
+            {% endfor %}
+        </div>
+
+        {# Pagination #}
+        {% if pagination and pagination.pages > 1 %}
+        <nav class="mt-12 flex items-center justify-center gap-2">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('opportunites.afficher_opportunites', page=pagination.prev_num, categorie=categorie_filter) }}"
+               class="pagination-btn px-4 py-2 rounded-lg glass text-sm font-medium flex items-center gap-2">
+                <i class="fas fa-chevron-left text-xs"></i> Précédent
+            </a>
+            {% endif %}
+
+            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                    {% if page_num == pagination.page %}
+                    <span class="pagination-btn active px-4 py-2 rounded-lg text-sm font-bold">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('opportunites.afficher_opportunites', page=page_num, categorie=categorie_filter) }}"
+                       class="pagination-btn px-4 py-2 rounded-lg glass text-sm font-medium">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                <span class="px-2 text-gray-600">…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <a href="{{ url_for('opportunites.afficher_opportunites', page=pagination.next_num, categorie=categorie_filter) }}"
+               class="pagination-btn px-4 py-2 rounded-lg glass text-sm font-medium flex items-center gap-2">
+                Suivant <i class="fas fa-chevron-right text-xs"></i>
+            </a>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+        {% else %}
+        {# État vide premium #}
+        <div class="reveal glass rounded-3xl p-12 text-center">
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br {{ c.gradient }} opacity-20 flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-{{ icon }} text-3xl text-white"></i>
+            </div>
+            <h3 class="font-display text-xl font-bold mb-2">
+                Aucun{{ 'e' if feminine else '' }} {{ title|lower }} disponible
+            </h3>
+            <p class="text-gray-400 mb-6 max-w-md mx-auto">
+                De nouvelles opportunités sont ajoutées régulièrement. Revenez bientôt ou soyez notifié des prochaines publications.
+            </p>
+            <button class="btn-ghost px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
+                <i class="fas fa-bell text-brand-400"></i>
+                Être notifié
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endmacro %}
+
+
+{# ============================================================
+   HERO IMMERSIF
+   ============================================================ #}
+<section class="relative min-h-[85vh] flex items-center overflow-hidden hero-glow">
+    <canvas id="opportunities-canvas"></canvas>
+
+    {# Grid background #}
+    <div class="absolute inset-0 z-[2]" style="background-image: linear-gradient(rgba(16,185,129,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.04) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);"></div>
+
+    {# Bottom fade #}
+    <div class="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent z-[3]"></div>
+
+    {# Floating cards #}
+    <div class="absolute inset-0 z-[4] pointer-events-none hero-floating">
+        <div class="absolute top-[18%] left-[8%] glass rounded-2xl p-4 w-56 float-slow shadow-2xl">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-emerald-700 flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-white text-xs"></i>
+                </div>
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider">Financement</span>
+            </div>
+            <div class="text-sm font-semibold mb-1">Fonds Innovation 2025</div>
+            <div class="text-xs text-brand-400 font-bold">Jusqu'à 50M FBU</div>
+        </div>
+
+        <div class="absolute top-[30%] right-[10%] glass rounded-2xl p-4 w-52 float-medium shadow-2xl">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <i class="fas fa-graduation-cap text-white text-xs"></i>
+                </div>
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider">Formation</span>
+            </div>
+            <div class="text-sm font-semibold mb-1">Digital Marketing</div>
+            <div class="text-xs text-purple-400">12 places restantes</div>
+        </div>
+
+        <div class="absolute bottom-[25%] left-[12%] glass rounded-2xl p-4 w-52 float-fast shadow-2xl">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-gold-500 to-amber-600 flex items-center justify-center">
+                    <i class="fas fa-handshake text-white text-xs"></i>
+                </div>
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider">Partenariat</span>
+            </div>
+            <div class="text-sm font-semibold mb-1">AgriTech Alliance</div>
+            <div class="text-xs text-gold-400">3 entreprises intéressées</div>
+        </div>
+
+        <div class="absolute bottom-[18%] right-[15%] glass rounded-2xl p-4 w-48 float-slow shadow-2xl" style="animation-delay: 2s;">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <i class="fas fa-calendar text-white text-xs"></i>
+                </div>
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider">Événement</span>
+            </div>
+            <div class="text-sm font-semibold mb-1">Startup Summit</div>
+            <div class="text-xs text-blue-400">15 Janvier 2025</div>
+        </div>
+    </div>
+
+    {# Content #}
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 w-full">
+        <div class="text-center max-w-4xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass mb-8">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                </span>
+                <span class="text-xs font-medium text-gray-300">+500 opportunités actives en ce moment</span>
+            </div>
+
+            <div class="inline-block px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-6">
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Centre des opportunités</span>
+            </div>
+
+            <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6">
+                Découvrez les opportunités<br>
+                <span class="gradient-text">qui font avancer vos projets</span>
+            </h1>
+
+            <p class="text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                Financement, partenariats, formations et événements pour développer votre activité au Burundi.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center mb-12">
+                <a href="#formations" class="btn-primary px-7 py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2">
+                    <i class="fas fa-compass"></i>
+                    Explorer les opportunités
+                </a>
+                {% if user_logged_in %}
+                <a href="{{ url_for('opportunites.create') }}" class="btn-ghost px-7 py-4 rounded-xl font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-plus text-brand-400"></i>
+                    Publier une opportunité
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.demande_inscription') }}" class="btn-ghost px-7 py-4 rounded-xl font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-plus text-brand-400"></i>
+                    Publier une opportunité
+                </a>
+                {% endif %}
+            </div>
+
+            {# Quick nav categories #}
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <span class="text-xs text-gray-500 uppercase tracking-wider mr-2">Catégories :</span>
+                <a href="#formations" class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                    <i class="fas fa-graduation-cap text-blue-400"></i> Formations
+                </a>
+                <a href="#financements" class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                    <i class="fas fa-money-bill-wave text-brand-400"></i> Financements
+                </a>
+                <a href="#projets" class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                    <i class="fas fa-star text-purple-400"></i> Projets
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Scroll indicator #}
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+        <span class="text-xs text-gray-500 uppercase tracking-widest">Scroll</span>
+        <div class="w-px h-12 bg-gradient-to-b from-brand-500 to-transparent"></div>
+    </div>
+</section>
+
+
+{# ============================================================
+   STATS ANIMÉES
+   ============================================================ #}
+<section class="py-16 lg:py-20 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="reveal stat-card glass rounded-2xl p-6 relative">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-brand-500/30">
+                        <i class="fas fa-bolt text-white"></i>
+                    </div>
+                    <span class="text-xs text-brand-400 font-semibold">+23%</span>
+                </div>
+                <div class="font-display text-3xl lg:text-4xl font-bold gradient-text stat-counter" data-target="500">0</div>
+                <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Opportunités</div>
+            </div>
+
+            <div class="reveal stat-card glass rounded-2xl p-6 relative" style="transition-delay: 0.1s;">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                        <i class="fas fa-building text-white"></i>
+                    </div>
+                    <span class="text-xs text-blue-400 font-semibold">+18%</span>
+                </div>
+                <div class="font-display text-3xl lg:text-4xl font-bold gradient-text stat-counter" data-target="200">0</div>
+                <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Organisations</div>
+            </div>
+
+            <div class="reveal stat-card glass rounded-2xl p-6 relative" style="transition-delay: 0.2s;">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <i class="fas fa-handshake text-white"></i>
+                    </div>
+                    <span class="text-xs text-purple-400 font-semibold">+31%</span>
+                </div>
+                <div class="font-display text-3xl lg:text-4xl font-bold gradient-text stat-counter" data-target="50">0</div>
+                <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Partenariats</div>
+            </div>
+
+            <div class="reveal stat-card glass rounded-2xl p-6 relative" style="transition-delay: 0.3s;">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-gold-500 to-amber-600 flex items-center justify-center shadow-lg shadow-gold-500/30">
+                        <i class="fas fa-users text-white"></i>
+                    </div>
+                    <span class="text-xs text-gold-400 font-semibold">+42%</span>
+                </div>
+                <div class="font-display text-3xl lg:text-4xl font-bold gradient-text stat-counter" data-target="1000">0</div>
+                <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Entrepreneurs connectés</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider max-w-7xl mx-auto"></div>
+
+
+{# ============================================================
+   FILTRES PREMIUM
+   ============================================================ #}
+<section class="py-12 lg:py-16 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal">
+            {# Search bar #}
+            <div class="search-premium rounded-2xl p-2 mb-6">
+                <div class="flex items-center gap-3 px-4">
+                    <i class="fas fa-search text-gray-500"></i>
+                    <input type="text" placeholder="Rechercher une formation, un financement, un événement..."
+                           class="flex-1 bg-transparent py-3 text-sm text-white placeholder-gray-500 focus:outline-none">
+                    <kbd class="hidden sm:inline-flex px-2 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-gray-500 font-mono">Ctrl+K</kbd>
+                    <button class="btn-primary px-5 py-2 rounded-xl text-sm font-semibold text-white">Rechercher</button>
+                </div>
+            </div>
+
+            {# Type filters #}
+            <div class="mb-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-layer-group text-brand-400 text-sm"></i>
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Type d'opportunité</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button class="filter-chip active px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" data-filter="type" data-value="all">
+                        Tous
+                    </button>
+                    <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" data-filter="type" data-value="financement">
+                        💰 Financement
+                    </button>
+                    <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" data-filter="type" data-value="partenariat">
+                        🤝 Partenariat
+                    </button>
+                    <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" data-filter="type" data-value="startup">
+                        🚀 Startup
+                    </button>
+                    <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" data-filter="type" data-value="formation">
+                        🎓 Formation
+                    </button>
+                    <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" data-filter="type" data-value="evenement">
+                        📅 Événement
+                    </button>
+                </div>
+            </div>
+
+            {# Sector + Location #}
+            <div class="grid md:grid-cols-2 gap-5">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-th-large text-brand-400 text-sm"></i>
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Secteur</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="filter-chip active px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="all">Tous</button>
+                        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="tech">💻 Technologie</button>
+                        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="agri">🌾 Agriculture</button>
+                        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="commerce">🛒 Commerce</button>
+                        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="finance">💳 Finance</button>
+                        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="sector" data-value="sante">🏥 Santé</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-map-marker-alt text-brand-400 text-sm"></i>
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Localisation</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="filter-chip active px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="all">Toutes</button>
+                        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="bujumbura">Bujumbura</button>
+                        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="gitega">Gitega</button>
+                        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="ngozi">Ngozi</button>
+                        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-medium" data-filter="location" data-value="online">🌐 En ligne</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{# ============================================================
+   SECTIONS : FORMATIONS, FINANCEMENTS, PROJETS
+   ============================================================ #}
+{{ programme_section(
+    section_id="formations",
+    title="Formations",
+    data=formations,
+    color="blue",
+    categorie="formation",
+    bg="bg-white",
+    icon="book",
+    feminine=true
+) }}
+
+<div class="section-divider max-w-7xl mx-auto"></div>
+
+{{ programme_section(
+    section_id="financements",
+    title="Financements",
+    data=financements,
+    color="green",
+    categorie="financement",
+    bg="bg-gray-50",
+    icon="briefcase",
+    feminine=false
+) }}
+
+<div class="section-divider max-w-7xl mx-auto"></div>
+
+{{ programme_section(
+    section_id="projets",
+    title="Opportunités & Projets",
+    data=opportunites,
+    color="purple",
+    categorie="projet",
+    bg="bg-white",
+    icon="star",
+    feminine=false
+) }}
+
+
+{# ============================================================
+   CTA IMMERSIF FINAL
+   ============================================================ #}
+<section class="py-20 lg:py-28 relative">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal cta-immersive rounded-3xl p-10 md:p-16 text-center relative overflow-hidden">
+            {# Floating decorative elements #}
+            <div class="absolute top-10 left-10 w-20 h-20 rounded-full bg-brand-500/20 blur-2xl"></div>
+            <div class="absolute bottom-10 right-10 w-24 h-24 rounded-full bg-gold-500/15 blur-2xl"></div>
+            <div class="absolute top-1/2 right-1/4 w-16 h-16 rounded-full bg-purple-500/10 blur-2xl"></div>
+
+            <div class="relative">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-6">
+                    <i class="fas fa-bullhorn text-brand-400 text-xs"></i>
+                    <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Pour les organisations</span>
+                </div>
+
+                <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                    Votre organisation crée<br>
+                    <span class="gradient-text">des opportunités ?</span>
+                </h2>
+
+                <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+                    Partagez vos formations, financements et appels à projets avec des milliers d'entrepreneurs burundais.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center mb-10">
+                    {% if user_logged_in %}
+                    <a href="{{ url_for('opportunites.create') }}" class="btn-primary px-8 py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        Publier une opportunité
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('auth.demande_inscription') }}" class="btn-primary px-8 py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        Créer un compte et publier
+                    </a>
+                    {% endif %}
+                    <a href="#" class="btn-ghost px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2">
+                        En savoir plus
+                        <i class="fas fa-arrow-right text-sm"></i>
+                    </a>
+                </div>
+
+                {# Trust indicators #}
+                <div class="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-500">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-check-circle text-brand-400"></i>
+                        <span>Publication gratuite</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-users text-brand-400"></i>
+                        <span>+1000 entrepreneurs</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-bolt text-brand-400"></i>
+                        <span>Activation immédiate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{# ============================================================
+   CTA INSCRIPTION (si non connecté)
+   ============================================================ #}
+{% if not user_logged_in %}
+<section class="py-16 relative">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal glass rounded-3xl p-8 md:p-12 text-center">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-gold-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-brand-500/30">
+                <i class="fas fa-rocket text-white text-2xl"></i>
+            </div>
+            <h3 class="font-display text-3xl font-bold mb-4">
+                Vous avez une opportunité à partager ?
+            </h3>
+            <p class="text-gray-400 mb-8 max-w-xl mx-auto">
+                Créez un compte pour publier vos formations, financements ou appels à projets et toucher des milliers d'entrepreneurs.
+            </p>
+            <a href="{{ url_for('auth.demande_inscription') }}" class="btn-primary px-8 py-4 rounded-xl font-semibold text-white inline-flex items-center gap-2">
+                Créer un compte
+                <i class="fas fa-arrow-right text-sm"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+{# ============================================================
+   THREE.JS - HERO 3D NETWORK
+   ============================================================ #}
+<script>
+(function() {
+    const canvas = document.getElementById('opportunities-canvas');
+    if (!canvas) return;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Réseau de noeuds connectés (représente les opportunités)
+    const nodes = [];
+    const nodeCount = 30;
+    const nodeGeo = new THREE.SphereGeometry(0.08, 16, 16);
+
+    for (let i = 0; i < nodeCount; i++) {
+        const color = Math.random() > 0.5 ? 0x10b981 : 0xfbbf24;
+        const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8 });
+        const mesh = new THREE.Mesh(nodeGeo, mat);
+        mesh.position.set(
+            (Math.random() - 0.5) * 12,
+            (Math.random() - 0.5) * 8,
+            (Math.random() - 0.5) * 6 - 2
+        );
+        mesh.userData = {
+            baseY: mesh.position.y,
+            speed: 0.3 + Math.random() * 0.5,
+            offset: Math.random() * Math.PI * 2
+        };
+        scene.add(mesh);
+        nodes.push(mesh);
+    }
+
+    // Connections
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.15 });
+    const connections = [];
+    for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+            if (nodes[i].position.distanceTo(nodes[j].position) < 4) {
+                const geo = new THREE.BufferGeometry().setFromPoints([nodes[i].position, nodes[j].position]);
+                const line = new THREE.Line(geo, lineMat);
+                scene.add(line);
+                connections.push({ line, i, j });
+            }
+        }
+    }
+
+    // Particules
+    const pGeo = new THREE.BufferGeometry();
+    const pCount = 300;
+    const pPos = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount * 3; i++) pPos[i] = (Math.random() - 0.5) * 16;
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    const pMat = new THREE.PointsMaterial({ size: 0.02, color: 0x10b981, transparent: true, opacity: 0.4 });
+    const particles = new THREE.Points(pGeo, pMat);
+    scene.add(particles);
+
+    scene.add(new THREE.AmbientLight(0x404040, 1.5));
+    const pl = new THREE.PointLight(0x10b981, 1.5, 100);
+    pl.position.set(5, 5, 5);
+    scene.add(pl);
+
+    camera.position.z = 7;
+
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', e => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const t = Date.now() * 0.001;
+
+        nodes.forEach(n => {
+            n.position.y = n.userData.baseY + Math.sin(t * n.userData.speed + n.userData.offset) * 0.3;
+        });
+
+        connections.forEach(c => {
+            const positions = c.line.geometry.attributes.position.array;
+            positions[0] = nodes[c.i].position.x;
+            positions[1] = nodes[c.i].position.y;
+            positions[2] = nodes[c.i].position.z;
+            positions[3] = nodes[c.j].position.x;
+            positions[4] = nodes[c.j].position.y;
+            positions[5] = nodes[c.j].position.z;
+            c.line.geometry.attributes.position.needsUpdate = true;
+        });
+
+        particles.rotation.y += 0.0005;
+        scene.rotation.y += (mouseX * 0.1 - scene.rotation.y) * 0.03;
+        scene.rotation.x += (mouseY * 0.1 - scene.rotation.x) * 0.03;
+
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+})();
+
+/* ============================================
+   GSAP ANIMATIONS
+   ============================================ */
+if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+
+    document.querySelectorAll('.reveal').forEach((el, i) => {
+        gsap.fromTo(el,
+            { opacity: 0, y: 40 },
+            {
+                opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+                scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' }
+            }
+        );
+    });
+
+    // Stat counters
+    document.querySelectorAll('.stat-counter').forEach(stat => {
+        const target = parseInt(stat.dataset.target);
+        gsap.fromTo(stat,
+            { innerText: 0 },
+            {
+                innerText: target, duration: 2, ease: 'power2.out',
+                snap: { innerText: 1 },
+                scrollTrigger: { trigger: stat, start: 'top 85%' },
+                onUpdate: function() {
+                    const val = Math.round(this.targets()[0].innerText);
+                    stat.innerText = val >= 1000 ? (val / 1000).toFixed(val >= 1000 ? 1 : 0) + 'k+' : val + '+';
+                    if (val >= 1000) stat.innerText = Math.round(val / 100) * 100 >= 1000 ? Math.round(val / 100) / 10 + 'k+' : val + '+';
+                    // Simple format
+                    stat.innerText = val.toLocaleString('fr-FR') + '+';
+                }
+            }
+        );
+    });
+}
+
+/* ============================================
+   FILTER CHIPS
+   ============================================ */
+document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        const filterType = chip.dataset.filter;
+        const parent = chip.parentElement;
+        parent.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+    });
+});
+
+/* ============================================
+   CTRL+K SHORTCUT
+   ============================================ */
+document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const input = document.querySelector('.search-premium input');
+        if (input) {
+            input.focus();
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+});
+</script>
+{% endblock %}
+

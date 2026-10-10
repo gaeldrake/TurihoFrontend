@@ -1,0 +1,103 @@
+{# ══════════════════════════════════════════
+   TAB: ACTIVITÉS
+   ══════════════════════════════════════════ #}
+
+<div class="content-card">
+    <div class="content-card-header">
+        <div class="content-card-title">
+            <i class="fas fa-rocket" style="color: #34d399;"></i>
+            Activités
+            {% if activites %}
+            <span class="content-card-count">{{ activites|length }}</span>
+            {% endif %}
+        </div>
+        <a href="{{ url_for('dashboard.ajouter_activite') }}" class="btn-dashboard primary sm">
+            <i class="fas fa-plus"></i> Nouvelle activité
+        </a>
+    </div>
+
+    {% if activites %}
+    <div class="activities-grid">
+        {% for act in activites %}
+        {% set color_map = {
+            'green':  {'bar': '#10b981', 'bg': 'rgba(16, 185, 129, 0.15)', 'gradient': 'linear-gradient(135deg, #10b981, #064e3b)'},
+            'red':    {'bar': '#ef4444', 'bg': 'rgba(239, 68, 68, 0.15)', 'gradient': 'linear-gradient(135deg, #ef4444, #7f1d1d)'},
+            'blue':   {'bar': '#3b82f6', 'bg': 'rgba(59, 130, 246, 0.15)', 'gradient': 'linear-gradient(135deg, #3b82f6, #1e3a8a)'},
+            'yellow': {'bar': '#fbbf24', 'bg': 'rgba(251, 191, 36, 0.15)', 'gradient': 'linear-gradient(135deg, #fbbf24, #78350f)'},
+            'purple': {'bar': '#a855f7', 'bg': 'rgba(168, 85, 247, 0.15)', 'gradient': 'linear-gradient(135deg, #a855f7, #581c87)'},
+            'orange': {'bar': '#f97316', 'bg': 'rgba(249, 115, 22, 0.15)', 'gradient': 'linear-gradient(135deg, #f97316, #7c2d12)'}
+        } %}
+        {% set colors = color_map.get(act.border_color, color_map.blue) %}
+        
+        <div class="activity-card" style="animation: fadeIn 0.4s ease-out {{ loop.index0 * 0.05 }}s both;">
+            <div class="activity-image">
+                <div class="activity-color-bar" style="background: {{ colors.bar }};"></div>
+                {% if act.image_url %}
+                    <img src="{{ get_url(act.image_url) }}" alt="{{ act.titre|e }}">
+                {% else %}
+                    <div style="width: 100%; height: 100%; background: {{ colors.gradient }}; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-rocket" style="font-size: 2.5rem; color: rgba(255,255,255,0.3);"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="activity-body">
+                <div class="activity-title">{{ act.titre|e }}</div>
+                
+                <div class="activity-meta">
+                    {% if act.frequency %}
+                    <span class="activity-meta-item">
+                        <i class="fas fa-clock"></i> {{ act.frequency|e }}
+                    </span>
+                    {% endif %}
+                    {% if act.location %}
+                    <span class="activity-meta-item">
+                        <i class="fas fa-map-marker-alt"></i> {{ act.location|e }}
+                    </span>
+                    {% endif %}
+                    {% if act.date %}
+                    <span class="activity-meta-item">
+                        <i class="fas fa-calendar"></i> {{ act.date|format_date }}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                {% if act.description %}
+                <div style="font-size: 0.8125rem; color: #94a3b8; line-height: 1.5; margin-top: 0.5rem;">
+                    {{ act.description|truncate(120)|e }}
+                </div>
+                {% endif %}
+                
+                <div class="activity-actions">
+                    <a href="{{ url_for('dashboard.modifier_activite', id=act.id) }}" class="btn-dashboard ghost sm">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <form method="POST" action="{{ url_for('dashboard.supprimer_activite', id=act.id) }}" style="display: inline;" onsubmit="return confirm('Supprimer cette activité ?')">
+                        <button type="submit" class="btn-dashboard danger sm">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-rocket"></i>
+        </div>
+        <div style="font-weight: 600; color: white; margin-bottom: 0.25rem;">Aucune activité enregistrée</div>
+        <div style="font-size: 0.875rem; margin-bottom: 1rem;">Présentez les activités principales de votre organisation.</div>
+        <a href="{{ url_for('dashboard.ajouter_activite') }}" class="btn-dashboard primary">
+            <i class="fas fa-plus"></i> Ajouter une activité
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>

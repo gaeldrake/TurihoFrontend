@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier {{ programme.titre|truncate(30) }} | TURIHO{% endblock %}
+
+{% block extra_css %}
+<style>
+  .form-grid { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; }
+  @media (max-width: 1024px) { .form-grid { grid-template-columns: 1fr; } .sidebar-sticky { position: static !important; } }
+
+  .form-section { transition: all 0.3s; }
+  .form-section:hover { border-color: rgba(139, 92, 246, 0.15); }
+
+  .section-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 20px -8px rgba(139, 92, 246, 0.5);
+    flex-shrink: 0;
+  }
+
+  .input-premium {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+    color: white; font-size: 14px;
+    transition: all 0.25s; font-family: inherit;
+  }
+  .input-premium::placeholder { color: #64748b; }
+  .input-premium:focus {
+    outline: none;
+    border-color: rgba(139, 92, 246, 0.5);
+    background: rgba(139, 92, 246, 0.03);
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.08);
+  }
+  textarea.input-premium { resize: vertical; min-height: 140px; line-height: 1.6; }
+
+  .label-premium {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: #94a3b8; margin-bottom: 0.5rem;
+  }
+  .label-premium .required { color: #ef4444; }
+  .label-hint { font-size: 11px; color: #64748b; margin-top: 0.375rem; }
+
+  input[type="date"].input-premium { color-scheme: dark; }
+
+  .field-group { display: grid; gap: 1.25rem; }
+  .field-row-2 { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 640px) { .field-row-2 { grid-template-columns: 1fr; } }
+
+  .btn-submit {
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.6); }
+  .btn-submit::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform: translateX(-100%); transition: transform 0.6s;
+  }
+  .btn-submit:hover::before { transform: translateX(100%); }
+
+  .countdown-ring {
+    width: 100px; height: 100px;
+    position: relative;
+    margin: 0 auto;
+  }
+  .countdown-ring svg { transform: rotate(-90deg); }
+  .countdown-ring circle {
+    fill: none; stroke-width: 8;
+  }
+  .countdown-ring .bg { stroke: rgba(255,255,255,0.05); }
+  .countdown-ring .progress {
+    stroke: url(#gradient-purple);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s;
+  }
+  .countdown-value {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  .tip-card {
+    padding: 1.25rem; border-radius: 16px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.04));
+    border: 1px solid rgba(139, 92, 246, 0.15);
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up { animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="relative pt-28 pb-10 overflow-hidden">
+  <div class="absolute inset-0" style="background: radial-gradient(600px circle at 20% 30%, rgba(139, 92, 246, 0.08), transparent 50%), radial-gradient(500px circle at 80% 70%, rgba(236, 72, 153, 0.05), transparent 50%);"></div>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="flex items-center gap-2 text-xs text-gray-500 mb-6">
+      <a href="{{ url_for('public.index') }}" class="hover:text-white transition-colors">Accueil</a>
+      <i class="fas fa-chevron-right text-[8px]"></i>
+      <a href="{{ url_for('opportunites.afficher_opportunites') }}" class="hover:text-white transition-colors">Opportunités</a>
+      <i class="fas fa-chevron-right text-[8px]"></i>
+      <span class="text-purple-400">Modifier</span>
+    </nav>
+
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 mb-4">
+          <i class="fas fa-star text-purple-400 text-[10px]"></i>
+          <span class="text-[11px] font-semibold text-purple-400 tracking-wider uppercase">Appel à projets</span>
+        </div>
+        <h1 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-3">
+          Modifier l'<span class="gradient-text">appel à projets</span>
+        </h1>
+        <p class="text-gray-400 max-w-2xl">Ajustez les informations de votre appel à projets ou partenariat.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pb-24">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <form method="POST" action="{{ url_for('opportunites.edit_projet', id=programme.id) }}" class="form-grid">
+
+      <div class="space-y-6">
+
+        {# ─── CONTENU ─── #}
+        <div class="form-section glass rounded-2xl p-6 lg:p-8 animate-slide-up">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="section-icon"><i class="fas fa-bullseye text-white"></i></div>
+            <div class="flex-1">
+              <h2 class="font-display text-xl font-bold mb-1">Présentation du projet</h2>
+              <p class="text-sm text-gray-400">Informez les candidats potentiels.</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div>
+              <label class="label-premium">
+                <i class="fas fa-heading text-purple-400 text-[10px]"></i>
+                Titre du projet <span class="required">*</span>
+              </label>
+              <input type="text" name="titre" value="{{ programme.titre }}" required maxlength="150" class="input-premium">
+            </div>
+
+            <div>
+              <label class="label-premium">
+                <i class="fas fa-align-left text-purple-400 text-[10px]"></i>
+                Description détaillée <span class="required">*</span>
+              </label>
+              <textarea name="description" required maxlength="3000" rows="10"
+                        class="input-premium">{{ programme.description }}</textarea>
+              <div class="label-hint">Contexte, objectifs, livrables attendus, critères de sélection.</div>
+            </div>
+
+            <div class="field-row-2">
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-tag text-purple-400 text-[10px]"></i>
+                  Type de projet
+                </label>
+                <select name="type" class="input-premium">
+                  <option value="">Sélectionner...</option>
+                  <option value="Appel à projets" {% if programme.type == 'Appel à projets' %}selected{% endif %}>Appel à projets</option>
+                  <option value="Partenariat" {% if programme.type == 'Partenariat' %}selected{% endif %}>Partenariat</option>
+                  <option value="Compétition" {% if programme.type == 'Compétition' %}selected{% endif %}>Compétition / Hackathon</option>
+                  <option value="Incubation" {% if programme.type == 'Incubation' %}selected{% endif %}>Programme d'incubation</option>
+                  <option value="Mentorat" {% if programme.type == 'Mentorat' %}selected{% endif %}>Mentorat</option>
+                </select>
+              </div>
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-map-marker-alt text-purple-400 text-[10px]"></i>
+                  Lieu / Zone
+                </label>
+                <input type="text" name="lieu" value="{{ programme.lieu }}" class="input-premium" placeholder="Burundi, International...">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# ─── CALENDRIER ─── #}
+        <div class="form-section glass rounded-2xl p-6 lg:p-8 animate-slide-up" style="animation-delay: 0.1s;">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="section-icon"><i class="fas fa-calendar-alt text-white"></i></div>
+            <div class="flex-1">
+              <h2 class="font-display text-xl font-bold mb-1">Calendrier</h2>
+              <p class="text-sm text-gray-400">Dates clés de l'appel à projets.</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-row-2">
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-play text-purple-400 text-[10px]"></i>
+                  Date de début
+                </label>
+                <input type="date" name="date_debut"
+                       value="{{ programme.date_debut.strftime('%Y-%m-%d') if programme.date_debut else '' }}"
+                       class="input-premium">
+                <div class="label-hint">Ouverture des candidatures.</div>
+              </div>
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-stop text-red-400 text-[10px]"></i>
+                  Date de clôture
+                </label>
+                <input type="date" name="date_fin"
+                       value="{{ programme.date_fin.strftime('%Y-%m-%d') if programme.date_fin else '' }}"
+                       class="input-premium">
+                <div class="label-hint">Deadline de soumission.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# ─── ACTIONS ─── #}
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+          <a href="{{ url_for('public.afficher_programmes', categorie='opportunite') }}"
+             class="btn-ghost px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2">
+            <i class="fas fa-times text-xs"></i> Annuler
+          </a>
+
+          <button type="submit" class="btn-submit px-8 py-3 rounded-xl font-semibold text-white text-sm flex items-center gap-2">
+            <i class="fas fa-check text-xs"></i> Mettre à jour le projet
+          </button>
+        </div>
+      </div>
+
+      {# ══════════ SIDEBAR ══════════ #}
+      <aside>
+        <div class="sidebar-sticky space-y-5" style="position: sticky; top: 100px;">
+
+          {# Countdown #}
+          <div class="glass rounded-2xl p-5 text-center">
+            <div class="text-[10px] text-purple-400 uppercase tracking-wider font-semibold mb-4">Temps restant</div>
+            <div class="countdown-ring">
+              <svg width="100" height="100">
+                <defs>
+                  <linearGradient id="gradient-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#8b5cf6"/>
+                    <stop offset="100%" stop-color="#ec4899"/>
+                  </linearGradient>
+                </defs>
+                <circle class="bg" cx="50" cy="50" r="42"/>
+                <circle class="progress" cx="50" cy="50" r="42"
+                        stroke-dasharray="264" stroke-dashoffset="92"/>
+              </svg>
+              <div class="countdown-value">
+                <div class="font-display text-2xl font-bold gradient-text">24</div>
+                <div class="text-[10px] text-gray-500 uppercase">jours</div>
+              </div>
+            </div>
+            <div class="text-xs text-gray-400 mt-3">avant la clôture</div>
+          </div>
+
+          <div class="glass rounded-2xl p-5">
+            <h3 class="font-display font-bold text-sm mb-4">Engagement</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-eye text-purple-400 text-xs"></i>
+                  <span class="text-sm text-gray-300">Vues</span>
+                </div>
+                <span class="font-display font-bold gradient-text">412</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-paper-plane text-purple-400 text-xs"></i>
+                  <span class="text-sm text-gray-300">Propositions</span>
+                </div>
+                <span class="font-display font-bold gradient-text">28</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-bookmark text-gold-400 text-xs"></i>
+                  <span class="text-sm text-gray-300">Favoris</span>
+                </div>
+                <span class="font-display font-bold gradient-text">64</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <i class="fas fa-lightbulb text-white text-xs"></i>
+              </div>
+              <div class="font-semibold text-sm">Bon à savoir</div>
+            </div>
+            <p class="text-xs text-gray-300 leading-relaxed">
+              Les appels à projets avec <span class="text-purple-400 font-semibold">budget précisé</span> reçoivent <span class="text-purple-400 font-semibold">+80%</span> de propositions pertinentes.
+            </p>
+          </div>
+
+        </div>
+      </aside>
+
+    </form>
+  </div>
+</section>
+
+{% endblock %}

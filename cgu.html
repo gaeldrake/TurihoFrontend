@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Conditions Générales d'Utilisation — TURIHO{% endblock %}
+{% block meta_description %}Conditions générales d'utilisation de la plateforme TURIHO.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legal-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 3rem;
+        align-items: start;
+    }
+    @media (max-width: 1024px) {
+        .legal-layout { grid-template-columns: 1fr; }
+        .legal-sidebar { position: static !important; }
+    }
+    .legal-sidebar { position: sticky; top: 100px; }
+    .legal-nav-item {
+        display: block;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #94a3b8;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+    }
+    .legal-nav-item:hover { color: white; background: rgba(255,255,255,0.03); }
+    .legal-nav-item.active {
+        color: #34d399;
+        background: rgba(16, 185, 129, 0.08);
+        border-left-color: #10b981;
+    }
+    .legal-section {
+        padding: 2.5rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        scroll-margin-top: 100px;
+    }
+    .legal-section:last-child { border-bottom: none; }
+    .legal-title {
+        display: flex; align-items: center; gap: 0.75rem;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.75rem; font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    .legal-title-icon {
+        width: 40px; height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        display: flex; align-items: center; justify-content: center;
+        color: #34d399;
+    }
+    .legal-content p {
+        color: #cbd5e1;
+        font-size: 15px;
+        line-height: 1.8;
+        margin-bottom: 1rem;
+    }
+    .legal-content strong { color: white; }
+    .info-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin: 1rem 0;
+    }
+    .warning-card {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(251, 146, 60, 0.04));
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin: 1rem 0;
+    }
+    .reveal { opacity: 0; transform: translateY(30px); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# HERO #}
+<section class="relative pt-32 pb-12 overflow-hidden">
+    <div class="absolute inset-0" style="background: radial-gradient(600px circle at 20% 30%, rgba(16, 185, 129, 0.08), transparent 50%);"></div>
+    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex items-center gap-2 text-xs text-gray-500 mb-6">
+            <a href="{{ url_for('public.index') }}" class="hover:text-white transition-colors">Accueil</a>
+            <i class="fas fa-chevron-right text-[8px]"></i>
+            <span class="text-brand-400">CGU</span>
+        </nav>
+
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+            <i class="fas fa-file-contract text-brand-400 text-xs"></i>
+            <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Conditions d'utilisation</span>
+        </div>
+
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-4">
+            Conditions Générales<br>
+            <span class="gradient-text">d'Utilisation</span>
+        </h1>
+        <p class="text-lg text-gray-400 max-w-2xl">
+            Bienvenue sur TURIHO. En accédant à ce site, vous acceptez les présentes conditions générales d'utilisation.
+        </p>
+    </div>
+</section>
+
+{# CONTENT #}
+<section class="pb-24">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="legal-layout">
+
+            <aside class="legal-sidebar hidden lg:block">
+                <div class="glass rounded-2xl p-5">
+                    <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-4 px-3">Sommaire</div>
+                    <nav class="space-y-1">
+                        <a href="#utilisation" class="legal-nav-item active" data-section="utilisation">
+                            <i class="fas fa-laptop text-xs mr-2 text-brand-400"></i>Utilisation du site
+                        </a>
+                        <a href="#responsabilites" class="legal-nav-item" data-section="responsabilites">
+                            <i class="fas fa-balance-scale text-xs mr-2 text-brand-400"></i>Responsabilités
+                        </a>
+                        <a href="#modifications" class="legal-nav-item" data-section="modifications">
+                            <i class="fas fa-sync text-xs mr-2 text-brand-400"></i>Modifications
+                        </a>
+                        <a href="#sanctions" class="legal-nav-item" data-section="sanctions">
+                            <i class="fas fa-gavel text-xs mr-2 text-brand-400"></i>Sanctions
+                        </a>
+                        <a href="#contact" class="legal-nav-item" data-section="contact">
+                            <i class="fas fa-envelope text-xs mr-2 text-brand-400"></i>Contact
+                        </a>
+                    </nav>
+                </div>
+            </aside>
+
+            <div class="legal-content">
+
+                <div id="utilisation" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-laptop"></i></div>
+                        1. Utilisation du site
+                    </div>
+                    <p>L'utilisation du site est réservée à un <strong>usage personnel et non commercial</strong>. Vous vous engagez à ne pas nuire au bon fonctionnement du site ou à tenter d'accéder à des données de manière frauduleuse.</p>
+
+                    <div class="info-card">
+                        <h4 class="font-semibold mb-3 flex items-center gap-2">
+                            <i class="fas fa-check-circle text-brand-400 text-sm"></i>
+                            Comportements autorisés
+                        </h4>
+                        <ul class="space-y-2 text-sm text-gray-400">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-brand-400 text-xs mt-1"></i>
+                                <span>Consulter les profils et opportunités publiés</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-brand-400 text-xs mt-1"></i>
+                                <span>Créer et gérer votre profil organisation</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-brand-400 text-xs mt-1"></i>
+                                <span>Contacter les organisations via les formulaires prévus</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="warning-card">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-exclamation-triangle text-red-400 text-xl mt-1"></i>
+                            <div>
+                                <h4 class="font-semibold text-red-300 mb-1">Comportements interdits</h4>
+                                <p class="text-sm text-gray-400 mb-0">Toute tentative de piratage, de collecte abusive de données, de publication de contenu illicite ou de nuisance au fonctionnement du site est strictement interdite.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="responsabilites" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-balance-scale"></i></div>
+                        2. Responsabilités
+                    </div>
+                    <p>TURIHO s'efforce de fournir des <strong>informations exactes</strong> mais ne saurait être tenu responsable des erreurs ou omissions.</p>
+                    <p>Les organisations inscrites sont <strong>entièrement responsables</strong> du contenu qu'elles publient sur la plateforme (descriptions, images, documents, offres).</p>
+
+                    <div class="info-card">
+                        <h4 class="font-semibold mb-3 flex items-center gap-2">
+                            <i class="fas fa-info-circle text-brand-400 text-sm"></i>
+                            Limitation de responsabilité
+                        </h4>
+                        <p class="text-sm text-gray-400 mb-0">TURIHO agit comme un intermédiaire de mise en relation et ne peut être tenu responsable des transactions, accords ou litiges survenant entre utilisateurs.</p>
+                    </div>
+                </div>
+
+                <div id="modifications" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-sync"></i></div>
+                        3. Modifications
+                    </div>
+                    <p>Nous nous réservons le droit de <strong>modifier les CGU à tout moment</strong>. Les utilisateurs sont invités à consulter cette page régulièrement.</p>
+                    <p>Les modifications entrent en vigueur dès leur publication sur le site. L'utilisation continue du site après publication des modifications vaut acceptation des nouvelles conditions.</p>
+                </div>
+
+                <div id="sanctions" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-gavel"></i></div>
+                        4. Sanctions
+                    </div>
+                    <p>Toute violation des présentes conditions pourra entraîner un <strong>blocage temporaire ou définitif</strong> de votre accès au site, sans préavis.</p>
+
+                    <div class="warning-card">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-ban text-red-400 text-xl mt-1"></i>
+                            <div>
+                                <h4 class="font-semibold text-red-300 mb-2">Niveaux de sanctions</h4>
+                                <ul class="space-y-2 text-sm text-gray-400">
+                                    <li class="flex items-start gap-2">
+                                        <span class="text-gold-400 font-bold">1.</span>
+                                        <span><strong class="text-white">Avertissement</strong> — notification par email pour infraction mineure</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <span class="text-orange-400 font-bold">2.</span>
+                                        <span><strong class="text-white">Suspension temporaire</strong> — accès restreint pendant 7 à 30 jours</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <span class="text-red-400 font-bold">3.</span>
+                                        <span><strong class="text-white">Bannissement définitif</strong> — suppression du compte et des données associées</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="contact" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-envelope"></i></div>
+                        Besoin d'aide ?
+                    </div>
+                    <p>Pour toute question sur les CGU, contactez-nous :</p>
+
+                    <div class="info-card">
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Email</div>
+                                <a href="mailto:gaelishimwe2007@gmail.com" class="text-brand-400 hover:text-brand-300 font-semibold transition-colors">
+                                    gaelishimwe2007@gmail.com
+                                </a>
+                            </div>
+                            <div>
+                                <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Délai de réponse</div>
+                                <div class="font-semibold">Sous 48h ouvrées</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const sections = document.querySelectorAll('.legal-section');
+const navItems = document.querySelectorAll('.legal-nav-item');
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            navItems.forEach(item => item.classList.remove('active'));
+            const active = document.querySelector(`.legal-nav-item[data-section="${entry.target.id}"]`);
+            if (active) active.classList.add('active');
+        }
+    });
+}, { rootMargin: '-100px 0px -60% 0px' });
+sections.forEach(section => observer.observe(section));
+navItems.forEach(item => {
+    item.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(item.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+});
+</script>
+{% endblock %}

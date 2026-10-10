@@ -1,0 +1,121 @@
+{# ══════════════════════════════════════════
+   PARTIAL: Carte Organisation Premium
+   ══════════════════════════════════════════ #}
+
+{# ---------- Configuration ---------- #}
+{% set type_config = {
+    "association": {"icon": "fa-users",       "gradient": "from-brand-500 to-emerald-700"},
+    "cooperative": {"icon": "fa-handshake",   "gradient": "from-gold-500 to-amber-700"},
+    "company":     {"icon": "fa-building",    "gradient": "from-blue-500 to-cyan-700"},
+    "ong":         {"icon": "fa-globe",       "gradient": "from-purple-500 to-pink-700"},
+    "fondation":   {"icon": "fa-heart",       "gradient": "from-red-500 to-rose-700"}
+} %}
+
+{% set org_type = org.type|default('')|lower %}
+{% set type_info = type_config.get(org_type, {"icon": "fa-building", "gradient": "from-brand-500 to-emerald-700"}) %}
+
+{# ---------- Helpers ---------- #}
+{% set logo_url = get_url(org.logo) if org.logo else get_url('sta_img/Untitled2.png') %}
+{% set profile_url = url_for('public.profil_token', token=org.token) %}
+{% set location_parts = [org.province, org.commune]|select|list %}
+{% set has_location = location_parts|length > 0 %}
+
+{# ---------- Gradients pour header ---------- #}
+{% set header_gradients = [
+    'from-brand-600 via-brand-700 to-ink-900',
+    'from-amber-700 via-amber-800 to-ink-900',
+    'from-emerald-600 via-teal-700 to-ink-900',
+    'from-blue-600 via-blue-700 to-ink-900',
+    'from-red-600 via-pink-700 to-ink-900',
+    'from-purple-600 via-purple-700 to-ink-900'
+] %}
+{% set header_gradient = header_gradients[loop.index0 % header_gradients|length] if loop is defined else header_gradients[0] %}
+
+
+{# ══════════════════════════════════════════
+   CARD MARKUP
+   ══════════════════════════════════════════ #}
+<div class="reveal glass rounded-2xl overflow-hidden card-hover group" style="transition-delay: {{ (loop.index0 % 6) * 0.08 if loop is defined else 0 }}s;">
+
+    {# ══════════ HEADER ══════════ #}
+    <div class="relative h-44 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br {{ header_gradient }}"></div>
+        <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3), transparent 50%);"></div>
+
+        {# Logo #}
+        <div class="absolute bottom-4 left-4 w-14 h-14 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center overflow-hidden shadow-xl">
+            {% if org.logo %}
+                <img src="{{ logo_url }}" alt="{{ org.org_name|e }}" class="w-full h-full object-cover">
+            {% else %}
+                <span class="font-display font-bold text-white text-lg">{{ org.org_name[:2]|upper|e if org.org_name else 'OR' }}</span>
+            {% endif %}
+        </div>
+
+        {# Badge type #}
+        {% if org_type %}
+        <div class="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm text-[10px] text-white font-semibold uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fas {{ type_info.icon }} text-[9px]"></i>
+            {{ org_type|capitalize }}
+        </div>
+        {% endif %}
+    </div>
+
+    {# ══════════ BODY ══════════ #}
+    <div class="p-6">
+        {# Nom + catégorie #}
+        <h3 class="font-display text-xl font-bold mb-1 group-hover:text-brand-400 transition-colors">
+            {{ org.org_name|default('Organisation sans nom')|e }}
+        </h3>
+        <p class="text-xs text-gray-500 mb-3">
+            {% if org.category %}
+                {{ org.category|capitalize|e }}
+                {% if has_location %} · {% endif %}
+            {% endif %}
+            {% if has_location %}{{ location_parts|join(', ')|e }}{% endif %}
+        </p>
+
+        {# Description #}
+        {% if org.description %}
+        <p class="text-sm text-gray-400 mb-5 leading-relaxed line-clamp-2">
+            {{ org.description|truncate(160)|e }}
+        </p>
+        {% else %}
+        <p class="text-sm text-gray-500 italic mb-5">Aucune description disponible.</p>
+        {% endif %}
+
+        {# ══════════ MÉTADONNÉES ══════════ #}
+        <div class="flex flex-wrap gap-3 mb-5 text-xs text-gray-500">
+            {% if org.creation_date %}
+            <span class="flex items-center gap-1.5">
+                <i class="fas fa-calendar-alt text-brand-400 text-[10px]"></i>
+                Depuis {{ org.creation_date.strftime('%Y') }}
+            </span>
+            {% endif %}
+            {% if org.membres_count is defined and org.membres_count > 0 %}
+            <span class="flex items-center gap-1.5">
+                <i class="fas fa-users text-brand-400 text-[10px]"></i>
+                {{ org.membres_count }} membre{{ 's' if org.membres_count > 1 else '' }}
+            </span>
+            {% endif %}
+        </div>
+
+        {# ══════════ FOOTER / ACTIONS ══════════ #}
+        <div class="flex items-center justify-between pt-4 border-t border-white/5">
+            {% if org.website %}
+            <a href="{{ org.website|e }}" target="_blank" rel="noopener"
+               class="text-xs text-gray-400 hover:text-brand-400 transition-colors flex items-center gap-1.5">
+                <i class="fas fa-external-link-alt text-[10px]"></i>
+                Site web
+            </a>
+            {% else %}
+            <span></span>
+            {% endif %}
+
+            <a href="{{ profile_url }}"
+               class="text-xs font-semibold text-brand-400 hover:text-brand-300 flex items-center gap-1 group/link">
+                Voir le profil
+                <i class="fas fa-arrow-right text-[9px] group-hover/link:translate-x-0.5 transition-transform"></i>
+            </a>
+        </div>
+    </div>
+</div>

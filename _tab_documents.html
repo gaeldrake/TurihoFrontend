@@ -1,0 +1,122 @@
+{# ══════════════════════════════════════════
+   TAB: DOCUMENTS
+   ══════════════════════════════════════════ #}
+
+<div class="content-card">
+    <div class="content-card-header">
+        <div class="content-card-title">
+            <i class="fas fa-file-alt" style="color: #34d399;"></i>
+            Documents
+            {% if documents %}
+            <span class="content-card-count">{{ documents|length }}</span>
+            {% endif %}
+        </div>
+        <button class="btn-dashboard primary sm" onclick="openModal('upload-document-modal')">
+            <i class="fas fa-cloud-upload-alt"></i> Téléverser
+        </button>
+    </div>
+
+    {% if documents %}
+    <div class="documents-grid">
+        {% set icon_config = {
+            'pdf':        {'icon': 'fa-file-pdf',        'color': '#ef4444', 'bg': 'rgba(239, 68, 68, 0.15)'},
+            'word':       {'icon': 'fa-file-word',       'color': '#3b82f6', 'bg': 'rgba(59, 130, 246, 0.15)'},
+            'excel':      {'icon': 'fa-file-excel',      'color': '#10b981', 'bg': 'rgba(16, 185, 129, 0.15)'},
+            'image':      {'icon': 'fa-file-image',      'color': '#a855f7', 'bg': 'rgba(168, 85, 247, 0.15)'},
+            'powerpoint': {'icon': 'fa-file-powerpoint', 'color': '#f97316', 'bg': 'rgba(249, 115, 22, 0.15)'},
+            'alt':        {'icon': 'fa-file',            'color': '#94a3b8', 'bg': 'rgba(148, 163, 184, 0.15)'}
+        } %}
+        
+        {% for doc in documents %}
+            {% set ic = icon_config.get(doc.icon, icon_config.alt) %}
+            <div class="document-card" style="animation: fadeIn 0.4s ease-out {{ loop.index0 * 0.05 }}s both;">
+                <div class="document-icon" style="background: {{ ic.bg }}; color: {{ ic.color }};">
+                    <i class="fas {{ ic.icon }}"></i>
+                </div>
+                <div class="document-name" title="{{ doc.nom|e }}">{{ doc.nom|e }}</div>
+                <div class="document-meta">
+                    {{ doc.type|upper|e if doc.type else 'DOC' }}
+                    {% if doc.taille %}
+                        {% if doc.taille > 1048576 %}
+                            · {{ "%.1f"|format(doc.taille / 1048576) }} Mo
+                        {% else %}
+                            · {{ "%.0f"|format(doc.taille / 1024) }} Ko
+                        {% endif %}
+                    {% endif %}
+                    {% if doc.date_ajout %}
+                        · {{ doc.date_ajout|format_date }}
+                    {% endif %}
+                </div>
+                <div style="display: flex; gap: 0.25rem; margin-top: 0.75rem;">
+                    <a href="{{ url_for('dashboard.telecharger_document', id=doc.id) }}" class="btn-dashboard ghost sm" style="flex: 1; justify-content: center;">
+                        <i class="fas fa-download"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('dashboard.supprimer_document', id=doc.id) }}" style="flex: 1;" onsubmit="return confirm('Supprimer ce document ?')">
+                        <button type="submit" class="btn-dashboard danger sm" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <div style="font-weight: 600; color: white; margin-bottom: 0.25rem;">Aucun document téléversé</div>
+        <div style="font-size: 0.875rem; margin-bottom: 1rem;">Partagez vos documents officiels (statuts, rapports, brochures).</div>
+        <button onclick="openModal('upload-document-modal')" class="btn-dashboard primary">
+            <i class="fas fa-cloud-upload-alt"></i> Téléverser un document
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+{# ══════════ MODAL UPLOAD DOCUMENT ══════════ #}
+<div id="upload-document-modal" class="modal-overlay">
+    <div class="modal-content">
+        <form method="POST" action="{{ url_for('dashboard.ajouter_document') }}" enctype="multipart/form-data">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-cloud-upload-alt" style="color: #34d399;"></i>
+                    Téléverser un document
+                </div>
+                <button type="button" class="btn-dashboard ghost icon" onclick="closeModal('upload-document-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nom du document *</label>
+                    <input type="text" name="nom" class="form-input" placeholder="Ex: Statuts 2025" required maxlength="120">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fichier *</label>
+                    <label class="dropzone" style="display: block;">
+                        <input type="file" name="fichier" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png" required style="display: none;">
+                        <div class="dropzone-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;">Cliquez ou glissez un fichier</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">PDF, Word, Excel, Images — max 5 Mo</div>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-dashboard ghost" onclick="closeModal('upload-document-modal')">Annuler</button>
+                <button type="submit" class="btn-dashboard primary">
+                    <i class="fas fa-cloud-upload-alt"></i> Téléverser
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>

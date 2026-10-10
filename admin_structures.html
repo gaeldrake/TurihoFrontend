@@ -1,0 +1,691 @@
+{% extends 'admin/basee.html' %}
+{% block title %}Organisations{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Page header */
+    .page-header {
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .page-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.875rem;
+        font-weight: 800;
+        color: white;
+        margin: 0 0 0.25rem 0;
+        letter-spacing: -0.02em;
+    }
+    
+    .page-subtitle {
+        font-size: 0.9375rem;
+        color: #94a3b8;
+        margin: 0;
+    }
+    
+    /* Filters bar */
+    .filters-bar {
+        background: rgba(20, 25, 33, 0.6);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .filters-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto auto;
+        gap: 0.75rem;
+        align-items: end;
+    }
+    
+    @media (max-width: 1024px) {
+        .filters-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .filter-group label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-input,
+    .filter-select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0.625rem 1rem;
+        color: white;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        outline: none;
+    }
+    
+    .filter-input:focus,
+    .filter-select:focus {
+        border-color: rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.03);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+    }
+    
+    .filter-select option {
+        background: #141921;
+        color: white;
+    }
+    
+    /* Stats mini */
+    .stats-mini-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-mini {
+        background: rgba(20, 25, 33, 0.6);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .stat-mini-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .stat-mini-value {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: white;
+        line-height: 1;
+    }
+    
+    .stat-mini-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-top: 0.25rem;
+    }
+    
+    /* Table container */
+    .table-container {
+        background: rgba(20, 25, 33, 0.6);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    
+    .table-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .table-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    
+    /* Empty state */
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+    
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+        color: #34d399;
+    }
+    
+    .empty-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-desc {
+        font-size: 0.875rem;
+        color: #94a3b8;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Pagination */
+    .pagination {
+        padding: 1.25rem 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .pagination-info {
+        font-size: 0.8125rem;
+        color: #94a3b8;
+    }
+    
+    .pagination-links {
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .pagination-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        padding: 0 0.75rem;
+        border-radius: 8px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #94a3b8;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .pagination-link:hover:not(.active):not(.disabled) {
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    
+    .pagination-link.active {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        border-color: transparent;
+    }
+    
+    .pagination-link.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    
+    /* Organization row */
+    .org-logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(251, 191, 36, 0.1));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #34d399;
+        font-weight: 700;
+        font-size: 0.875rem;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    
+    .org-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .org-name {
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.125rem;
+    }
+    
+    .org-type {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    
+    /* Actions */
+    .row-actions {
+        display: flex;
+        gap: 0.375rem;
+        justify-content: flex-end;
+    }
+    
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.75rem;
+        text-decoration: none;
+    }
+    
+    .action-btn.view {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+    }
+    
+    .action-btn.view:hover {
+        background: rgba(59, 130, 246, 0.25);
+    }
+    
+    .action-btn.edit {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+    }
+    
+    .action-btn.edit:hover {
+        background: rgba(16, 185, 129, 0.25);
+    }
+    
+    .action-btn.toggle {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+    }
+    
+    .action-btn.toggle:hover {
+        background: rgba(251, 191, 36, 0.25);
+    }
+    
+    .action-btn.delete {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+    }
+    
+    .action-btn.delete:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{# ══════════════════════════════════════════
+   PAGE HEADER
+   ══════════════════════════════════════════ #}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Organisations</h1>
+        <p class="page-subtitle">Gérez toutes les organisations inscrites sur TURIHO</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{{ url_for('admin.export_abonnes') }}" class="btn-admin ghost">
+            <i class="fas fa-download"></i>
+            <span>Export</span>
+        </a>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   STATS MINI
+   ══════════════════════════════════════════ #}
+<div class="stats-mini-bar">
+    <div class="stat-mini">
+        <div class="stat-mini-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+            <i class="fas fa-building"></i>
+        </div>
+        <div>
+            <div class="stat-mini-value" data-count="{{ pagination.total }}">0</div>
+            <div class="stat-mini-label">Total organisations</div>
+        </div>
+    </div>
+    
+    <div class="stat-mini">
+        <div class="stat-mini-icon" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa;">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div>
+            <div class="stat-mini-value" data-count="{{ structures|selectattr('is_active')|list|length }}">0</div>
+            <div class="stat-mini-label">Actives</div>
+        </div>
+    </div>
+    
+    <div class="stat-mini">
+        <div class="stat-mini-icon" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">
+            <i class="fas fa-filter"></i>
+        </div>
+        <div>
+            <div class="stat-mini-value">{{ all_types|length }}</div>
+            <div class="stat-mini-label">Types</div>
+        </div>
+    </div>
+    
+    <div class="stat-mini">
+        <div class="stat-mini-icon" style="background: rgba(168, 85, 247, 0.15); color: #a78bfa;">
+            <i class="fas fa-tags"></i>
+        </div>
+        <div>
+            <div class="stat-mini-value">{{ all_categories|length }}</div>
+            <div class="stat-mini-label">Catégories</div>
+        </div>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   FILTERS BAR
+   ══════════════════════════════════════════ #}
+<div class="filters-bar">
+    <form method="GET" action="{{ url_for('admin.admin_structures') }}" class="filters-grid">
+        {# Search #}
+        <div class="filter-group">
+            <label for="search">Rechercher</label>
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                <input type="text" id="search" name="search" value="{{ search|e }}" 
+                       placeholder="Nom de l'organisation..." 
+                       class="filter-input pl-9">
+            </div>
+        </div>
+        
+        {# Type filter #}
+        <div class="filter-group">
+            <label for="type">Type</label>
+            <select id="type" name="type" class="filter-select">
+                <option value="">Tous les types</option>
+                {% for t in all_types %}
+                <option value="{{ t|e }}" {% if selected_type == t %}selected{% endif %}>
+                    {{ t|capitalize|e }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        {# Category filter #}
+        <div class="filter-group">
+            <label for="category">Catégorie</label>
+            <select id="category" name="category" class="filter-select">
+                <option value="">Toutes les catégories</option>
+                {% for c in all_categories %}
+                <option value="{{ c|e }}" {% if selected_category == c %}selected{% endif %}>
+                    {{ c|capitalize|e }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        {# Filter button #}
+        <button type="submit" class="btn-admin primary">
+            <i class="fas fa-filter"></i>
+            <span>Filtrer</span>
+        </button>
+        
+        {# Reset button #}
+        {% if search or selected_type or selected_category %}
+        <a href="{{ url_for('admin.admin_structures') }}" class="btn-admin ghost">
+            <i class="fas fa-times"></i>
+            <span>Réinitialiser</span>
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+{# ══════════════════════════════════════════
+   TABLE
+   ══════════════════════════════════════════ #}
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">
+            <i class="fas fa-building text-brand-400"></i>
+            Liste des organisations
+            <span class="status-badge info ml-2">{{ pagination.total }}</span>
+        </div>
+    </div>
+    
+    {% if structures %}
+    <div class="table-wrapper">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Organisation</th>
+                    <th>Type</th>
+                    <th>Catégorie</th>
+                    <th>Email</th>
+                    <th>Statut</th>
+                    <th>Date création</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in structures %}
+                <tr>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <div class="org-logo">
+                                {% if s.logo %}
+                                    <img src="{{ get_url(s.logo) }}" alt="{{ s.org_name|e }}">
+                                {% else %}
+                                    {{ s.org_name[:1]|upper if s.org_name else '?' }}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="org-name">{{ s.org_name|e if s.org_name else '—' }}</div>
+                                <div class="org-type">{{ s.type|capitalize|e if s.type else '—' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if s.type %}
+                        <span class="status-badge info">{{ s.type|capitalize|e }}</span>
+                        {% else %}
+                        <span style="color: #64748b;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.category %}
+                        <span style="color: #cbd5e1;">{{ s.category|capitalize|e }}</span>
+                        {% else %}
+                        <span style="color: #64748b;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.email %}
+                        <a href="mailto:{{ s.email|e }}" class="text-brand-400 hover:text-brand-300 transition-colors">
+                            {{ s.email|e }}
+                        </a>
+                        {% else %}
+                        <span style="color: #64748b;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.is_active %}
+                        <span class="status-badge success">
+                            <i class="fas fa-circle text-[8px]"></i>
+                            Active
+                        </span>
+                        {% else %}
+                        <span class="status-badge danger">
+                            <i class="fas fa-circle text-[8px]"></i>
+                            Inactive
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.creation_date %}
+                        <span style="color: #cbd5e1;">{{ s.creation_date.strftime('%d/%m/%Y') }}</span>
+                        {% else %}
+                        <span style="color: #64748b;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <a href="{{ url_for('public.profil_token', token=s.token) }}" 
+                               class="action-btn view" title="Voir le profil public" target="_blank">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a href="{{ url_for('admin.modifier_structure', id=s.id) }}" 
+                               class="action-btn edit" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('admin.toggle_structure', id=s.id) }}" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="action-btn toggle" title="{% if s.is_active %}Désactiver{% else %}Activer{% endif %}">
+                                    <i class="fas {% if s.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin.supprimer_structure', id=s.id) }}" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette organisation ?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="action-btn delete" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {# Pagination #}
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        <div class="pagination-info">
+            Affichage de
+            <strong class="text-white">{{ ((pagination.page - 1) * pagination.per_page) + 1 }}</strong>
+            à
+            <strong class="text-white">{{ [pagination.page * pagination.per_page, pagination.total]|min }}</strong>
+            sur
+            <strong class="text-white">{{ pagination.total }}</strong>
+            résultats
+        </div>
+        
+        <div class="pagination-links">
+            {# Previous #}
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('admin.admin_structures', page=pagination.prev_num, search=search, type=selected_type, category=selected_category) }}" 
+               class="pagination-link">
+                <i class="fas fa-chevron-left text-xs"></i>
+            </a>
+            {% else %}
+            <span class="pagination-link disabled">
+                <i class="fas fa-chevron-left text-xs"></i>
+            </span>
+            {% endif %}
+            
+            {# Pages #}
+            {% for p in pagination.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
+                {% if p %}
+                    {% if p == pagination.page %}
+                    <span class="pagination-link active">{{ p }}</span>
+                    {% else %}
+                    <a href="{{ url_for('admin.admin_structures', page=p, search=search, type=selected_type, category=selected_category) }}" 
+                       class="pagination-link">{{ p }}</a>
+                    {% endif %}
+                {% else %}
+                <span class="pagination-link disabled">…</span>
+                {% endif %}
+            {% endfor %}
+            
+            {# Next #}
+            {% if pagination.has_next %}
+            <a href="{{ url_for('admin.admin_structures', page=pagination.next_num, search=search, type=selected_type, category=selected_category) }}" 
+               class="pagination-link">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </a>
+            {% else %}
+            <span class="pagination-link disabled">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    {# Empty state #}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-building"></i>
+        </div>
+        <div class="empty-title">Aucune organisation trouvée</div>
+        <div class="empty-desc">
+            {% if search or selected_type or selected_category %}
+            Aucune organisation ne correspond aux filtres sélectionnés.
+            {% else %}
+            Les organisations enregistrées apparaîtront ici.
+            {% endif %}
+        </div>
+        {% if search or selected_type or selected_category %}
+        <a href="{{ url_for('admin.admin_structures') }}" class="btn-admin primary">
+            <i class="fas fa-times"></i>
+            Réinitialiser les filtres
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animate counters
+document.querySelectorAll('[data-count]').forEach(el => {
+    const target = parseInt(el.dataset.count);
+    const duration = 1500;
+    const start = performance.now();
+    
+    function update(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 4);
+        el.textContent = Math.round(target * eased).toLocaleString('fr-FR');
+        if (progress < 1) requestAnimationFrame(update);
+    }
+    
+    requestAnimationFrame(update);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,525 @@
+{% extends 'admin/basee.html' %}
+{% block title %}Logs de sécurité{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cyber-green: #00ff88;
+        --cyber-red: #ff3344;
+        --cyber-blue: #00aaff;
+        --cyber-amber: #ffaa00;
+        --cyber-card: rgba(10, 15, 20, 0.7);
+    }
+    
+    .security-tabs {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        background: rgba(10, 15, 20, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+    }
+    
+    .security-tab {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        border-radius: 10px;
+        color: #94a3b8;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    
+    .security-tab:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .security-tab.active {
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 170, 255, 0.05));
+        color: var(--cyber-green);
+        border: 1px solid rgba(0, 255, 136, 0.2);
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
+    }
+    
+    .page-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.875rem;
+        font-weight: 800;
+        color: white;
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .page-subtitle {
+        color: #64748b;
+        font-size: 0.9375rem;
+        margin: 0;
+    }
+    
+    /* Filters */
+    .filters-card {
+        background: var(--cyber-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .filters-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 0.75rem;
+        align-items: end;
+    }
+    
+    @media (max-width: 768px) {
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .filter-group label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-input,
+    .filter-select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0.625rem 1rem;
+        color: white;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        outline: none;
+    }
+    
+    .filter-input:focus,
+    .filter-select:focus {
+        border-color: rgba(0, 255, 136, 0.5);
+        background: rgba(0, 255, 136, 0.03);
+        box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.08);
+    }
+    
+    .filter-select option {
+        background: #0a0d12;
+        color: white;
+    }
+    
+    /* Table */
+    .logs-card {
+        background: var(--cyber-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    
+    .logs-card-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .logs-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8125rem;
+    }
+    
+    .logs-table thead th {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+    }
+    
+    .logs-table tbody td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        color: #cbd5e1;
+    }
+    
+    .logs-table tbody tr:hover {
+        background: rgba(0, 255, 136, 0.03);
+    }
+    
+    .severity-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .severity-badge.info {
+        background: rgba(0, 170, 255, 0.15);
+        color: var(--cyber-blue);
+        border: 1px solid rgba(0, 170, 255, 0.3);
+    }
+    
+    .severity-badge.warning {
+        background: rgba(255, 170, 0, 0.15);
+        color: var(--cyber-amber);
+        border: 1px solid rgba(255, 170, 0, 0.3);
+    }
+    
+    .severity-badge.critical {
+        background: rgba(255, 51, 68, 0.15);
+        color: var(--cyber-red);
+        border: 1px solid rgba(255, 51, 68, 0.3);
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.6875rem;
+        font-weight: 600;
+    }
+    
+    .status-badge.success {
+        background: rgba(0, 255, 136, 0.15);
+        color: var(--cyber-green);
+    }
+    
+    .status-badge.failed {
+        background: rgba(255, 170, 0, 0.15);
+        color: var(--cyber-amber);
+    }
+    
+    .status-badge.blocked {
+        background: rgba(255, 51, 68, 0.15);
+        color: var(--cyber-red);
+    }
+    
+    .btn-cyber {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        text-decoration: none;
+    }
+    
+    .btn-cyber.primary {
+        background: linear-gradient(135deg, var(--cyber-green), #00cc66);
+        color: #030507;
+        box-shadow: 0 4px 12px -4px rgba(0, 255, 136, 0.4);
+    }
+    
+    .btn-cyber.ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+    
+    .btn-cyber.ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(0, 255, 136, 0.3);
+    }
+    
+    /* Pagination */
+    .pagination {
+        padding: 1.25rem 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .pagination-info {
+        font-size: 0.8125rem;
+        color: #94a3b8;
+    }
+    
+    .pagination-links {
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .pagination-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        padding: 0 0.75rem;
+        border-radius: 8px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #94a3b8;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .pagination-link:hover:not(.active):not(.disabled) {
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+        border-color: rgba(0, 255, 136, 0.3);
+    }
+    
+    .pagination-link.active {
+        background: linear-gradient(135deg, var(--cyber-green), #00cc66);
+        color: #030507;
+        border-color: transparent;
+    }
+    
+    .pagination-link.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+        color: #64748b;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--cyber-green);
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" />
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-list" style="color: var(--cyber-green);"></i>
+        Journal de Sécurité
+    </h1>
+    <p class="page-subtitle">
+        Historique complet des événements de sécurité
+    </p>
+</div>
+
+{# Tabs #}
+<div class="security-tabs">
+    <a href="{{ url_for('admin.security_dashboard') }}" class="security-tab">
+        <i class="fas fa-tachometer-alt"></i>
+        Vue d'ensemble
+    </a>
+    <a href="{{ url_for('admin.security_logs') }}" class="security-tab active">
+        <i class="fas fa-list"></i>
+        Logs
+    </a>
+    <a href="{{ url_for('admin.security_sessions') }}" class="security-tab">
+        <i class="fas fa-desktop"></i>
+        Sessions
+    </a>
+    <a href="{{ url_for('admin.security_ip_rules') }}" class="security-tab">
+        <i class="fas fa-network-wired"></i>
+        Règles IP
+    </a>
+    <a href="{{ url_for('admin.security_config') }}" class="security-tab">
+        <i class="fas fa-sliders-h"></i>
+        Configuration
+    </a>
+</div>
+
+{# Filters #}
+<div class="filters-card">
+    <form method="GET" action="{{ url_for('admin.security_logs') }}" class="filters-grid">
+        <div class="filter-group">
+            <label for="search">Rechercher</label>
+            <input type="text" id="search" name="search" value="{{ search|e }}" 
+                   placeholder="Email, IP, action..." class="filter-input">
+        </div>
+        
+        <div class="filter-group">
+            <label for="event_type">Type</label>
+            <select id="event_type" name="event_type" class="filter-select">
+                <option value="">Tous les types</option>
+                {% set types = ['login', 'logout', 'failed', 'blocked', 'locked', 'password_change', '2fa_enabled', 'suspicious', 'bruteforce'] %}
+                {% for t in types %}
+                <option value="{{ t }}" {% if event_type == t %}selected{% endif %}>
+                    {{ t|replace('_', ' ')|title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="severity">Sévérité</label>
+            <select id="severity" name="severity" class="filter-select">
+                <option value="">Toutes</option>
+                <option value="info" {% if severity == 'info' %}selected{% endif %}>Info</option>
+                <option value="warning" {% if severity == 'warning' %}selected{% endif %}>Warning</option>
+                <option value="critical" {% if severity == 'critical' %}selected{% endif %}>Critical</option>
+            </select>
+        </div>
+        
+        <button type="submit" class="btn-cyber primary">
+            <i class="fas fa-filter"></i>
+            Filtrer
+        </button>
+    </form>
+</div>
+
+{# Logs table #}
+<div class="logs-card">
+    <div class="logs-card-header">
+        <div style="color: #94a3b8; font-size: 0.875rem;">
+            {{ pagination.total }} événement{{ 's' if pagination.total != 1 else '' }}
+        </div>
+        <a href="{{ url_for('admin.security_export', format_type='csv') }}" class="btn-cyber ghost">
+            <i class="fas fa-file-csv"></i>
+            Export CSV
+        </a>
+    </div>
+    
+    {% if logs %}
+    <div style="overflow-x: auto;">
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Sévérité</th>
+                    <th>Email</th>
+                    <th>IP</th>
+                    <th>Pays</th>
+                    <th>Navigateur</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.created_at.strftime('%d/%m %H:%M') if log.created_at else '—' }}</td>
+                    <td>
+                        <i class="fas {{ log.icon }}" style="color: {{ log.color }}; margin-right: 0.375rem;"></i>
+                        {{ log.event_type|replace('_', ' ')|title }}
+                    </td>
+                    <td>
+                        <span class="severity-badge {{ log.severity }}">
+                            {{ log.severity|upper }}
+                        </span>
+                    </td>
+                    <td>{{ log.user_email or '—' }}</td>
+                    <td style="font-family: 'JetBrains Mono', monospace;">{{ log.ip_address or '—' }}</td>
+                    <td>{{ log.country or '—' }}</td>
+                    <td>{{ log.browser or '—' }}</td>
+                    <td>
+                        <span class="status-badge {{ log.status }}">
+                            {{ log.status|upper }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {# Pagination #}
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        <div class="pagination-info">
+            Affichage de
+            <strong style="color: white;">{{ ((pagination.page - 1) * pagination.per_page) + 1 }}</strong>
+            à
+            <strong style="color: white;">{{ [pagination.page * pagination.per_page, pagination.total]|min }}</strong>
+            sur
+            <strong style="color: white;">{{ pagination.total }}</strong>
+        </div>
+        
+        <div class="pagination-links">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('admin.security_logs', page=pagination.prev_num, search=search, event_type=event_type, severity=severity) }}" 
+               class="pagination-link">
+                <i class="fas fa-chevron-left text-xs"></i>
+            </a>
+            {% else %}
+            <span class="pagination-link disabled">
+                <i class="fas fa-chevron-left text-xs"></i>
+            </span>
+            {% endif %}
+            
+            {% for p in pagination.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
+                {% if p %}
+                    {% if p == pagination.page %}
+                    <span class="pagination-link active">{{ p }}</span>
+                    {% else %}
+                    <a href="{{ url_for('admin.security_logs', page=p, search=search, event_type=event_type, severity=severity) }}" 
+                       class="pagination-link">{{ p }}</a>
+                    {% endif %}
+                {% else %}
+                <span class="pagination-link disabled">…</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if pagination.has_next %}
+            <a href="{{ url_for('admin.security_logs', page=pagination.next_num, search=search, event_type=event_type, severity=severity) }}" 
+               class="pagination-link">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </a>
+            {% else %}
+            <span class="pagination-link disabled">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-shield-alt"></i>
+        <p>Aucun événement de sécurité trouvé</p>
+        {% if search or event_type or severity %}
+        <a href="{{ url_for('admin.security_logs') }}" class="btn-cyber ghost" style="margin-top: 1rem;">
+            <i class="fas fa-times"></i>
+            Réinitialiser les filtres
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,866 @@
+{% extends 'admin/basee.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Page header */
+    .page-header {
+        margin-bottom: 2rem;
+    }
+    
+    .page-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.875rem;
+        font-weight: 800;
+        color: white;
+        margin: 0 0 0.25rem 0;
+        letter-spacing: -0.02em;
+    }
+    
+    .page-subtitle {
+        font-size: 0.9375rem;
+        color: #94a3b8;
+        margin: 0;
+    }
+    
+    /* KPI Grid */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Chart grid */
+    .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+    
+    .chart-grid .col-8 { grid-column: span 8; }
+    .chart-grid .col-6 { grid-column: span 6; }
+    .chart-grid .col-4 { grid-column: span 4; }
+    .chart-grid .col-12 { grid-column: span 12; }
+    
+    @media (max-width: 1024px) {
+        .chart-grid .col-8,
+        .chart-grid .col-6,
+        .chart-grid .col-4 {
+            grid-column: span 12;
+        }
+    }
+    
+    /* Section title */
+    .section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: white;
+        margin: 2rem 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title i { color: #34d399; }
+    
+    /* Quick actions */
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .quick-action {
+        background: rgba(20, 25, 33, 0.6);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .quick-action:hover {
+        border-color: rgba(16, 185, 129, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px -20px rgba(16, 185, 129, 0.2);
+    }
+    
+    .quick-action-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    
+    .quick-action-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .quick-action-title {
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.125rem;
+    }
+    
+    .quick-action-desc {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    
+    /* Activity feed */
+    .activity-feed {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 12px;
+        transition: background 0.2s;
+    }
+    
+    .activity-item:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .activity-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.875rem;
+    }
+    
+    .activity-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .activity-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.125rem;
+    }
+    
+    .activity-desc {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    
+    .activity-time {
+        font-size: 0.6875rem;
+        color: #64748b;
+        margin-top: 0.25rem;
+    }
+    
+    /* Pending items */
+    .pending-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .pending-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        transition: all 0.2s;
+    }
+    
+    .pending-item:hover {
+        border-color: rgba(251, 191, 36, 0.3);
+        background: rgba(251, 191, 36, 0.03);
+    }
+    
+    .pending-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fbbf24;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .pending-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .pending-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.125rem;
+    }
+    
+    .pending-meta {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    
+    .pending-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.75rem;
+    }
+    
+    .btn-icon.success {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+    }
+    
+    .btn-icon.success:hover {
+        background: rgba(16, 185, 129, 0.25);
+    }
+    
+    .btn-icon.danger {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+    }
+    
+    .btn-icon.danger:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+    
+    /* Stats mini */
+    .stats-mini {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    
+    .stat-mini {
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 10px;
+        text-align: center;
+    }
+    
+    .stat-mini-value {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: white;
+    }
+    
+    .stat-mini-label {
+        font-size: 0.6875rem;
+        color: #94a3b8;
+        margin-top: 0.125rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{# ══════════════════════════════════════════
+   PAGE HEADER
+   ══════════════════════════════════════════ #}
+<div class="page-header">
+    <h1 class="page-title">Centre de Pilotage</h1>
+    <p class="page-subtitle">Vue d'ensemble de la plateforme TURIHO</p>
+</div>
+
+{# ══════════════════════════════════════════
+   KPI CARDS
+   ══════════════════════════════════════════ #}
+<div class="kpi-grid">
+    {# Organisations #}
+    <div class="kpi-card" style="--kpi-color: rgba(16, 185, 129, 0.15);">
+        <div class="kpi-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+            <i class="fas fa-building"></i>
+        </div>
+        <div class="kpi-value" data-count="{{ structures_count|default(0) }}">0</div>
+        <div class="kpi-label">Organisations</div>
+        <div class="kpi-trend up">
+            <i class="fas fa-arrow-up"></i> +12% ce mois
+        </div>
+    </div>
+    
+    {# Abonnés #}
+    <div class="kpi-card" style="--kpi-color: rgba(59, 130, 246, 0.15);">
+        <div class="kpi-icon" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa;">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="kpi-value" data-count="{{ abonnes_count|default(0) }}">0</div>
+        <div class="kpi-label">Abonnés Newsletter</div>
+        <div class="kpi-trend up">
+            <i class="fas fa-arrow-up"></i> +8% ce mois
+        </div>
+    </div>
+    
+    {# Newsletters #}
+    <div class="kpi-card" style="--kpi-color: rgba(168, 85, 247, 0.15);">
+        <div class="kpi-icon" style="background: rgba(168, 85, 247, 0.15); color: #a78bfa;">
+            <i class="fas fa-envelope"></i>
+        </div>
+        <div class="kpi-value" data-count="{{ newsletters_count|default(0) }}">0</div>
+        <div class="kpi-label">Newsletters Envoyées</div>
+        <div class="kpi-trend up">
+            <i class="fas fa-arrow-up"></i> +5 cette semaine
+        </div>
+    </div>
+    
+    {# Programmes #}
+    <div class="kpi-card" style="--kpi-color: rgba(251, 191, 36, 0.15);">
+        <div class="kpi-icon" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">
+            <i class="fas fa-rocket"></i>
+        </div>
+        <div class="kpi-value" data-count="{{ programmes_count|default(0) }}">0</div>
+        <div class="kpi-label">Programmes Actifs</div>
+        <div class="kpi-trend up">
+            <i class="fas fa-arrow-up"></i> +3 nouveaux
+        </div>
+    </div>
+    
+    {# Témoignages validés #}
+    <div class="kpi-card" style="--kpi-color: rgba(16, 185, 129, 0.15);">
+        <div class="kpi-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="kpi-value" data-count="{{ temoignages_count|default(0) }}">0</div>
+        <div class="kpi-label">Témoignages Validés</div>
+    </div>
+    
+    {# Témoignages en attente #}
+    <div class="kpi-card" style="--kpi-color: rgba(251, 191, 36, 0.15);">
+        <div class="kpi-icon" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="kpi-value" data-count="{{ temoignages_pending|default(0) }}">0</div>
+        <div class="kpi-label">En Attente de Validation</div>
+        {% if temoignages_pending is defined and temoignages_pending > 0 %}
+        <div class="kpi-trend down">
+            <i class="fas fa-exclamation-circle"></i> Action requise
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   QUICK ACTIONS
+   ══════════════════════════════════════════ #}
+<div class="section-title">
+    <i class="fas fa-bolt"></i>
+    Actions Rapides
+</div>
+
+<div class="quick-actions">
+    <a href="{{ url_for('admin.envoyer_newsletter_view') }}" class="quick-action">
+        <div class="quick-action-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+            <i class="fas fa-paper-plane"></i>
+        </div>
+        <div class="quick-action-content">
+            <div class="quick-action-title">Envoyer Newsletter</div>
+            <div class="quick-action-desc">Communiquer avec les abonnés</div>
+        </div>
+    </a>
+    
+    <a href="{{ url_for('admin.ajouter_programme') }}" class="quick-action">
+        <div class="quick-action-icon" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">
+            <i class="fas fa-plus"></i>
+        </div>
+        <div class="quick-action-content">
+            <div class="quick-action-title">Nouveau Programme</div>
+            <div class="quick-action-desc">Formation, financement ou projet</div>
+        </div>
+    </a>
+    
+    <a href="{{ url_for('admin.export_abonnes') }}" class="quick-action">
+        <div class="quick-action-icon" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa;">
+            <i class="fas fa-download"></i>
+        </div>
+        <div class="quick-action-content">
+            <div class="quick-action-title">Exporter Abonnés</div>
+            <div class="quick-action-desc">Télécharger en CSV</div>
+        </div>
+    </a>
+    
+    <a href="{{ url_for('admin.admin_temoignages') }}" class="quick-action">
+        <div class="quick-action-icon" style="background: rgba(168, 85, 247, 0.15); color: #a78bfa;">
+            <i class="fas fa-quote-left"></i>
+        </div>
+        <div class="quick-action-content">
+            <div class="quick-action-title">Gérer Témoignages</div>
+            <div class="quick-action-desc">Valider ou refuser</div>
+        </div>
+    </a>
+</div>
+
+{# ══════════════════════════════════════════
+   CHARTS
+   ══════════════════════════════════════════ #}
+<div class="section-title">
+    <i class="fas fa-chart-line"></i>
+    Analytics
+</div>
+
+<div class="chart-grid">
+    {# Graphique 1: Évolution des inscriptions #}
+    <div class="col-8 chart-container">
+        <div class="chart-header">
+            <div class="chart-title">
+                <i class="fas fa-chart-area text-brand-400"></i>
+                Évolution des Inscriptions
+            </div>
+            <div class="flex gap-2">
+                <button class="btn-admin ghost text-xs">7j</button>
+                <button class="btn-admin ghost text-xs">30j</button>
+                <button class="btn-admin ghost text-xs">12m</button>
+            </div>
+        </div>
+        <div style="height: 300px;">
+            <canvas id="inscriptionsChart"></canvas>
+        </div>
+    </div>
+    
+    {# Graphique 2: Répartition par type #}
+    <div class="col-4 chart-container">
+        <div class="chart-header">
+            <div class="chart-title">
+                <i class="fas fa-chart-pie text-gold-400"></i>
+                Répartition par Type
+            </div>
+        </div>
+        <div style="height: 300px;">
+            <canvas id="typesChart"></canvas>
+        </div>
+    </div>
+    
+    {# Graphique 3: Activité quotidienne #}
+    <div class="col-6 chart-container">
+        <div class="chart-header">
+            <div class="chart-title">
+                <i class="fas fa-chart-bar text-blue-400"></i>
+                Activité Quotidienne
+            </div>
+        </div>
+        <div style="height: 280px;">
+            <canvas id="activityChart"></canvas>
+        </div>
+    </div>
+    
+    {# Graphique 4: Performance #}
+    <div class="col-6 chart-container">
+        <div class="chart-header">
+            <div class="chart-title">
+                <i class="fas fa-bullseye text-purple-400"></i>
+                Performance Plateforme
+            </div>
+        </div>
+        <div style="height: 280px;">
+            <canvas id="radarChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   ACTIVITY + PENDING
+   ══════════════════════════════════════════ #}
+<div class="chart-grid">
+    {# Activité récente #}
+    <div class="col-8 chart-container">
+        <div class="chart-header">
+            <div class="chart-title">
+                <i class="fas fa-history text-brand-400"></i>
+                Activité Récente
+            </div>
+            <a href="#" class="btn-admin ghost text-xs">Voir tout</a>
+        </div>
+        
+        <div class="activity-feed">
+            <div class="activity-item">
+                <div class="activity-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Nouvelle organisation inscrite</div>
+                    <div class="activity-desc">Association Espoir des Jeunes a rejoint la plateforme</div>
+                    <div class="activity-time">Il y a 5 minutes</div>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-icon" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">
+                    <i class="fas fa-quote-left"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Témoignage en attente</div>
+                    <div class="activity-desc">Jean Mugabo a soumis un témoignage</div>
+                    <div class="activity-time">Il y a 15 minutes</div>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-icon" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa;">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Newsletter envoyée</div>
+                    <div class="activity-desc">156 abonnés ont reçu la newsletter hebdomadaire</div>
+                    <div class="activity-time">Il y a 2 heures</div>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-icon" style="background: rgba(168, 85, 247, 0.15); color: #a78bfa;">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Nouveau programme publié</div>
+                    <div class="activity-desc">Formation en Marketing Digital est maintenant visible</div>
+                    <div class="activity-time">Il y a 5 heures</div>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Nouvel abonné newsletter</div>
+                    <div class="activity-desc">Marie Ndayisaba s'est inscrite à la newsletter</div>
+                    <div class="activity-time">Il y a 1 jour</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {# Témoignages en attente #}
+    <div class="col-4 chart-container">
+        <div class="chart-header">
+            <div class="chart-title">
+                <i class="fas fa-clock text-gold-400"></i>
+                En Attente
+            </div>
+            <span class="status-badge warning">{{ temoignages_pending|default(0) }}</span>
+        </div>
+        
+        {% if temoignages_pending is defined and temoignages_pending > 0 %}
+        <div class="pending-list">
+            <div class="pending-item">
+                <div class="pending-avatar">
+                    <i class="fas fa-quote-left"></i>
+                </div>
+                <div class="pending-content">
+                    <div class="pending-name">Témoignage #1</div>
+                    <div class="pending-meta">Soumis il y a 15 min</div>
+                </div>
+                <div class="pending-actions">
+                    <button class="btn-icon success" title="Valider">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn-icon danger" title="Refuser">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="pending-item">
+                <div class="pending-avatar">
+                    <i class="fas fa-quote-left"></i>
+                </div>
+                <div class="pending-content">
+                    <div class="pending-name">Témoignage #2</div>
+                    <div class="pending-meta">Soumis il y a 1h</div>
+                </div>
+                <div class="pending-actions">
+                    <button class="btn-icon success" title="Valider">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn-icon danger" title="Refuser">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 2rem 1rem; color: #64748b;">
+            <i class="fas fa-check-circle text-3xl text-brand-400 mb-2"></i>
+            <p class="text-sm">Aucun élément en attente</p>
+        </div>
+        {% endif %}
+        
+        <div class="stats-mini">
+            <div class="stat-mini">
+                <div class="stat-mini-value">{{ temoignages_count|default(0) }}</div>
+                <div class="stat-mini-label">Validés</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-value">{{ temoignages_pending|default(0) }}</div>
+                <div class="stat-mini-label">En attente</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ══════════════════════════════════════════
+// CHART.JS CONFIGURATION
+// ══════════════════════════════════════════
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+// ══════════════════════════════════════════
+// GRAPHIQUE 1: ÉVOLUTION INSCRIPTIONS
+// ══════════════════════════════════════════
+const inscriptionsCtx = document.getElementById('inscriptionsChart');
+if (inscriptionsCtx) {
+    const gradient = inscriptionsCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+    gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+    
+    new Chart(inscriptionsCtx, {
+        type: 'line',
+        data: {
+            labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+            datasets: [{
+                label: 'Inscriptions',
+                data: [12, 19, 15, 25, 22, 30, 28],
+                borderColor: '#10b981',
+                backgroundColor: gradient,
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#10b981',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 1500,
+                easing: 'easeOutQuart'
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 13, 18, 0.95)',
+                    borderColor: 'rgba(16, 185, 129, 0.3)',
+                    borderWidth: 1,
+                    padding: 12,
+                    titleFont: { size: 13, weight: '600' },
+                    bodyFont: { size: 12 }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { font: { size: 11 } }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+}
+
+// ══════════════════════════════════════════
+// GRAPHIQUE 2: RÉPARTITION PAR TYPE
+// ══════════════════════════════════════════
+const typesCtx = document.getElementById('typesChart');
+if (typesCtx) {
+    new Chart(typesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Associations', 'Coopératives', 'Entreprises'],
+            datasets: [{
+                data: [45, 30, 25],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(251, 191, 36, 0.8)',
+                    'rgba(59, 130, 246, 0.8)'
+                ],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            animation: {
+                animateRotate: true,
+                duration: 1500,
+                easing: 'easeOutQuart'
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 13, 18, 0.95)',
+                    borderColor: 'rgba(16, 185, 129, 0.3)',
+                    borderWidth: 1,
+                    padding: 12
+                }
+            }
+        }
+    });
+}
+
+// ══════════════════════════════════════════
+// GRAPHIQUE 3: ACTIVITÉ QUOTIDIENNE
+// ══════════════════════════════════════════
+const activityCtx = document.getElementById('activityChart');
+if (activityCtx) {
+    new Chart(activityCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+            datasets: [{
+                label: 'Visiteurs',
+                data: [120, 180, 150, 220, 190, 250, 200],
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 1500,
+                easing: 'easeOutQuart'
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 13, 18, 0.95)',
+                    borderColor: 'rgba(59, 130, 246, 0.3)',
+                    borderWidth: 1,
+                    padding: 12
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { font: { size: 11 } }
+                }
+            }
+        }
+    });
+}
+
+// ══════════════════════════════════════════
+// GRAPHIQUE 4: RADAR PERFORMANCE
+// ══════════════════════════════════════════
+const radarCtx = document.getElementById('radarChart');
+if (radarCtx) {
+    new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+            labels: ['SEO', 'Performance', 'Engagement', 'Contenu', 'Visibilité', 'Utilisateurs'],
+            datasets: [{
+                label: 'Score',
+                data: [85, 90, 75, 80, 88, 70],
+                backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                borderColor: 'rgba(168, 85, 247, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(168, 85, 247, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 1500,
+                easing: 'easeOutQuart'
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 13, 18, 0.95)',
+                    borderColor: 'rgba(168, 85, 247, 0.3)',
+                    borderWidth: 1,
+                    padding: 12
+                }
+            },
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(255, 255, 255, 0.05)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    pointLabels: {
+                        font: { size: 11 },
+                        color: '#94a3b8'
+                    },
+                    ticks: {
+                        display: false,
+                        stepSize: 20
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+/* fontawesome-paths.css
+   Corrige les chemins des polices pour les fichiers locaux.
+   Le fichier fontawesome.min.css original pointe vers ../webfonts/
+   ce qui devrait fonctionner si la structure est :
+     static/css/fontawesome.min.css
+     static/webfonts/fa-*.woff2
+   Ce fichier n'est nécessaire QUE si les polices ne se chargent pas.
+*/
+
+@font-face {
+    font-family: 'Font Awesome 6 Free';
+    font-style: normal;
+    font-weight: 900;
+    font-display: block;
+    src: url('../webfonts/fa-solid-900.woff2') format('woff2'),
+         url('../webfonts/fa-solid-900.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Font Awesome 6 Free';
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url('../webfonts/fa-regular-400.woff2') format('woff2'),
+         url('../webfonts/fa-regular-400.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Font Awesome 6 Brands';
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url('../webfonts/fa-brands-400.woff2') format('woff2'),
+         url('../webfonts/fa-brands-400.ttf') format('truetype');
+}

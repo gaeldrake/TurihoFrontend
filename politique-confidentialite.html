@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Politique de Confidentialité — TURIHO{% endblock %}
+{% block meta_description %}Comment TURIHO protège et utilise vos données personnelles.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legal-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 3rem;
+        align-items: start;
+    }
+    @media (max-width: 1024px) {
+        .legal-layout { grid-template-columns: 1fr; }
+        .legal-sidebar { position: static !important; }
+    }
+    .legal-sidebar { position: sticky; top: 100px; }
+    .legal-nav-item {
+        display: block;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #94a3b8;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+    }
+    .legal-nav-item:hover { color: white; background: rgba(255,255,255,0.03); }
+    .legal-nav-item.active {
+        color: #34d399;
+        background: rgba(16, 185, 129, 0.08);
+        border-left-color: #10b981;
+    }
+    .legal-section {
+        padding: 2.5rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        scroll-margin-top: 100px;
+    }
+    .legal-section:last-child { border-bottom: none; }
+    .legal-title {
+        display: flex; align-items: center; gap: 0.75rem;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.75rem; font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    .legal-title-icon {
+        width: 40px; height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        display: flex; align-items: center; justify-content: center;
+        color: #34d399;
+    }
+    .legal-content p, .legal-content li {
+        color: #cbd5e1;
+        font-size: 15px;
+        line-height: 1.8;
+        margin-bottom: 1rem;
+    }
+    .legal-content strong { color: white; }
+    .legal-content ul { padding-left: 0; }
+    .legal-content li { list-style: none; padding-left: 1.5rem; position: relative; }
+    .legal-content li::before {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute; left: 0; top: 0.2rem;
+        color: #34d399;
+        font-size: 0.75rem;
+    }
+    .info-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin: 1rem 0;
+    }
+    .reveal { opacity: 0; transform: translateY(30px); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# HERO #}
+<section class="relative pt-32 pb-12 overflow-hidden">
+    <div class="absolute inset-0" style="background: radial-gradient(600px circle at 20% 30%, rgba(16, 185, 129, 0.08), transparent 50%);"></div>
+    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex items-center gap-2 text-xs text-gray-500 mb-6">
+            <a href="{{ url_for('public.index') }}" class="hover:text-white transition-colors">Accueil</a>
+            <i class="fas fa-chevron-right text-[8px]"></i>
+            <span class="text-brand-400">Confidentialité</span>
+        </nav>
+
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+            <i class="fas fa-shield-alt text-brand-400 text-xs"></i>
+            <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Vie privée</span>
+        </div>
+
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-4">
+            Politique de <span class="gradient-text">Confidentialité</span>
+        </h1>
+        <p class="text-lg text-gray-400 max-w-2xl">
+            La protection de vos données personnelles est une priorité pour TURIHO. Cette page détaille comment nous collectons et utilisons vos informations.
+        </p>
+    </div>
+</section>
+
+{# CONTENT #}
+<section class="pb-24">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="legal-layout">
+
+            <aside class="legal-sidebar hidden lg:block">
+                <div class="glass rounded-2xl p-5">
+                    <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-4 px-3">Sommaire</div>
+                    <nav class="space-y-1">
+                        <a href="#collecte" class="legal-nav-item active" data-section="collecte">
+                            <i class="fas fa-database text-xs mr-2 text-brand-400"></i>Collecte des données
+                        </a>
+                        <a href="#utilisation" class="legal-nav-item" data-section="utilisation">
+                            <i class="fas fa-cogs text-xs mr-2 text-brand-400"></i>Utilisation
+                        </a>
+                        <a href="#partage" class="legal-nav-item" data-section="partage">
+                            <i class="fas fa-share-alt text-xs mr-2 text-brand-400"></i>Partage
+                        </a>
+                        <a href="#droits" class="legal-nav-item" data-section="droits">
+                            <i class="fas fa-user-shield text-xs mr-2 text-brand-400"></i>Vos droits
+                        </a>
+                        <a href="#dpo" class="legal-nav-item" data-section="dpo">
+                            <i class="fas fa-id-badge text-xs mr-2 text-brand-400"></i>Contact DPO
+                        </a>
+                    </nav>
+                </div>
+            </aside>
+
+            <div class="legal-content">
+
+                <div id="collecte" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-database"></i></div>
+                        1. Collecte des données
+                    </div>
+                    <p>Nous collectons les informations que vous nous fournissez lors de votre inscription (<strong>nom de l'organisation, email, téléphone, adresse</strong>, etc.) ainsi que des données de navigation anonymes via des cookies.</p>
+
+                    <div class="info-card">
+                        <h4 class="font-semibold mb-3 flex items-center gap-2">
+                            <i class="fas fa-list-check text-brand-400 text-sm"></i>
+                            Données collectées
+                        </h4>
+                        <ul>
+                            <li>Informations d'identification (nom, email, téléphone)</li>
+                            <li>Informations professionnelles (organisation, secteur, localisation)</li>
+                            <li>Données de navigation (adresse IP, type de navigateur, pages visitées)</li>
+                            <li>Contenu publié (descriptions, images, documents)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="utilisation" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-cogs"></i></div>
+                        2. Utilisation des données
+                    </div>
+                    <p>Vos données servent exclusivement à :</p>
+                    <ul>
+                        <li>Gérer votre compte et votre profil d'organisation</li>
+                        <li>Afficher vos informations dans le répertoire public</li>
+                        <li>Vous envoyer des notifications importantes concernant la plateforme</li>
+                        <li>Améliorer l'expérience utilisateur et les fonctionnalités</li>
+                        <li>Assurer la sécurité et la prévention des fraudes</li>
+                    </ul>
+                </div>
+
+                <div id="partage" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-share-alt"></i></div>
+                        3. Partage des données
+                    </div>
+                    <p>TURIHO <strong>ne vend ni ne loue</strong> vos données personnelles à des tiers.</p>
+                    <p>Les informations publiques de votre profil sont accessibles à tous les visiteurs du site conformément à l'objectif de visibilité de la plateforme.</p>
+
+                    <div class="glass rounded-2xl p-5 mt-4 border-l-4 border-brand-500">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-lock text-brand-400 text-xl mt-1"></i>
+                            <div>
+                                <h4 class="font-semibold mb-1">Engagement de confidentialité</h4>
+                                <p class="text-sm text-gray-400 mb-0">Vos données privées (email, téléphone) ne sont jamais partagées sans votre consentement explicite.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="droits" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-user-shield"></i></div>
+                        4. Vos droits
+                    </div>
+                    <p>Conformément aux réglementations en vigueur, vous disposez des droits suivants :</p>
+                    <ul>
+                        <li><strong>Droit d'accès</strong> — consulter vos données personnelles</li>
+                        <li><strong>Droit de rectification</strong> — corriger des informations inexactes</li>
+                        <li><strong>Droit de suppression</strong> — demander l'effacement de vos données</li>
+                        <li><strong>Droit d'opposition</strong> — vous opposer au traitement</li>
+                        <li><strong>Droit à la portabilité</strong> — récupérer vos données dans un format structuré</li>
+                    </ul>
+                    <p>Ces droits peuvent être exercés directement depuis votre <strong>tableau de bord</strong> ou en nous contactant.</p>
+                </div>
+
+                <div id="dpo" class="legal-section reveal">
+                    <div class="legal-title">
+                        <div class="legal-title-icon"><i class="fas fa-id-badge"></i></div>
+                        Contact DPO
+                    </div>
+                    <p>Pour toute question relative à vos données personnelles ou pour exercer vos droits :</p>
+
+                    <div class="info-card">
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Email DPO</div>
+                                <a href="mailto:gaelishimwe2007@gmail.com" class="text-brand-400 hover:text-brand-300 font-semibold transition-colors">
+                                    gaelishimwe2007@gmail.com
+                                </a>
+                            </div>
+                            <div>
+                                <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Délai de réponse</div>
+                                <div class="font-semibold">Sous 30 jours</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const sections = document.querySelectorAll('.legal-section');
+const navItems = document.querySelectorAll('.legal-nav-item');
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            navItems.forEach(item => item.classList.remove('active'));
+            const active = document.querySelector(`.legal-nav-item[data-section="${entry.target.id}"]`);
+            if (active) active.classList.add('active');
+        }
+    });
+}, { rootMargin: '-100px 0px -60% 0px' });
+sections.forEach(section => observer.observe(section));
+navItems.forEach(item => {
+    item.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(item.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+});
+</script>
+{% endblock %}

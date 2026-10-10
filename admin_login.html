@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <title>Connexion Admin — TURIHO</title>
+    
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='sta_img/favicon.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5', 100: '#d1fae5', 400: '#34d399',
+                            500: '#10b981', 600: '#059669', 700: '#047857', 900: '#064e3b'
+                        },
+                        gold: { 400: '#fbbf24', 500: '#f59e0b' },
+                        ink: {
+                            950: '#05070a', 900: '#0a0d12', 850: '#0f1319',
+                            800: '#141921', 700: '#1c2330', 600: '#2a3344'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * { -webkit-font-smoothing: antialiased; }
+        html, body { background: #05070a; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        
+        /* Background immersif */
+        .auth-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            background: #05070a;
+        }
+        
+        .auth-bg::before {
+            content: '';
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15), transparent 70%);
+            top: -200px;
+            left: -200px;
+            animation: float-blob 20s ease-in-out infinite;
+        }
+        
+        .auth-bg::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.1), transparent 70%);
+            bottom: -150px;
+            right: -150px;
+            animation: float-blob 25s ease-in-out infinite reverse;
+        }
+        
+        @keyframes float-blob {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 40px) scale(0.95); }
+        }
+        
+        /* Particules */
+        .particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(16, 185, 129, 0.4);
+            border-radius: 50%;
+            animation: particle-float 15s linear infinite;
+        }
+        
+        .particle:nth-child(2n) {
+            background: rgba(251, 191, 36, 0.3);
+            animation-duration: 20s;
+        }
+        
+        @keyframes particle-float {
+            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) translateX(100px); opacity: 0; }
+        }
+        
+        /* Layout */
+        .auth-layout {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        
+        .auth-form-wrapper {
+            width: 100%;
+            max-width: 440px;
+        }
+        
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+        }
+        
+        .logo-mark {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5);
+        }
+        
+        .logo-text {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.02em;
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.02em;
+        }
+        
+        .auth-subtitle {
+            font-size: 0.9375rem;
+            color: #94a3b8;
+            margin: 0;
+        }
+        
+        /* Card glassmorphism */
+        .auth-card {
+            background: rgba(20, 25, 33, 0.6);
+            backdrop-filter: blur(24px) saturate(140%);
+            -webkit-backdrop-filter: blur(24px) saturate(140%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 
+                0 20px 60px -20px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            animation: card-appear 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        
+        @keyframes card-appear {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        /* Flash messages */
+        .auth-flash {
+            padding: 0.875rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+            animation: flash-in 0.4s ease-out;
+        }
+        
+        @keyframes flash-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .auth-flash.success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; }
+        .auth-flash.danger { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; }
+        .auth-flash.warning { background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; }
+        .auth-flash.info { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; }
+        
+        /* Form fields */
+        .form-group { margin-bottom: 1.25rem; }
+        .form-field { position: relative; }
+        
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1rem 1rem 1rem 2.75rem;
+            color: white;
+            font-size: 0.9375rem;
+            font-family: inherit;
+            transition: all 0.2s;
+            outline: none;
+        }
+        
+        .form-input::placeholder { color: transparent; }
+        
+        .form-input:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        
+        .form-input:focus {
+            border-color: rgba(16, 185, 129, 0.5);
+            background: rgba(16, 185, 129, 0.03);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+        }
+        
+        .form-label {
+            position: absolute;
+            left: 2.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 0.9375rem;
+            pointer-events: none;
+            transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+            background: transparent;
+            padding: 0 0.25rem;
+        }
+        
+        .form-input:focus ~ .form-label,
+        .form-input:not(:placeholder-shown) ~ .form-label {
+            top: 0;
+            left: 2.5rem;
+            font-size: 0.75rem;
+            color: #34d399;
+            background: #141921;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+        
+        .form-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+            pointer-events: none;
+        }
+        
+        .form-input:focus ~ .form-icon { color: #34d399; }
+        
+        /* Password toggle */
+        .password-wrapper { position: relative; }
+        
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: color 0.2s;
+        }
+        
+        .password-toggle:hover { color: #34d399; }
+        
+        /* Submit button */
+        .btn-submit {
+            position: relative;
+            width: 100%;
+            padding: 0.9375rem 1.5rem;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 
+                0 10px 30px -10px rgba(16, 185, 129, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-submit::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 20px 40px -10px rgba(16, 185, 129, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-submit:hover::before { transform: translateX(100%); }
+        .btn-submit:active { transform: translateY(0); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .btn-submit-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn-loader {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        .btn-submit.loading .btn-loader { display: block; }
+        .btn-submit.loading .btn-text { opacity: 0.5; }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Footer */
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+        
+        .auth-footer a {
+            color: #34d399;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        
+        .auth-footer a:hover { color: #10b981; }
+        
+        /* Security badge */
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        
+        .security-badge i { color: #34d399; }
+        
+        @media (max-width: 640px) {
+            .auth-card { padding: 1.5rem; }
+            .auth-title { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-bg">
+        <div class="particles">
+            {% for i in range(30) %}
+            <div class="particle" style="left: {{ (i * 3.33) % 100 }}%; animation-delay: {{ i * 0.5 }}s;"></div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="auth-layout">
+        <div class="auth-form-wrapper">
+            {# Logo #}
+            <a href="{{ url_for('public.index') }}" class="auth-logo">
+                <div class="logo-mark">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12l2-2 4 4 8-8 4 4"/>
+                        <circle cx="19" cy="6" r="2" fill="white"/>
+                    </svg>
+                </div>
+                <span class="logo-text">TURIHO</span>
+            </a>
+            
+            {# Header #}
+            <div class="auth-header">
+                <h1 class="auth-title">Espace Administrateur</h1>
+                <p class="auth-subtitle">Connectez-vous pour accéder au centre de pilotage</p>
+            </div>
+            
+            {# Card #}
+            <div class="auth-card">
+                {# Flash messages #}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="auth-flash {{ category }}">
+                    <i class="fas {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-circle-xmark{% elif category == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                    <span>{{ message|e }}</span>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+                
+                {# Login form #}
+                <form method="POST" action="{{ url_for('admin.admin_login') }}" id="login-form">
+                    {% if csrf_token is defined %}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% endif %}
+                    
+                    {# Honeypot #}
+                    <div style="position: absolute; left: -9999px;">
+                        <input type="text" name="website" tabindex="-1" autocomplete="off">
+                    </div>
+                    
+                    {# Email #}
+                    <div class="form-group">
+                        <div class="form-field">
+                            <input type="email" id="email" name="email" class="form-input" placeholder=" " required autocomplete="email" aria-required="true">
+                            <label for="email" class="form-label">Adresse e-mail</label>
+                            <i class="fas fa-envelope form-icon"></i>
+                        </div>
+                    </div>
+                    
+                    {# Password #}
+                    <div class="form-group">
+                        <div class="form-field password-wrapper">
+                            <input type="password" id="password" name="password" class="form-input" placeholder=" " required autocomplete="current-password" aria-required="true">
+                            <label for="password" class="form-label">Mot de passe</label>
+                            <i class="fas fa-lock form-icon"></i>
+                            <button type="button" class="password-toggle" onclick="togglePassword('password', this)" aria-label="Afficher le mot de passe">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {# Submit #}
+                    <button type="submit" class="btn-submit" id="submit-btn">
+                        <span class="btn-submit-content">
+                            <span class="btn-text">Se connecter</span>
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="btn-loader"></span>
+                        </span>
+                    </button>
+                </form>
+                
+                {# Security badge #}
+                <div class="security-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Connexion sécurisée — Chiffrement SSL/TLS</span>
+                </div>
+            </div>
+            
+            {# Footer #}
+            <div class="auth-footer">
+                <a href="{{ url_for('public.index') }}">
+                    <i class="fas fa-arrow-left" style="font-size: 0.75rem;"></i>
+                    Retour au site
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function togglePassword(fieldId, btn) {
+            const field = document.getElementById(fieldId);
+            const icon = btn.querySelector('i');
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+        
+        const form = document.getElementById('login-form');
+        const submitBtn = document.getElementById('submit-btn');
+        
+        if (form) {
+            form.addEventListener('submit', function() {
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+            });
+        }
+        
+        // GSAP animations
+        if (typeof gsap !== 'undefined') {
+            gsap.from('.auth-logo', { opacity: 0, y: -20, duration: 0.6, ease: 'power3.out' });
+            gsap.from('.auth-header', { opacity: 0, y: 20, duration: 0.6, delay: 0.1, ease: 'power3.out' });
+            gsap.from('.auth-card .form-group', { 
+                opacity: 0, y: 15, duration: 0.4, delay: 0.2, stagger: 0.05, ease: 'power3.out' 
+            });
+        }
+    </script>
+</body>
+</html>

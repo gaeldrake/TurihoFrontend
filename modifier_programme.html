@@ -1,0 +1,379 @@
+{% extends 'admin/basee.html' %}
+{% block title %}Modifier — {{ programme.titre|e }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    
+    .page-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.875rem;
+        font-weight: 800;
+        color: white;
+        margin: 0;
+    }
+    
+    .form-container {
+        background: rgba(20, 25, 33, 0.6);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 2rem;
+        max-width: 800px;
+    }
+    
+    .form-intro {
+        font-size: 0.9375rem;
+        color: #94a3b8;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+        margin: 2rem 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title:first-of-type {
+        margin-top: 0;
+    }
+    
+    .section-title i {
+        color: #34d399;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    @media (max-width: 640px) {
+        .form-row { grid-template-columns: 1fr; }
+    }
+    
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label .required {
+        color: #ef4444;
+    }
+    
+    .form-input,
+    .form-textarea,
+    .form-select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        color: white;
+        font-size: 0.875rem;
+        font-family: inherit;
+        transition: all 0.2s;
+        outline: none;
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 120px;
+        line-height: 1.6;
+    }
+    
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+        border-color: rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.03);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+    }
+    
+    .form-select option {
+        background: #141921;
+        color: white;
+    }
+    
+    .form-hint {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.375rem;
+    }
+    
+    .char-counter {
+        font-size: 0.75rem;
+        color: #64748b;
+        text-align: right;
+        margin-top: 0.25rem;
+    }
+    
+    .input-with-suffix {
+        position: relative;
+    }
+    
+    .input-suffix {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+        pointer-events: none;
+    }
+    
+    .input-with-suffix .form-input {
+        padding-right: 3.5rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{# ══════════════════════════════════════════
+   PAGE HEADER
+   ══════════════════════════════════════════ #}
+<div class="page-header">
+    <a href="{{ url_for('admin.afficher_programmes') }}" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h1 class="page-title">Modifier le programme</h1>
+</div>
+
+{# ══════════════════════════════════════════
+   FORM
+   ══════════════════════════════════════════ #}
+<div class="form-container">
+    <p class="form-intro">
+        Modifiez les informations du programme « <strong class="text-white">{{ programme.titre|e }}</strong> ».
+    </p>
+    
+    <form method="POST" action="{{ url_for('admin.modifier_programme', id=programme.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        {# ——— Section: Informations principales ——— #}
+        <div class="section-title">
+            <i class="fas fa-info-circle"></i>
+            Informations principales
+        </div>
+        
+        <div class="form-group">
+            <label for="titre" class="form-label">
+                Titre <span class="required">*</span>
+            </label>
+            <input type="text" id="titre" name="titre" class="form-input" 
+                   required maxlength="150" 
+                   value="{{ programme.titre|e if programme.titre else '' }}"
+                   placeholder="Ex: Formation en Marketing Digital">
+            <div class="char-counter"><span id="titre-counter">{{ programme.titre|length if programme.titre else 0 }}</span>/150</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="description" class="form-label">
+                Description <span class="required">*</span>
+            </label>
+            <textarea id="description" name="description" class="form-textarea" 
+                      required maxlength="5000" 
+                      placeholder="Décrivez le programme en détail...">{{ programme.description|e if programme.description else '' }}</textarea>
+            <div class="char-counter"><span id="desc-counter">{{ programme.description|length if programme.description else 0 }}</span>/5000</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="categorie" class="form-label">
+                Catégorie <span class="required">*</span>
+            </label>
+            <select id="categorie" name="categorie" class="form-select" required>
+                <option value="">— Choisir une catégorie —</option>
+                <option value="formation" {% if programme.categorie == 'formation' %}selected{% endif %}>
+                    Formation
+                </option>
+                <option value="financement" {% if programme.categorie == 'financement' %}selected{% endif %}>
+                    Financement
+                </option>
+                <option value="projet" {% if programme.categorie == 'projet' %}selected{% endif %}>
+                    Projet
+                </option>
+            </select>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="type" class="form-label">Type</label>
+                <input type="text" id="type" name="type" class="form-input" 
+                       maxlength="100" 
+                       value="{{ programme.type|e if programme.type else '' }}"
+                       placeholder="Ex: Bootcamp, Subvention...">
+            </div>
+            <div class="form-group">
+                <label for="lieu" class="form-label">Lieu</label>
+                <input type="text" id="lieu" name="lieu" class="form-input" 
+                       maxlength="100" 
+                       value="{{ programme.lieu|e if programme.lieu else '' }}"
+                       placeholder="Ex: Bujumbura, En ligne...">
+            </div>
+        </div>
+        
+        {# ——— Section: Période ——— #}
+        <div class="section-title">
+            <i class="fas fa-calendar-alt"></i>
+            Période
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="date_debut" class="form-label">Date de début</label>
+                <input type="date" id="date_debut" name="date_debut" class="form-input"
+                       value="{{ programme.date_debut.strftime('%Y-%m-%d') if programme.date_debut else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="date_fin" class="form-label">Date de fin</label>
+                <input type="date" id="date_fin" name="date_fin" class="form-input"
+                       value="{{ programme.date_fin.strftime('%Y-%m-%d') if programme.date_fin else '' }}">
+                <div class="form-hint">Doit être postérieure à la date de début</div>
+            </div>
+        </div>
+        
+        {# ——— Section: Informations financières ——— #}
+        <div class="section-title">
+            <i class="fas fa-coins"></i>
+            Informations financières
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="montant_max" class="form-label">Montant maximum</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="montant_max" name="montant_max" class="form-input" 
+                           min="0" step="1" 
+                           value="{{ programme.montant_max if programme.montant_max is not none else '' }}"
+                           placeholder="0">
+                    <span class="input-suffix">FBU</span>
+                </div>
+                <div class="form-hint">Applicable aux programmes de financement</div>
+            </div>
+            <div class="form-group">
+                <label for="prix" class="form-label">Prix</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="prix" name="prix" class="form-input" 
+                           min="0" step="1" 
+                           value="{{ programme.prix if programme.prix is not none else '' }}"
+                           placeholder="0">
+                    <span class="input-suffix">FBU</span>
+                </div>
+                <div class="form-hint">Applicable aux formations</div>
+            </div>
+        </div>
+        
+        {# ——— Section: Structure associée ——— #}
+        <div class="section-title">
+            <i class="fas fa-building"></i>
+            Structure associée
+        </div>
+        
+        <div class="form-group">
+            <label for="structure_id" class="form-label">Organisation</label>
+            <select id="structure_id" name="structure_id" class="form-select">
+                <option value="">— Aucune structure —</option>
+                {% for struct in structures %}
+                <option value="{{ struct.id }}" 
+                        {% if programme.structure_id == struct.id %}selected{% endif %}>
+                    {{ struct.org_name|e }}
+                </option>
+                {% endfor %}
+            </select>
+            <div class="form-hint">Seules les structures actives sont affichées</div>
+        </div>
+        
+        {# ——— Actions ——— #}
+        <div class="form-actions">
+            <a href="{{ url_for('admin.afficher_programmes') }}" class="btn-admin ghost">
+                <i class="fas fa-times"></i>
+                Annuler
+            </a>
+            <button type="submit" class="btn-admin primary">
+                <i class="fas fa-check"></i>
+                Enregistrer les modifications
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Char counters
+const titre = document.getElementById('titre');
+const titreCounter = document.getElementById('titre-counter');
+if (titre && titreCounter) {
+    titre.addEventListener('input', () => {
+        titreCounter.textContent = titre.value.length;
+    });
+}
+
+const desc = document.getElementById('description');
+const descCounter = document.getElementById('desc-counter');
+if (desc && descCounter) {
+    desc.addEventListener('input', () => {
+        descCounter.textContent = desc.value.length;
+    });
+}
+
+// Date validation
+const dateDebut = document.getElementById('date_debut');
+const dateFin = document.getElementById('date_fin');
+if (dateDebut && dateFin) {
+    dateDebut.addEventListener('change', () => {
+        dateFin.min = dateDebut.value;
+    });
+}
+</script>
+{% endblock %}

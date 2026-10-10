@@ -1,0 +1,763 @@
+{% extends "base.html" %}
+
+{% block title %}Informations complémentaires — TURIHO{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-bg {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        overflow: hidden;
+        background: #05070a;
+    }
+    
+    .auth-bg::before {
+        content: '';
+        position: absolute;
+        width: 800px;
+        height: 800px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.15), transparent 70%);
+        top: -200px;
+        left: -200px;
+        animation: float-blob 20s ease-in-out infinite;
+    }
+    
+    .auth-bg::after {
+        content: '';
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(251, 191, 36, 0.1), transparent 70%);
+        bottom: -150px;
+        right: -150px;
+        animation: float-blob 25s ease-in-out infinite reverse;
+    }
+    
+    @keyframes float-blob {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(50px, -30px) scale(1.1); }
+        66% { transform: translate(-30px, 40px) scale(0.95); }
+    }
+    
+    .particles {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    
+    .particle {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: rgba(16, 185, 129, 0.4);
+        border-radius: 50%;
+        animation: particle-float 15s linear infinite;
+    }
+    
+    .particle:nth-child(2n) {
+        background: rgba(251, 191, 36, 0.3);
+        animation-duration: 20s;
+    }
+    
+    @keyframes particle-float {
+        0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { transform: translateY(-100px) translateX(100px); opacity: 0; }
+    }
+    
+    .auth-layout {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+    
+    .auth-form-wrapper {
+        width: 100%;
+        max-width: 560px;
+    }
+    
+    .auth-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+    }
+    
+    .logo-mark {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5);
+    }
+    
+    .logo-text {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: white;
+        letter-spacing: -0.02em;
+    }
+    
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .auth-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        color: white;
+        margin: 0 0 0.5rem 0;
+        letter-spacing: -0.02em;
+    }
+    
+    .auth-subtitle {
+        font-size: 0.9375rem;
+        color: #94a3b8;
+        margin: 0;
+    }
+    
+    /* Progress bar */
+    .progress-container {
+        margin-bottom: 2rem;
+    }
+    
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .progress-label {
+        font-size: 0.8125rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+    
+    .progress-value {
+        font-size: 0.8125rem;
+        color: #34d399;
+        font-weight: 700;
+    }
+    
+    .progress-bar {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 999px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #fbbf24);
+        border-radius: 999px;
+        width: 0%;
+        transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    
+    .auth-card {
+        background: rgba(20, 25, 33, 0.6);
+        backdrop-filter: blur(24px) saturate(140%);
+        -webkit-backdrop-filter: blur(24px) saturate(140%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 
+            0 20px 60px -20px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        animation: card-appear 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    
+    @keyframes card-appear {
+        from { opacity: 0; transform: translateY(20px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    .auth-flash {
+        padding: 0.875rem 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.875rem;
+        animation: flash-in 0.4s ease-out;
+    }
+    
+    @keyframes flash-in {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .auth-flash.success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; }
+    .auth-flash.danger { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; }
+    .auth-flash.warning { background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; }
+    .auth-flash.info { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; }
+    
+    /* Section divider */
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1.5rem 0 1rem 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .section-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #34d399;
+        font-size: 0.875rem;
+    }
+    
+    .section-label {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 0.02em;
+    }
+    
+    .form-group { margin-bottom: 1.25rem; }
+    .form-field { position: relative; }
+    
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 1rem 1rem 1rem 2.75rem;
+        color: white;
+        font-size: 0.9375rem;
+        font-family: inherit;
+        transition: all 0.2s;
+        outline: none;
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 120px;
+        padding-top: 1.25rem;
+    }
+    
+    .form-input::placeholder,
+    .form-textarea::placeholder { color: transparent; }
+    
+    .form-input:hover,
+    .form-textarea:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.04);
+    }
+    
+    .form-input:focus,
+    .form-textarea:focus {
+        border-color: rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.03);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+    }
+    
+    .form-label {
+        position: absolute;
+        left: 2.75rem;
+        top: 1rem;
+        color: #64748b;
+        font-size: 0.9375rem;
+        pointer-events: none;
+        transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+        background: transparent;
+        padding: 0 0.25rem;
+    }
+    
+    .form-textarea ~ .form-label {
+        top: 1rem;
+    }
+    
+    .form-input:focus ~ .form-label,
+    .form-input:not(:placeholder-shown) ~ .form-label,
+    .form-textarea:focus ~ .form-label,
+    .form-textarea:not(:placeholder-shown) ~ .form-label {
+        top: -0.5rem;
+        left: 2.5rem;
+        font-size: 0.75rem;
+        color: #34d399;
+        background: #141921;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+    
+    .form-icon {
+        position: absolute;
+        left: 1rem;
+        top: 1.125rem;
+        color: #64748b;
+        font-size: 0.875rem;
+        transition: color 0.2s;
+        pointer-events: none;
+    }
+    
+    .form-input:focus ~ .form-icon,
+    .form-textarea:focus ~ .form-icon { color: #34d399; }
+    
+    .form-hint {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.375rem;
+        padding-left: 0.25rem;
+    }
+    
+    /* Upload zone */
+    .upload-zone {
+        border: 2px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: rgba(255, 255, 255, 0.02);
+        position: relative;
+    }
+    
+    .upload-zone:hover {
+        border-color: rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.03);
+    }
+    
+    .upload-zone.dragover {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.08);
+    }
+    
+    .upload-zone.has-file {
+        border-style: solid;
+        border-color: rgba(16, 185, 129, 0.3);
+        background: rgba(16, 185, 129, 0.05);
+    }
+    
+    .upload-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(16, 185, 129, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem;
+        color: #34d399;
+        font-size: 1.25rem;
+    }
+    
+    .upload-text {
+        font-size: 0.875rem;
+        color: #cbd5e1;
+        margin-bottom: 0.25rem;
+    }
+    
+    .upload-hint {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    
+    .upload-preview {
+        max-width: 100%;
+        max-height: 150px;
+        border-radius: 8px;
+        margin-top: 0.75rem;
+        display: none;
+    }
+    
+    .upload-preview.visible { display: block; }
+    
+    .upload-input { display: none; }
+    
+    /* Char counter */
+    .char-counter {
+        font-size: 0.75rem;
+        color: #64748b;
+        text-align: right;
+        margin-top: 0.25rem;
+    }
+    
+    .char-counter.warning { color: #fbbf24; }
+    .char-counter.danger { color: #ef4444; }
+    
+    /* Submit button */
+    .btn-submit {
+        position: relative;
+        width: 100%;
+        padding: 0.9375rem 1.5rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 
+            0 10px 30px -10px rgba(16, 185, 129, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        margin-top: 1rem;
+    }
+    
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-submit:hover::before { transform: translateX(100%); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    
+    .btn-submit-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .btn-loader {
+        display: none;
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    
+    .btn-submit.loading .btn-loader { display: block; }
+    .btn-submit.loading .btn-text { opacity: 0.5; }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Skip link */
+    .skip-link {
+        display: block;
+        text-align: center;
+        margin-top: 1rem;
+        font-size: 0.8125rem;
+        color: #64748b;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    
+    .skip-link:hover { color: #34d399; }
+    
+    @media (max-width: 640px) {
+        .auth-card { padding: 1.5rem; }
+        .auth-title { font-size: 1.5rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-bg">
+    <div class="particles">
+        {% for i in range(30) %}
+        <div class="particle" style="left: {{ (i * 3.33) % 100 }}%; animation-delay: {{ i * 0.5 }}s;"></div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="auth-layout">
+    <div class="auth-form-wrapper">
+        <a href="{{ url_for('public.index') }}" class="auth-logo">
+            <div class="logo-mark">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12l2-2 4 4 8-8 4 4"/>
+                    <circle cx="19" cy="6" r="2" fill="white"/>
+                </svg>
+            </div>
+            <span class="logo-text">TURIHO</span>
+        </a>
+        
+        <div class="auth-header">
+            <h1 class="auth-title">Finalisez votre profil</h1>
+            <p class="auth-subtitle">Ajoutez plus de détails pour maximiser votre visibilité</p>
+        </div>
+        
+        {# Progress bar #}
+        <div class="progress-container">
+            <div class="progress-header">
+                <span class="progress-label">Complétude du profil</span>
+                <span class="progress-value" id="progress-value">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+        
+        <div class="auth-card">
+            {# ——— Default variables to prevent UndefinedError ——— #}
+            {% set org = organisation | default(none) %}
+            {% set today_date = today | default('') %}
+            
+            {# ——— Flash messages ——— #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="auth-flash {{ category }}">
+                <i class="fas {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-circle-xmark{% elif category == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            
+            {# ——— Form ——— #}
+            <form method="POST" action="{{ url_for('public.info') }}" id="info-form" enctype="multipart/form-data">
+                {% if csrf_token is defined %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% endif %}
+                
+                {# ——— Section: Images ——— #}
+                <div class="section-title">
+                    <div class="section-icon"><i class="fas fa-images"></i></div>
+                    <span class="section-label">Images</span>
+                </div>
+                
+                {# Logo upload #}
+                <div class="form-group">
+                    <label class="form-label" style="position: static; padding: 0; margin-bottom: 0.5rem; display: block;">Logo de l'organisation</label>
+                    <label class="upload-zone" id="logo-zone" for="logo">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text">Cliquez ou glissez votre logo</div>
+                        <div class="upload-hint">PNG, JPG, GIF ou WebP — max 5 Mo — 200×200 px recommandé</div>
+                        <img class="upload-preview" id="logo-preview" alt="Preview logo">
+                    </label>
+                    <input type="file" id="logo" name="logo" accept="image/png,image/jpeg,image/gif,image/webp" class="upload-input">
+                </div>
+                
+                {# Cover upload #}
+                <div class="form-group">
+                    <label class="form-label" style="position: static; padding: 0; margin-bottom: 0.5rem; display: block;">Image de couverture</label>
+                    <label class="upload-zone" id="cover-zone" for="cover">
+                        <div class="upload-icon"><i class="fas fa-image"></i></div>
+                        <div class="upload-text">Cliquez ou glissez votre couverture</div>
+                        <div class="upload-hint">PNG, JPG, GIF ou WebP — max 5 Mo — 1200×400 px recommandé</div>
+                        <img class="upload-preview" id="cover-preview" alt="Preview couverture">
+                    </label>
+                    <input type="file" id="cover" name="cover" accept="image/png,image/jpeg,image/gif,image/webp" class="upload-input">
+                </div>
+                
+                {# ——— Section: Details ——— #}
+                <div class="section-title">
+                    <div class="section-icon"><i class="fas fa-info-circle"></i></div>
+                    <span class="section-label">Détails</span>
+                </div>
+                
+                {# Description #}
+                <div class="form-group">
+                    <div class="form-field">
+                        <textarea id="description" name="description" class="form-textarea" placeholder=" " maxlength="2000" data-counter="desc-counter">{{ org.description if org and org.description else '' }}</textarea>
+                        <label for="description" class="form-label">Description de votre organisation</label>
+                        <i class="fas fa-align-left form-icon"></i>
+                    </div>
+                    <div class="char-counter" id="desc-counter">0 / 2000 caractères</div>
+                </div>
+                
+                {# Creation date #}
+                <div class="form-group">
+                    <div class="form-field">
+                        <input type="date" id="creation_date" name="creation_date" class="form-input" 
+                               value="{{ org.creation_date.strftime('%Y-%m-%d') if org and org.creation_date else '' }}"
+                               {% if today_date %}max="{{ today_date }}"{% endif %}>
+                        <label for="creation_date" class="form-label">Date de création</label>
+                        <i class="fas fa-calendar-alt form-icon"></i>
+                    </div>
+                </div>
+                
+                {# Website #}
+                <div class="form-group">
+                    <div class="form-field">
+                        <input type="url" id="website" name="website" class="form-input" placeholder=" " maxlength="255"
+                               value="{{ org.website if org and org.website else '' }}">
+                        <label for="website" class="form-label">Site web (optionnel)</label>
+                        <i class="fas fa-globe form-icon"></i>
+                    </div>
+                </div>
+                
+                {# Submit #}
+                <button type="submit" class="btn-submit" id="submit-btn">
+                    <span class="btn-submit-content">
+                        <span class="btn-text">Enregistrer et continuer</span>
+                        <i class="fas fa-arrow-right"></i>
+                        <span class="btn-loader"></span>
+                    </span>
+                </button>
+            </form>
+        </div>
+        
+        {# Skip link #}
+        <a href="{{ url_for('dashboard.dashboard') }}" class="skip-link">
+            Passer cette étape pour l'instant →
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ══════════════════════════════════════════
+// PROGRESS BAR
+// ══════════════════════════════════════════
+function updateProgress() {
+    const fields = [
+        document.getElementById('description')?.value,
+        document.getElementById('creation_date')?.value,
+        document.getElementById('website')?.value,
+        document.getElementById('logo')?.files?.length > 0,
+        document.getElementById('cover')?.files?.length > 0
+    ];
+    
+    const filled = fields.filter(v => v && v.toString().trim() !== '').length;
+    const percent = Math.round((filled / fields.length) * 100);
+    
+    const fill = document.getElementById('progress-fill');
+    const value = document.getElementById('progress-value');
+    
+    if (fill) fill.style.width = percent + '%';
+    if (value) value.textContent = percent + '%';
+}
+
+// ══════════════════════════════════════════
+// FILE UPLOAD PREVIEW
+// ══════════════════════════════════════════
+function setupUpload(inputId, zoneId, previewId) {
+    const input = document.getElementById(inputId);
+    const zone = document.getElementById(zoneId);
+    const preview = document.getElementById(previewId);
+    
+    if (!input || !zone || !preview) return;
+    
+    input.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.add('visible');
+                zone.classList.add('has-file');
+                updateProgress();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Drag & drop
+    ['dragenter', 'dragover'].forEach(evt => {
+        zone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            zone.classList.add('dragover');
+        });
+    });
+    
+    ['dragleave', 'drop'].forEach(evt => {
+        zone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            zone.classList.remove('dragover');
+        });
+    });
+    
+    zone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            input.files = files;
+            input.dispatchEvent(new Event('change'));
+        }
+    });
+}
+
+setupUpload('logo', 'logo-zone', 'logo-preview');
+setupUpload('cover', 'cover-zone', 'cover-preview');
+
+// ══════════════════════════════════════════
+// CHAR COUNTER
+// ══════════════════════════════════════════
+const descTextarea = document.getElementById('description');
+const descCounter = document.getElementById('desc-counter');
+
+if (descTextarea && descCounter) {
+    function updateCounter() {
+        const len = descTextarea.value.length;
+        const max = 2000;
+        descCounter.textContent = `${len} / ${max} caractères`;
+        descCounter.classList.remove('warning', 'danger');
+        if (len > max * 0.9) descCounter.classList.add('danger');
+        else if (len > max * 0.75) descCounter.classList.add('warning');
+        updateProgress();
+    }
+    
+    descTextarea.addEventListener('input', updateCounter);
+    updateCounter();
+}
+
+// Update progress on all fields
+document.querySelectorAll('#info-form input, #info-form textarea').forEach(field => {
+    field.addEventListener('input', updateProgress);
+    field.addEventListener('change', updateProgress);
+});
+
+// Initial progress
+updateProgress();
+
+// ══════════════════════════════════════════
+// FORM SUBMISSION
+// ══════════════════════════════════════════
+const form = document.getElementById('info-form');
+const submitBtn = document.getElementById('submit-btn');
+
+if (form) {
+    form.addEventListener('submit', function() {
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+    });
+}
+
+// ══════════════════════════════════════════
+// GSAP ANIMATIONS
+// ══════════════════════════════════════════
+if (typeof gsap !== 'undefined') {
+    gsap.from('.auth-logo', { opacity: 0, y: -20, duration: 0.6, ease: 'power3.out' });
+    gsap.from('.auth-header', { opacity: 0, y: 20, duration: 0.6, delay: 0.1, ease: 'power3.out' });
+    gsap.from('.progress-container', { opacity: 0, y: 15, duration: 0.5, delay: 0.2, ease: 'power3.out' });
+    gsap.from('.section-title', { opacity: 0, x: -15, duration: 0.4, delay: 0.3, stagger: 0.1, ease: 'power3.out' });
+    gsap.from('.auth-card .form-group', { opacity: 0, y: 15, duration: 0.4, delay: 0.4, stagger: 0.05, ease: 'power3.out' });
+}
+</script>
+{% endblock %}

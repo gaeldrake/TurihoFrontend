@@ -1,0 +1,1548 @@
+{# ═══════════════════════════════════════════════════════════════
+   CALCUL DE LA PROGRESSION DU PROFIL
+   ═══════════════════════════════════════════════════════════════ #}
+{% set progress_fields = [
+    org.logo,
+    org.cover,
+    org.description,
+    org.telephone,
+    org.email,
+    org.website,
+    org.province
+] %}
+{% set filled = progress_fields|select|list|length %}
+{% set total = progress_fields|length %}
+{% set progress_percent = ((filled / total) * 100)|int if total > 0 else 0 %}
+
+{# ═══════════════════════════════════════════════════════════════
+   PROFILE HEADER PREMIUM
+   ═══════════════════════════════════════════════════════════════ #}
+
+<section class="profile-hero" id="profile-hero">
+    {# ══════ Cover Image ══════ #}
+    <div class="profile-cover-wrapper">
+        {% if org.cover %}
+            <img src="{{ get_url(org.cover) }}" 
+                 alt="Couverture {{ org.org_name|e }}" 
+                 class="profile-cover-img"
+                 loading="eager">
+        {% else %}
+            <div class="profile-cover-placeholder">
+                <div class="cover-pattern"></div>
+            </div>
+        {% endif %}
+        
+        <div class="profile-cover-overlay"></div>
+        <div class="profile-cover-gradient"></div>
+    </div>
+
+    {# ══════ Profile Info Block ══════ #}
+    <div class="profile-info-container">
+        <div class="profile-info-grid">
+            
+            {# ══════ Left: Logo + Infos ══════ #}
+            <div class="profile-main-info">
+                
+                {# ——— Logo flottant ——— #}
+                <div class="profile-logo-wrapper">
+                    <div class="profile-logo-glow"></div>
+                    <div class="profile-logo-border">
+                        {% if org.logo %}
+                            <img src="{{ get_url(org.logo) }}" 
+                                 alt="Logo {{ org.org_name|e }}" 
+                                 class="profile-logo-img"
+                                 loading="eager">
+                        {% else %}
+                            <div class="profile-logo-fallback">
+                                <span class="logo-initial">{{ org.org_name[0]|upper if org.org_name else '?' }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="profile-logo-ring"></div>
+                </div>
+
+                {# ——— Nom + Badge + Meta ——— #}
+                <div class="profile-details">
+                    
+                    <div class="profile-name-block">
+                        <h1 class="profile-org-name">{{ org.org_name|e }}</h1>
+                        
+                        {% if org.validated %}
+                            <div class="profile-verified-badge">
+                                <div class="badge-glow"></div>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Vérifié</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="profile-meta-pills">
+                        {% if org.type %}
+                            <div class="meta-pill meta-pill-type">
+                                <i class="fas fa-building"></i>
+                                <span>{{ org.type|capitalize|e }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if org.category %}
+                            <div class="meta-pill meta-pill-category">
+                                <i class="fas fa-tag"></i>
+                                <span>{{ org.category|capitalize|e }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if full_address %}
+                            <div class="meta-pill meta-pill-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ full_address|e }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if org.creation_date %}
+                            <div class="meta-pill meta-pill-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Depuis {{ org.creation_date.strftime('%Y') }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="profile-status">
+                        <div class="status-indicator status-online">
+                            <span class="status-dot"></span>
+                            <span class="status-text">En ligne</span>
+                        </div>
+                        <div class="status-separator"></div>
+                        <div class="status-info">
+                            <i class="fas fa-clock"></i>
+                            <span>Dernière activité : il y a 2h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ══════ Right: Actions ══════ #}
+            <div class="profile-actions-block">
+                
+                <a href="{{ url_for('dashboard.modifier_organisation', id=org.id) }}" 
+                   class="action-btn action-btn-primary">
+                    <span class="btn-glow"></span>
+                    <i class="fas fa-edit"></i>
+                    <span>Modifier le profil</span>
+                    <span class="btn-ripple"></span>
+                </a>
+
+                <button class="action-btn action-btn-secondary" id="share-btn">
+                    <i class="fas fa-share-alt"></i>
+                    <span>Partager</span>
+                </button>
+
+                <div class="actions-dropdown">
+                    <button class="action-btn action-btn-icon" aria-label="Plus d'options">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-download"></i>
+                            <span>Exporter le profil</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-qrcode"></i>
+                            <span>QR Code</span>
+                        </a>
+                        <a href="#" class="dropdown-item" id="copy-link-btn">
+                            <i class="fas fa-link"></i>
+                            <span>Copier le lien</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-eye"></i>
+                            <span>Aperçu public</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ═══════════════════════════════════════════════════════════════
+   FLOATING STATS CARD
+   ═══════════════════════════════════════════════════════════════ #}
+<section class="profile-stats-section">
+    <div class="stats-grid">
+        
+        <div class="stat-card stat-card-score">
+            <div class="stat-card-glow"></div>
+            <div class="stat-card-content">
+                <div class="stat-icon stat-icon-score">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Score de visibilité</div>
+                    <div class="stat-value">
+                        <span class="stat-number" data-target="{{ progress_percent }}">0</span>
+                        <span class="stat-suffix">/100</span>
+                    </div>
+                    <div class="stat-trend stat-trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+5 pts cette semaine</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-card-progress">
+            <div class="stat-card-glow"></div>
+            <div class="stat-card-content">
+                <div class="stat-icon stat-icon-progress">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Profil complété</div>
+                    <div class="stat-value">
+                        <span class="stat-number" data-target="{{ progress_percent }}">0</span>
+                        <span class="stat-suffix">%</span>
+                    </div>
+                    <div class="stat-progress-bar">
+                        <div class="progress-fill" style="width: 0%" data-width="{{ progress_percent }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-card-rank">
+            <div class="stat-card-glow"></div>
+            <div class="stat-card-content">
+                <div class="stat-icon stat-icon-rank">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Classement</div>
+                    <div class="stat-value">
+                        <span class="stat-number">#</span>
+                        <span class="stat-number" data-target="24">0</span>
+                    </div>
+                    <div class="stat-trend stat-trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+3 places</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-card-visitors">
+            <div class="stat-card-glow"></div>
+            <div class="stat-card-content">
+                <div class="stat-icon stat-icon-visitors">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">Visiteurs aujourd'hui</div>
+                    <div class="stat-value">
+                        <span class="stat-number" data-target="147">0</span>
+                    </div>
+                    <div class="stat-trend stat-trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+18% vs hier</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ═══════════════════════════════════════════════════════════════
+   PROFILE COMPLETION — Cercle de progression + Conseils
+   ═══════════════════════════════════════════════════════════════ #}
+<section class="profile-completion-section">
+    <div class="completion-card">
+        <div class="completion-card-glow"></div>
+        
+        <div class="completion-grid">
+            {# ══════ Left: Cercle de progression ══════ #}
+            <div class="completion-circle-wrapper">
+                <div class="completion-circle">
+                    <svg class="circle-svg" viewBox="0 0 120 120">
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle class="circle-bg" cx="60" cy="60" r="54"></circle>
+                        <circle class="circle-progress" 
+                                cx="60" cy="60" r="54"
+                                stroke="url(#gradient)"
+                                stroke-dasharray="339.292"
+                                stroke-dashoffset="339.292"
+                                data-percent="{{ progress_percent }}"></circle>
+                    </svg>
+                    <div class="circle-content">
+                        <div class="circle-value">{{ progress_percent }}%</div>
+                        <div class="circle-label">
+                            {% if progress_percent >= 90 %}
+                                Profil Premium
+                            {% elif progress_percent >= 70 %}
+                                Très bon profil
+                            {% elif progress_percent >= 50 %}
+                                Bon profil
+                            {% else %}
+                                À compléter
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ══════ Right: Conseils + Actions ══════ #}
+            <div class="completion-details">
+                <h3 class="completion-title">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Conseils pour améliorer votre profil</span>
+                </h3>
+                
+                {% if progress_percent < 100 %}
+                    <div class="completion-tips">
+                        <div class="tip-item">
+                            <i class="fas fa-check-circle tip-icon tip-done"></i>
+                            <span class="tip-text">Informations de base complétées</span>
+                        </div>
+                        
+                        {% if not org.logo %}
+                            <div class="tip-item">
+                                <i class="fas fa-circle tip-icon tip-pending"></i>
+                                <span class="tip-text">Ajoutez un logo pour améliorer votre visibilité</span>
+                            </div>
+                        {% else %}
+                            <div class="tip-item">
+                                <i class="fas fa-check-circle tip-icon tip-done"></i>
+                                <span class="tip-text">Logo ajouté</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if not org.description %}
+                            <div class="tip-item">
+                                <i class="fas fa-circle tip-icon tip-pending"></i>
+                                <span class="tip-text">Rédigez une description pour présenter votre organisation</span>
+                            </div>
+                        {% else %}
+                            <div class="tip-item">
+                                <i class="fas fa-check-circle tip-icon tip-done"></i>
+                                <span class="tip-text">Description ajoutée</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if not org.telephone %}
+                            <div class="tip-item">
+                                <i class="fas fa-circle tip-icon tip-pending"></i>
+                                <span class="tip-text">Ajoutez un numéro de téléphone pour être contacté</span>
+                            </div>
+                        {% else %}
+                            <div class="tip-item">
+                                <i class="fas fa-check-circle tip-icon tip-done"></i>
+                                <span class="tip-text">Téléphone ajouté</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="completion-success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Votre profil est complet ! Excellent travail.</span>
+                    </div>
+                {% endif %}
+
+                <a href="{{ url_for('dashboard.modifier_organisation', id=org.id) }}" 
+                   class="completion-action-btn">
+                    <i class="fas fa-edit"></i>
+                    <span>Compléter mon profil</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ═══════════════════════════════════════════════════════════════
+   STATISTIQUES DÉTAILLÉES
+   ═══════════════════════════════════════════════════════════════ #}
+<section class="profile-detailed-stats">
+    <div class="detailed-stats-grid">
+        
+        <div class="detailed-stat-card">
+            <div class="detailed-stat-header">
+                <div class="detailed-stat-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="detailed-stat-title">Visites</div>
+            </div>
+            <div class="detailed-stat-value">1,247</div>
+            <div class="detailed-stat-chart">
+                <svg viewBox="0 0 100 30" class="mini-chart">
+                    <polyline points="0,25 10,20 20,22 30,15 40,18 50,10 60,12 70,8 80,5 90,7 100,3" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              stroke-width="2"></polyline>
+                </svg>
+            </div>
+            <div class="detailed-stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>+24% ce mois</span>
+            </div>
+        </div>
+
+        <div class="detailed-stat-card">
+            <div class="detailed-stat-header">
+                <div class="detailed-stat-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="detailed-stat-title">Impressions</div>
+            </div>
+            <div class="detailed-stat-value">8,432</div>
+            <div class="detailed-stat-chart">
+                <svg viewBox="0 0 100 30" class="mini-chart">
+                    <polyline points="0,28 10,25 20,20 30,22 40,15 50,18 60,12 70,10 80,8 90,5 100,2" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              stroke-width="2"></polyline>
+                </svg>
+            </div>
+            <div class="detailed-stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>+32% ce mois</span>
+            </div>
+        </div>
+
+        <div class="detailed-stat-card">
+            <div class="detailed-stat-header">
+                <div class="detailed-stat-icon">
+                    <i class="fas fa-mouse-pointer"></i>
+                </div>
+                <div class="detailed-stat-title">Clics</div>
+            </div>
+            <div class="detailed-stat-value">389</div>
+            <div class="detailed-stat-chart">
+                <svg viewBox="0 0 100 30" class="mini-chart">
+                    <polyline points="0,20 10,22 20,18 30,20 40,15 50,12 60,14 70,10 80,8 90,6 100,5" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              stroke-width="2"></polyline>
+                </svg>
+            </div>
+            <div class="detailed-stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>+18% ce mois</span>
+            </div>
+        </div>
+
+        <div class="detailed-stat-card">
+            <div class="detailed-stat-header">
+                <div class="detailed-stat-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="detailed-stat-title">Messages</div>
+            </div>
+            <div class="detailed-stat-value">24</div>
+            <div class="detailed-stat-chart">
+                <svg viewBox="0 0 100 30" class="mini-chart">
+                    <polyline points="0,15 10,18 20,12 30,20 40,10 50,15 60,8 70,12 80,6 90,10 100,5" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              stroke-width="2"></polyline>
+                </svg>
+            </div>
+            <div class="detailed-stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>+8% ce mois</span>
+            </div>
+        </div>
+
+        <div class="detailed-stat-card">
+            <div class="detailed-stat-header">
+                <div class="detailed-stat-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="detailed-stat-title">Documents</div>
+            </div>
+            <div class="detailed-stat-value">42</div>
+            <div class="detailed-stat-chart">
+                <svg viewBox="0 0 100 30" class="mini-chart">
+                    <polyline points="0,22 10,20 20,18 30,15 40,12 50,10 60,8 70,6 80,5 90,4 100,3" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              stroke-width="2"></polyline>
+                </svg>
+            </div>
+            <div class="detailed-stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>+12% ce mois</span>
+            </div>
+        </div>
+
+        <div class="detailed-stat-card">
+            <div class="detailed-stat-header">
+                <div class="detailed-stat-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="detailed-stat-title">Activités</div>
+            </div>
+            <div class="detailed-stat-value">18</div>
+            <div class="detailed-stat-chart">
+                <svg viewBox="0 0 100 30" class="mini-chart">
+                    <polyline points="0,25 10,22 20,20 30,18 40,15 50,12 60,10 70,8 80,6 90,5 100,4" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              stroke-width="2"></polyline>
+                </svg>
+            </div>
+            <div class="detailed-stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>+15% ce mois</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ═══════════════════════════════════════════════════════════════
+   STYLES PREMIUM
+   ═══════════════════════════════════════════════════════════════ #}
+<style>
+/* ══════ VARIABLES ══════ */
+:root {
+    --primary: #10b981;
+    --primary-glow: rgba(16, 185, 129, 0.4);
+    --gold: #fbbf24;
+    --gold-glow: rgba(251, 191, 36, 0.4);
+    --bg-dark: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.6);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.5);
+    --shadow-premium: 0 20px 60px -10px rgba(0, 0, 0, 0.5);
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+}
+
+/* ══════ HERO HEADER ══════ */
+.profile-hero {
+    position: relative;
+    min-height: 400px;
+    overflow: hidden;
+    margin-bottom: 120px;
+}
+
+.profile-cover-wrapper {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.profile-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.profile-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    position: relative;
+}
+
+.cover-pattern {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(251, 191, 36, 0.1) 0%, transparent 50%);
+}
+
+.profile-cover-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, 
+        rgba(15, 23, 42, 0.3) 0%, 
+        rgba(15, 23, 42, 0.6) 50%, 
+        rgba(15, 23, 42, 0.95) 100%);
+    backdrop-filter: blur(2px);
+}
+
+.profile-cover-gradient {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background: linear-gradient(180deg, 
+        transparent 0%, 
+        var(--bg-dark) 100%);
+}
+
+/* ══════ PROFILE INFO CONTAINER ══════ */
+.profile-info-container {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    margin-top: 280px;
+}
+
+.profile-info-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: end;
+}
+
+/* ══════ LOGO FLOTTANT ══════ */
+.profile-logo-wrapper {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin-bottom: -70px;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.profile-logo-glow {
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+    filter: blur(20px);
+    opacity: 0.6;
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+.profile-logo-border {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-lg);
+    padding: 4px;
+    background: linear-gradient(135deg, var(--primary), var(--gold));
+    box-shadow: var(--shadow-premium);
+}
+
+.profile-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: calc(var(--radius-lg) - 4px);
+    background: var(--bg-dark);
+}
+
+.profile-logo-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: calc(var(--radius-lg) - 4px);
+    background: linear-gradient(135deg, var(--primary), var(--gold));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-initial {
+    font-size: 3rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.profile-logo-ring {
+    position: absolute;
+    inset: -8px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: calc(var(--radius-lg) + 8px);
+    animation: rotate-ring 20s linear infinite;
+}
+
+@keyframes rotate-ring {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ══════ PROFILE DETAILS ══════ */
+.profile-details {
+    margin-top: 1rem;
+}
+
+.profile-name-block {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.profile-org-name {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    line-height: 1.2;
+}
+
+/* ══════ BADGE VÉRIFIÉ ══════ */
+.profile-verified-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 999px;
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+}
+
+.badge-glow {
+    position: absolute;
+    inset: -2px;
+    background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+    filter: blur(8px);
+    opacity: 0.5;
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.8; }
+}
+
+.profile-verified-badge i {
+    font-size: 1rem;
+}
+
+/* ══════ META PILLS ══════ */
+.profile-meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: 999px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.meta-pill:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px var(--primary-glow);
+}
+
+.meta-pill i {
+    font-size: 0.875rem;
+    color: var(--primary);
+}
+
+/* ══════ STATUS ══════ */
+.profile-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
+    animation: status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-online .status-text {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.status-separator {
+    width: 1px;
+    height: 16px;
+    background: var(--border-glass);
+}
+
+.status-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ══════ ACTIONS ══════ */
+.profile-actions-block {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.action-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+.action-btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--gold));
+    color: white;
+    box-shadow: 0 8px 20px -4px var(--primary-glow);
+}
+
+.action-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -4px var(--primary-glow);
+}
+
+.btn-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.action-btn-primary:hover .btn-glow {
+    opacity: 1;
+}
+
+.btn-ripple {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, transparent 70%);
+    transform: scale(0);
+    transition: transform 0.6s ease;
+}
+
+.action-btn-primary:active .btn-ripple {
+    transform: scale(2);
+}
+
+.action-btn-secondary {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    color: var(--text-primary);
+    backdrop-filter: blur(10px);
+}
+
+.action-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.action-btn-icon {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    color: var(--text-primary);
+    backdrop-filter: blur(10px);
+}
+
+.action-btn-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+}
+
+/* ══════ DROPDOWN ══════ */
+.actions-dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+    min-width: 200px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-premium);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.actions-dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.dropdown-item i {
+    width: 20px;
+    color: var(--primary);
+}
+
+/* ══════ STATS SECTION ══════ */
+.profile-stats-section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+}
+
+.stat-card-glow {
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+    filter: blur(40px);
+    opacity: 0.3;
+}
+
+.stat-card-content {
+    position: relative;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.stat-icon-score {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+    color: var(--primary);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.stat-icon-progress {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05));
+    color: var(--gold);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.stat-icon-rank {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.05));
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.stat-icon-visitors {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05));
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-suffix {
+    font-size: 1rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.stat-trend-up {
+    color: var(--primary);
+}
+
+.stat-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--gold));
+    border-radius: 999px;
+    transition: width 1.5s ease;
+}
+
+/* ══════ COMPLETION SECTION ══════ */
+.profile-completion-section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+}
+
+.completion-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+}
+
+.completion-card-glow {
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+    filter: blur(60px);
+    opacity: 0.2;
+}
+
+.completion-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3rem;
+    align-items: center;
+}
+
+.completion-circle-wrapper {
+    position: relative;
+}
+
+.completion-circle {
+    position: relative;
+    width: 160px;
+    height: 160px;
+}
+
+.circle-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.circle-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 8;
+}
+
+.circle-progress {
+    fill: none;
+    stroke: url(#gradient);
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 2s ease;
+}
+
+.circle-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.circle-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.circle-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+.completion-details {
+    flex: 1;
+}
+
+.completion-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 1.5rem 0;
+}
+
+.completion-title i {
+    color: var(--gold);
+}
+
+.completion-tips {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.tip-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.tip-icon {
+    font-size: 1rem;
+}
+
+.tip-done {
+    color: var(--primary);
+}
+
+.tip-pending {
+    color: var(--text-muted);
+}
+
+.completion-success {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: var(--radius-sm);
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.completion-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary), var(--gold));
+    color: white;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.completion-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px var(--primary-glow);
+}
+
+/* ══════ DETAILED STATS ══════ */
+.profile-detailed-stats {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+}
+
+.detailed-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.detailed-stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+}
+
+.detailed-stat-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+}
+
+.detailed-stat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.detailed-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.detailed-stat-title {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.detailed-stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.detailed-stat-chart {
+    margin-bottom: 1rem;
+}
+
+.mini-chart {
+    width: 100%;
+    height: 30px;
+    color: var(--primary);
+}
+
+.detailed-stat-change {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.detailed-stat-change.positive {
+    color: var(--primary);
+}
+
+/* ══════ RESPONSIVE ══════ */
+@media (max-width: 1024px) {
+    .profile-info-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .profile-actions-block {
+        justify-content: flex-start;
+    }
+    
+    .completion-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .completion-circle-wrapper {
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-hero {
+        min-height: 300px;
+        margin-bottom: 100px;
+    }
+    
+    .profile-info-container {
+        margin-top: 200px;
+        padding: 0 1rem;
+    }
+    
+    .profile-org-name {
+        font-size: 1.75rem;
+    }
+    
+    .profile-logo-wrapper {
+        width: 100px;
+        height: 100px;
+        margin-bottom: -50px;
+    }
+    
+    .profile-meta-pills {
+        gap: 0.5rem;
+    }
+    
+    .meta-pill {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    
+    .profile-actions-block {
+        flex-wrap: wrap;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .detailed-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-status {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .status-separator {
+        display: none;
+    }
+}
+</style>
+
+{# ═══════════════════════════════════════════════════════════════
+   JAVASCRIPT — Animations + Parallax + Compteurs
+   ═══════════════════════════════════════════════════════════════ #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ══════ Parallax au scroll ══════
+    const hero = document.getElementById('profile-hero');
+    const coverImg = document.querySelector('.profile-cover-img');
+    
+    if (hero && coverImg) {
+        window.addEventListener('scroll', function() {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * 0.5;
+            coverImg.style.transform = `translateY(${rate}px) scale(1.1)`;
+        });
+    }
+    
+    // ══════ Animation des compteurs ══════
+    const counters = document.querySelectorAll('.stat-number[data-target]');
+    
+    const animateCounter = (counter) => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const duration = 2000;
+        const step = target / (duration / 16);
+        let current = 0;
+        
+        const updateCounter = () => {
+            current += step;
+            if (current < target) {
+                counter.textContent = Math.floor(current);
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.textContent = target;
+            }
+        };
+        
+        updateCounter();
+    };
+    
+    // Intersection Observer pour déclencher les animations
+    const observerOptions = {
+        threshold: 0.5,
+        rootMargin: '0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const counters = entry.target.querySelectorAll('.stat-number[data-target]');
+                counters.forEach(counter => animateCounter(counter));
+                
+                // Animer les barres de progression
+                const progressBars = entry.target.querySelectorAll('.progress-fill');
+                progressBars.forEach(bar => {
+                    const width = bar.getAttribute('data-width');
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 300);
+                });
+                
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    // Observer les sections
+    const statsSection = document.querySelector('.profile-stats-section');
+    if (statsSection) {
+        observer.observe(statsSection);
+    }
+    
+    // ══════ Animation du cercle de progression ══════
+    const circleProgress = document.querySelector('.circle-progress');
+    if (circleProgress) {
+        const percent = parseInt(circleProgress.getAttribute('data-percent'));
+        const circumference = 339.292; // 2 * π * 54
+        const offset = circumference - (percent / 100) * circumference;
+        
+        setTimeout(() => {
+            circleProgress.style.strokeDashoffset = offset;
+        }, 500);
+    }
+    
+    // ══════ Bouton partager ══════
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', async function() {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: document.querySelector('.profile-org-name').textContent,
+                        text: 'Découvrez cette organisation sur TURIHO',
+                        url: window.location.href
+                    });
+                } catch (err) {
+                    console.log('Partage annulé');
+                }
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert('Lien copié dans le presse-papiers !');
+            }
+        });
+    }
+    
+    // ══════ Bouton copier le lien ══════
+    const copyLinkBtn = document.getElementById('copy-link-btn');
+    if (copyLinkBtn) {
+        copyLinkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            navigator.clipboard.writeText(window.location.href);
+            
+            const originalText = this.querySelector('span').textContent;
+            this.querySelector('span').textContent = 'Lien copié !';
+            setTimeout(() => {
+                this.querySelector('span').textContent = originalText;
+            }, 2000);
+        });
+    }
+    
+    // ══════ Fade in au scroll ══════
+    const fadeElements = document.querySelectorAll('.stat-card, .detailed-stat-card, .completion-card');
+    
+    const fadeObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+                fadeObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    fadeElements.forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        fadeObserver.observe(el);
+    });
+    
+});
+</script>

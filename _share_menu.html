@@ -1,0 +1,65 @@
+{# ══════════════════════════════════════════
+   PARTIAL: Menu de partage
+   ══════════════════════════════════════════ #}
+
+{% set profile_url = url_for('public.profil_token', token=org.token, _external=True) %}
+
+{# ——— Modal de partage ——— #}
+<div id="share-modal-{{ org.token }}" class="fixed inset-0 z-[100] hidden items-center justify-center p-4"
+     style="background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);">
+    <div class="glass-strong rounded-3xl p-8 max-w-md w-full relative">
+        {# Close button #}
+        <button onclick="document.getElementById('share-modal-{{ org.token }}').classList.add('hidden'); document.getElementById('share-modal-{{ org.token }}').classList.remove('flex'); document.body.style.overflow='';"
+                class="absolute top-4 right-4 w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-colors">
+            <i class="fas fa-times text-white"></i>
+        </button>
+
+        {# Header #}
+        <div class="text-center mb-6">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-gold-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-500/30">
+                <i class="fas fa-share-alt text-white text-xl"></i>
+            </div>
+            <h3 class="font-display text-2xl font-bold mb-1">Partager</h3>
+            <p class="text-sm text-gray-400">Partagez {{ org.org_name|e }} avec votre réseau</p>
+        </div>
+
+        {# Liens de partage #}
+        {% set share_links = [
+            ('Facebook',  'fab fa-facebook-f', 'from-blue-600 to-blue-700',    'https://www.facebook.com/sharer/sharer.php?u=' + profile_url|urlencode),
+            ('WhatsApp',  'fab fa-whatsapp',   'from-green-500 to-green-600',  'https://api.whatsapp.com/send?text=' + profile_url|urlencode),
+            ('X',         'fab fa-x-twitter',  'from-gray-800 to-gray-900',    'https://twitter.com/intent/tweet?url=' + profile_url|urlencode),
+            ('LinkedIn',  'fab fa-linkedin-in','from-blue-700 to-blue-800',    'https://www.linkedin.com/shareArticle?mini=true&url=' + profile_url|urlencode),
+            ('Email',     'fas fa-envelope',   'from-gray-600 to-gray-700',    'mailto:?subject=' + org.org_name|urlencode + '&body=' + profile_url|urlencode),
+            ('Telegram',  'fab fa-telegram-plane','from-blue-500 to-blue-600', 'https://t.me/share/url?url=' + profile_url|urlencode),
+        ] %}
+
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            {% for name, icon, gradient, href in share_links %}
+            <a href="{{ href }}" target="_blank" rel="noopener"
+               class="flex flex-col items-center gap-2 p-4 rounded-2xl glass hover:bg-white/5 transition-all hover:-translate-y-1">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br {{ gradient }} flex items-center justify-center shadow-lg">
+                    <i class="{{ icon }} text-white"></i>
+                </div>
+                <span class="text-xs font-medium">{{ name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+
+        {# Copier le lien #}
+        <button onclick="navigator.clipboard.writeText('{{ profile_url }}').then(() => { this.innerHTML = '<i class=\'fas fa-check text-brand-400\'></i> Lien copié !'; setTimeout(() => { this.innerHTML = '<i class=\'fas fa-link text-brand-400\'></i> Copier le lien'; }, 2000); })"
+                class="w-full py-3.5 rounded-xl glass font-semibold flex items-center justify-center gap-2 hover:bg-white/10 transition-colors">
+            <i class="fas fa-link text-brand-400"></i>
+            Copier le lien
+        </button>
+    </div>
+</div>
+
+{# ——— Script pour ouvrir le modal ——— #}
+<script>
+function openShareModal_{{ org.token|replace('-', '_') }}() {
+    const modal = document.getElementById('share-modal-{{ org.token }}');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+</script>

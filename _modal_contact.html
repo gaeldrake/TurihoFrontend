@@ -1,0 +1,55 @@
+{# ══════════════════════════════════════════
+   MODAL: ÉDITION COORDONNÉES
+   ══════════════════════════════════════════ #}
+
+<div id="edit-contact-modal" class="modal-overlay">
+    <div class="modal-content">
+        <form method="POST" action="{{ url_for('dashboard.modifier_contact') }}">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-address-card" style="color: #34d399;"></i>
+                    Modifier les coordonnées
+                </div>
+                <button type="button" class="btn-dashboard ghost icon" onclick="closeModal('edit-contact-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                {% set fields = [
+                    ('province', 'Province', 'text', org.province),
+                    ('commune', 'Commune', 'text', org.commune),
+                    ('colline', 'Colline', 'text', org.colline),
+                    ('quartier', 'Quartier', 'text', org.quartier),
+                    ('telephone', 'Téléphone', 'tel', org.telephone),
+                    ('email', 'Email', 'email', org.email),
+                    ('website', 'Site web', 'url', org.website),
+                ] %}
+                
+                {% for name, label, type, value in fields %}
+                <div class="form-group">
+                    <label class="form-label">{{ label }}</label>
+                    <input type="{{ type }}" name="{{ name }}" class="form-input" 
+                           value="{{ value|e if value else '' }}"
+                           placeholder="Saisir {{ label|lower }}">
+                </div>
+                {% endfor %}
+                
+                <div class="form-group">
+                    <label class="form-label">Horaires</label>
+                    <textarea name="horaires" class="form-textarea" rows="3" 
+                              placeholder="Ex: Lun-Ven 9h-18h">{{ org.horaires|e if org.horaires else '' }}</textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn-dashboard ghost" onclick="closeModal('edit-contact-modal')">
+                    Annuler
+                </button>
+                <button type="submit" class="btn-dashboard primary">
+                    <i class="fas fa-check"></i> Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

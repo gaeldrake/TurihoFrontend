@@ -1,0 +1,859 @@
+{% extends "base.html" %}
+
+{% block title %}À propos — TURIHO | Connecter • Collaborer • Croître{% endblock %}
+{% block meta_description %}TURIHO est la plateforme qui connecte l'écosystème entrepreneurial du Burundi. Découvrez notre mission, notre vision et notre impact.{% endblock %}
+{% block og_title %}À propos — TURIHO | Le réseau entrepreneurial du Burundi{% endblock %}
+{% block og_description %}Connecter les entrepreneurs, investisseurs et acteurs du développement au Burundi.{% endblock %}
+
+
+{# ══════════════════════════════════════════
+   STYLES PREMIUM
+══════════════════════════════════════════ #}
+{% block extra_css %}
+<style>
+    :root {
+        --brand-glow: rgba(16, 185, 129, 0.35);
+        --gold-glow: rgba(251, 191, 36, 0.25);
+    }
+
+    /* ===== HERO ===== */
+    #about-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+    .hero-about::before {
+        content: '';
+        position: absolute; inset: 0;
+        background:
+            radial-gradient(700px circle at 25% 20%, rgba(16, 185, 129, 0.18), transparent 55%),
+            radial-gradient(600px circle at 75% 70%, rgba(251, 191, 36, 0.1), transparent 55%);
+        pointer-events: none;
+    }
+    .hero-about::after {
+        content: '';
+        position: absolute; inset: 0;
+        background-image:
+            linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+        background-size: 56px 56px;
+        mask-image: radial-gradient(ellipse at center, black 25%, transparent 70%);
+        -webkit-mask-image: radial-gradient(ellipse at center, black 25%, transparent 70%);
+        pointer-events: none;
+    }
+
+    /* ===== GLASS CARDS 3D ===== */
+    .glass-card-3d {
+        position: relative;
+        background: rgba(20, 25, 33, 0.55);
+        backdrop-filter: blur(20px) saturate(140%);
+        -webkit-backdrop-filter: blur(20px) saturate(140%);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 24px;
+        overflow: hidden;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-style: preserve-3d;
+    }
+    .glass-card-3d::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(16,185,129,0.15), transparent 50%);
+        opacity: 0;
+        transition: opacity 0.4s;
+        pointer-events: none;
+    }
+    .glass-card-3d:hover {
+        transform: translateY(-8px) rotateX(2deg);
+        border-color: rgba(16, 185, 129, 0.3);
+        box-shadow: 0 30px 60px -20px rgba(16, 185, 129, 0.25);
+    }
+    .glass-card-3d:hover::before { opacity: 1; }
+    .glass-card-3d:hover .card-icon {
+        transform: scale(1.1) rotate(-5deg);
+    }
+    .card-icon {
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ===== GLOW EFFECTS ===== */
+    .glow-emerald { box-shadow: 0 0 40px rgba(16, 185, 129, 0.3); }
+    .glow-gold { box-shadow: 0 0 40px rgba(251, 191, 36, 0.3); }
+
+    /* ===== TIMELINE ===== */
+    .timeline-container {
+        position: relative;
+        padding-left: 3rem;
+    }
+    .timeline-container::before {
+        content: '';
+        position: absolute;
+        left: 1rem; top: 0; bottom: 0;
+        width: 2px;
+        background: linear-gradient(180deg, #10b981, #fbbf24, transparent);
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 3rem;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: -2.5rem; top: 0.5rem;
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981, #fbbf24);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2), 0 0 20px rgba(16, 185, 129, 0.5);
+    }
+    .timeline-dot::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 2px solid rgba(16, 185, 129, 0.4);
+        animation: timeline-pulse 2s ease-out infinite;
+    }
+    @keyframes timeline-pulse {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(2); opacity: 0; }
+    }
+
+    /* ===== ECOSYSTEM NETWORK ===== */
+    .ecosystem-node {
+        position: relative;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ecosystem-node:hover {
+        transform: translateY(-6px) scale(1.03);
+    }
+    .ecosystem-node:hover .node-icon {
+        box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.5);
+        transform: scale(1.1);
+    }
+    .node-icon {
+        transition: all 0.4s;
+    }
+    .ecosystem-connector {
+        position: relative;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .ecosystem-connector::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        width: 2px;
+        height: 100%;
+        background: linear-gradient(180deg, rgba(16, 185, 129, 0.6), rgba(251, 191, 36, 0.6));
+        transform: translateX(-50%);
+    }
+    .ecosystem-connector::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 15px #10b981;
+        transform: translate(-50%, -50%);
+        animation: connector-pulse 2s ease-in-out infinite;
+    }
+    @keyframes connector-pulse {
+        0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+        50% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+    }
+
+    /* ===== STAT COUNTER ===== */
+    .stat-big {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 800;
+        line-height: 1;
+        background: linear-gradient(135deg, #34d399 0%, #fbbf24 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ===== CONTACT CARD ===== */
+    .contact-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .contact-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(16, 185, 129, 0.3);
+        background: rgba(16, 185, 129, 0.03);
+    }
+
+    /* ===== FLOATING ELEMENTS ===== */
+    @keyframes float-slow {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(3deg); }
+    }
+    @keyframes float-medium {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-15px) rotate(-2deg); }
+    }
+    .float-slow { animation: float-slow 8s ease-in-out infinite; }
+    .float-medium { animation: float-medium 6s ease-in-out infinite; }
+
+    /* ===== REVEAL ===== */
+    .reveal { opacity: 0; transform: translateY(40px); }
+
+    /* ===== SECTION DIVIDER ===== */
+    .section-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.3), transparent);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .hero-floating { display: none; }
+        .timeline-container { padding-left: 2rem; }
+        .timeline-dot { left: -1.75rem; width: 14px; height: 14px; }
+    }
+</style>
+{% endblock %}
+
+
+{# ══════════════════════════════════════════
+   CONTENU
+══════════════════════════════════════════ #}
+{% block content %}
+
+{# ══════════ HERO IMMERSIF ══════════ #}
+<section class="relative min-h-screen flex items-center overflow-hidden hero-about">
+    <canvas id="about-canvas"></canvas>
+
+    {# Floating elements #}
+    <div class="absolute inset-0 z-[2] pointer-events-none hero-floating">
+        <div class="absolute top-[15%] left-[8%] glass-card-3d p-4 w-56 float-slow shadow-2xl">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-emerald-700 flex items-center justify-center">
+                    <i class="fas fa-rocket text-white"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wider">Startups</div>
+                    <div class="text-sm font-bold">+340 connectées</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute top-[35%] right-[10%] glass-card-3d p-4 w-52 float-medium shadow-2xl">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-amber-700 flex items-center justify-center">
+                    <i class="fas fa-handshake text-white"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wider">Partenariats</div>
+                    <div class="text-sm font-bold">+50 actifs</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute bottom-[25%] left-[12%] glass-card-3d p-4 w-52 float-slow shadow-2xl" style="animation-delay: 2s;">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                    <i class="fas fa-chart-line text-white"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wider">Croissance</div>
+                    <div class="text-sm font-bold">+240% en 2024</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Content #}
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 w-full">
+        <div class="text-center max-w-4xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass mb-8">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                </span>
+                <span class="text-xs font-medium text-gray-300">Depuis 2024 · Fait au Burundi 🇧🇮</span>
+            </div>
+
+            <div class="inline-block px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-6">
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Notre histoire</span>
+            </div>
+
+            <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6">
+                Construire le réseau<br>
+                <span class="gradient-text">entrepreneurial du Burundi</span>
+            </h1>
+
+            <p class="text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                TURIHO connecte entrepreneurs, investisseurs et acteurs du développement pour bâtir un écosystème visible, dynamique et prospère.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="#ecosystem" class="btn-primary px-7 py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2">
+                    <i class="fas fa-compass"></i>
+                    Découvrir l'écosystème
+                </a>
+                <a href="{{ url_for('auth.demande_inscription') }}" class="btn-ghost px-7 py-4 rounded-xl font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-rocket text-brand-400"></i>
+                    Rejoindre TURIHO
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Scroll indicator #}
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+        <span class="text-xs text-gray-500 uppercase tracking-widest">Scroll</span>
+        <div class="w-px h-12 bg-gradient-to-b from-brand-500 to-transparent"></div>
+    </div>
+</section>
+
+
+{# ══════════ QUI SOMMES-NOUS ══════════ #}
+<section class="py-24 lg:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal text-center mb-16 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                <i class="fas fa-compass text-brand-400 text-xs"></i>
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Qui sommes-nous</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Une plateforme,<br>
+                <span class="gradient-text">trois piliers</span>
+            </h2>
+            <p class="text-lg text-gray-400">
+                TURIHO est une plateforme innovante agissant comme un répertoire national regroupant startups, PME, coopératives, incubateurs et organisations de développement.
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+            {# Vision #}
+            <div class="reveal glass-card-3d p-8">
+                <div class="card-icon w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-emerald-700 flex items-center justify-center mb-6 shadow-lg shadow-brand-500/30">
+                    <i class="fas fa-eye text-2xl text-white"></i>
+                </div>
+                <h3 class="font-display text-2xl font-bold mb-3">Vision</h3>
+                <p class="text-gray-400 leading-relaxed">
+                    Faire de TURIHO le hub de référence pour la mise en réseau, la visibilité et la collaboration entrepreneuriale au Burundi.
+                </p>
+            </div>
+
+            {# Mission #}
+            <div class="reveal glass-card-3d p-8" style="transition-delay: 0.1s;">
+                <div class="card-icon w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-500 to-amber-700 flex items-center justify-center mb-6 shadow-lg shadow-gold-500/30">
+                    <i class="fas fa-bullseye text-2xl text-white"></i>
+                </div>
+                <h3 class="font-display text-2xl font-bold mb-3">Mission</h3>
+                <p class="text-gray-400 leading-relaxed">
+                    Connecter les entrepreneurs, acteurs du développement et décideurs avec une visibilité qui stimule croissance, innovation et collaboration.
+                </p>
+            </div>
+
+            {# Objectif #}
+            <div class="reveal glass-card-3d p-8" style="transition-delay: 0.2s;">
+                <div class="card-icon w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/30">
+                    <i class="fas fa-heart text-2xl text-white"></i>
+                </div>
+                <h3 class="font-display text-2xl font-bold mb-3">Objectif</h3>
+                <p class="text-gray-400 leading-relaxed">
+                    Renforcer l'écosystème entrepreneurial pour un impact socio-économique positif et durable sur les communautés locales.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider max-w-7xl mx-auto"></div>
+
+
+{# ══════════ VALEURS ══════════ #}
+<section class="py-24 lg:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal text-center mb-16 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 mb-5">
+                <i class="fas fa-heart text-gold-400 text-xs"></i>
+                <span class="text-xs font-semibold text-gold-400 tracking-wider uppercase">Nos valeurs</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Ce qui nous <span class="gradient-text">anime</span>
+            </h2>
+            <p class="text-lg text-gray-400">
+                Quatre principes fondamentaux guident chacune de nos actions.
+            </p>
+        </div>
+
+        {% set values = [
+            ('fa-rocket', 'from-purple-500 to-pink-500', 'shadow-purple-500/30', 'Innovation', 'Des solutions nouvelles adaptées à nos réalités africaines.'),
+            ('fa-people-group', 'from-brand-500 to-emerald-600', 'shadow-brand-500/30', 'Inclusion', 'Chaque acteur compte, quelle que soit sa taille ou son secteur.'),
+            ('fa-earth-africa', 'from-gold-500 to-amber-600', 'shadow-gold-500/30', 'Impact', 'Créer une valeur durable pour les communautés locales.'),
+            ('fa-link', 'from-blue-500 to-cyan-500', 'shadow-blue-500/30', 'Collaboration', 'Aller plus loin, ensemble, en connectant les forces.')
+        ] %}
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {% for icon, gradient, shadow, title, desc in values %}
+            <div class="reveal glass-card-3d p-7 text-center" style="transition-delay: {{ loop.index0 * 0.1 }}s;">
+                <div class="card-icon w-16 h-16 rounded-2xl bg-gradient-to-br {{ gradient }} flex items-center justify-center mx-auto mb-5 shadow-lg {{ shadow }}">
+                    <i class="fas {{ icon }} text-2xl text-white"></i>
+                </div>
+                <h3 class="font-display text-xl font-bold mb-2">{{ title }}</h3>
+                <p class="text-sm text-gray-400 leading-relaxed">{{ desc }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+{# ══════════ ACTIVITÉS ══════════ #}
+<section class="py-24 lg:py-32 relative overflow-hidden">
+    <div class="absolute inset-0" style="background: radial-gradient(600px circle at 30% 50%, rgba(16, 185, 129, 0.08), transparent 60%);"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal text-center mb-16 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                <i class="fas fa-th-large text-brand-400 text-xs"></i>
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Nos activités</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Quatre piliers<br>
+                <span class="gradient-text">d'action</span>
+            </h2>
+            <p class="text-lg text-gray-400">Visibilité · Connexion · Opportunités · Croissance</p>
+        </div>
+
+        {% set activities = [
+            ('fa-address-book', 'from-blue-500 to-cyan-600', 'shadow-blue-500/30', 'Répertoire & Annuaire', 'Accès simple et structuré à toutes les organisations du Burundi.'),
+            ('fa-handshake', 'from-brand-500 to-emerald-700', 'shadow-brand-500/30', 'Networking & Matchmaking', 'Événements et outils pour connecter efficacement les acteurs.'),
+            ('fa-satellite-dish', 'from-purple-500 to-pink-600', 'shadow-purple-500/30', 'Veille & Opportunités', 'Appels à projets, financements et formations centralisés.'),
+            ('fa-bullhorn', 'from-gold-500 to-amber-700', 'shadow-gold-500/30', 'Promotion & Visibilité', 'Campagnes pour valoriser les initiatives et talents locaux.'),
+            ('fa-graduation-cap', 'from-red-500 to-orange-600', 'shadow-red-500/30', 'Renforcement des capacités', 'Formations et ateliers pratiques pour monter en compétence.'),
+            ('fa-people-arrows', 'from-indigo-500 to-purple-600', 'shadow-indigo-500/30', 'Partenariats stratégiques', 'Mise en relation avec les acteurs clés de l\'écosystème.')
+        ] %}
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {% for icon, gradient, shadow, title, desc in activities %}
+            <div class="reveal glass-card-3d p-7" style="transition-delay: {{ (loop.index0 % 3) * 0.1 }}s;">
+                <div class="card-icon w-14 h-14 rounded-2xl bg-gradient-to-br {{ gradient }} flex items-center justify-center mb-5 shadow-lg {{ shadow }}">
+                    <i class="fas {{ icon }} text-2xl text-white"></i>
+                </div>
+                <h3 class="font-display text-xl font-bold mb-2">{{ title }}</h3>
+                <p class="text-sm text-gray-400 leading-relaxed">{{ desc }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+{# ══════════ IMPACT ══════════ #}
+<section class="py-24 lg:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal text-center mb-16 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 mb-5">
+                <i class="fas fa-chart-line text-gold-400 text-xs"></i>
+                <span class="text-xs font-semibold text-gold-400 tracking-wider uppercase">Notre impact</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Des chiffres qui<br>
+                <span class="gradient-text">parlent d'eux-mêmes</span>
+            </h2>
+        </div>
+
+        {% set stats = [
+            ('500+', 'Organisations connectées', 'fa-building', 'brand'),
+            ('10', 'Partenariats stratégiques', 'fa-handshake', 'gold'),
+            ('2', 'Événements annuels', 'fa-calendar', 'purple'),
+            ('50 000', 'Visiteurs mensuels', 'fa-users', 'blue')
+        ] %}
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+            {% for number, label, icon, color in stats %}
+            <div class="reveal glass-card-3d p-8 text-center" style="transition-delay: {{ loop.index0 * 0.1 }}s;">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-{{ color }}-500 to-{{ color }}-700 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <i class="fas {{ icon }} text-white text-xl"></i>
+                </div>
+                <div class="stat-big mb-2">{{ number }}</div>
+                <div class="text-sm text-gray-400">{{ label }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+{# ══════════ TIMELINE ══════════ #}
+<section class="py-24 lg:py-32 relative overflow-hidden">
+    <div class="absolute inset-0" style="background: radial-gradient(600px circle at 70% 30%, rgba(251, 191, 36, 0.08), transparent 60%);"></div>
+
+    <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal text-center mb-16 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                <i class="fas fa-history text-brand-400 text-xs"></i>
+                <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Notre évolution</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                L'histoire de<br>
+                <span class="gradient-text">TURIHO</span>
+            </h2>
+        </div>
+
+        <div class="timeline-container">
+            {% set timeline = [
+                ('2023', 'Vision', 'Naissance de l\'idée de créer une plateforme centralisant l\'écosystème entrepreneurial burundais.', 'fa-lightbulb'),
+                ('2024 Q1', 'Création', 'Lancement officiel de TURIHO avec les premières organisations inscrites.', 'fa-rocket'),
+                ('2024 Q3', 'Croissance', 'Expansion rapide avec +300 organisations et premiers partenariats stratégiques.', 'fa-chart-line'),
+                ('2025', 'Expansion', 'Objectif : devenir le hub national de référence pour l\'entrepreneuriat au Burundi.', 'fa-flag-checkered')
+            ] %}
+
+            {% for date, title, desc, icon in timeline %}
+            <div class="reveal timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="glass-card-3d p-6 lg:p-8">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-gold-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                            <i class="fas {{ icon }} text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-xs font-bold text-brand-400 uppercase tracking-wider">{{ date }}</span>
+                                <span class="h-px flex-1 bg-gradient-to-r from-brand-500/30 to-transparent"></span>
+                            </div>
+                            <h3 class="font-display text-xl font-bold mb-2">{{ title }}</h3>
+                            <p class="text-sm text-gray-400 leading-relaxed">{{ desc }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+{# ══════════ ÉCOSYSTÈME ══════════ #}
+<section id="ecosystem" class="py-24 lg:py-32 relative">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal text-center mb-16 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 mb-5">
+                <i class="fas fa-network-wired text-purple-400 text-xs"></i>
+                <span class="text-xs font-semibold text-purple-400 tracking-wider uppercase">L'écosystème</span>
+            </div>
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Un réseau<br>
+                <span class="gradient-text">interconnecté</span>
+            </h2>
+            <p class="text-lg text-gray-400">
+                TURIHO crée un écosystème vivant où chaque acteur nourrit la croissance des autres.
+            </p>
+        </div>
+
+        <div class="space-y-0">
+            {% set ecosystem = [
+                ('fa-user-tie', 'from-brand-500 to-emerald-700', 'shadow-brand-500/30', 'Entrepreneurs', 'Porteurs de projets et créateurs de valeur'),
+                ('fa-building', 'from-blue-500 to-cyan-600', 'shadow-blue-500/30', 'Entreprises', 'PME, startups et grandes sociétés'),
+                ('fa-coins', 'from-gold-500 to-amber-700', 'shadow-gold-500/30', 'Investisseurs', 'Business angels, fonds et institutions financières'),
+                ('fa-landmark', 'from-purple-500 to-pink-600', 'shadow-purple-500/30', 'Institutions', 'Organisations publiques et ONG'),
+                ('fa-lightbulb', 'from-red-500 to-orange-600', 'shadow-red-500/30', 'Opportunités', 'Financements, formations et partenariats')
+            ] %}
+
+            {% for icon, gradient, shadow, title, desc in ecosystem %}
+            <div class="reveal ecosystem-node glass-card-3d p-6" style="transition-delay: {{ loop.index0 * 0.08 }}s;">
+                <div class="flex items-center gap-5">
+                    <div class="node-icon w-16 h-16 rounded-2xl bg-gradient-to-br {{ gradient }} flex items-center justify-center flex-shrink-0 shadow-lg {{ shadow }}">
+                        <i class="fas {{ icon }} text-2xl text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-display text-xl font-bold mb-1">{{ title }}</h3>
+                        <p class="text-sm text-gray-400">{{ desc }}</p>
+                    </div>
+                    <div class="hidden sm:flex items-center gap-2 text-xs text-brand-400 font-semibold">
+                        <span class="w-2 h-2 rounded-full bg-brand-400 animate-pulse"></span>
+                        Actif
+                    </div>
+                </div>
+            </div>
+
+            {% if not loop.last %}
+            <div class="ecosystem-connector"></div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+{# ══════════ CONTACT ══════════ #}
+<section class="py-24 lg:py-32 relative">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="reveal glass-card-3d p-8 md:p-12 relative overflow-hidden">
+            <div class="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-brand-500/10 blur-3xl"></div>
+            <div class="absolute -bottom-20 -left-20 w-60 h-60 rounded-full bg-gold-500/10 blur-3xl"></div>
+
+            <div class="relative">
+                <div class="text-center mb-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-5">
+                        <i class="fas fa-envelope text-brand-400 text-xs"></i>
+                        <span class="text-xs font-semibold text-brand-400 tracking-wider uppercase">Contact</span>
+                    </div>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold mb-3">
+                        Restons en <span class="gradient-text">contact</span>
+                    </h2>
+                    <p class="text-gray-400">Nous sommes à votre écoute pour toute question ou partenariat.</p>
+                </div>
+
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <a href="mailto:info@turiho.org" class="contact-card glass rounded-2xl p-6 text-center block">
+                        <div class="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-envelope text-brand-400"></i>
+                        </div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Email</div>
+                        <div class="text-sm font-semibold">info@turiho.org</div>
+                    </a>
+
+                    <a href="tel:+25779755369" class="contact-card glass rounded-2xl p-6 text-center block">
+                        <div class="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-phone text-brand-400"></i>
+                        </div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Téléphone</div>
+                        <div class="text-sm font-semibold">+257 79 75 53 69</div>
+                    </a>
+
+                    <a href="https://www.turiho.org" target="_blank" class="contact-card glass rounded-2xl p-6 text-center block">
+                        <div class="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-globe text-brand-400"></i>
+                        </div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Site web</div>
+                        <div class="text-sm font-semibold">www.turiho.org</div>
+                    </a>
+
+                    <div class="contact-card glass rounded-2xl p-6 text-center">
+                        <div class="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-share-alt text-brand-400"></i>
+                        </div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Réseaux</div>
+                        <div class="flex justify-center gap-2">
+                            <a href="#" class="w-7 h-7 rounded-lg bg-blue-600/20 hover:bg-blue-600/40 flex items-center justify-center transition-colors"><i class="fab fa-linkedin-in text-xs text-blue-400"></i></a>
+                            <a href="#" class="w-7 h-7 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 flex items-center justify-center transition-colors"><i class="fab fa-facebook-f text-xs text-blue-400"></i></a>
+                            <a href="#" class="w-7 h-7 rounded-lg bg-gray-500/20 hover:bg-gray-500/40 flex items-center justify-center transition-colors"><i class="fab fa-x-twitter text-xs text-gray-400"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{# ══════════ CTA FINAL ══════════ #}
+<section class="py-24 lg:py-32 relative overflow-hidden">
+    <div class="absolute inset-0" style="background: radial-gradient(800px circle at 50% 50%, rgba(16, 185, 129, 0.12), transparent 60%);"></div>
+
+    <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+            Prêt à rejoindre<br>
+            <span class="gradient-text">l'aventure TURIHO ?</span>
+        </h2>
+        <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
+            Que vous soyez entrepreneur, investisseur ou organisation, votre place est parmi nous.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-3 justify-center mb-12">
+            <a href="{{ url_for('auth.demande_inscription') }}" class="btn-primary px-8 py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2">
+                <i class="fas fa-rocket"></i>
+                Créer mon profil
+            </a>
+            <a href="mailto:info@turiho.org" class="btn-ghost px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2">
+                <i class="fas fa-envelope text-brand-400"></i>
+                Nous contacter
+            </a>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-500">
+            <div class="flex items-center gap-2"><i class="fas fa-shield-alt text-brand-400"></i><span>Plateforme sécurisée</span></div>
+            <div class="flex items-center gap-2"><i class="fas fa-headset text-brand-400"></i><span>Support 24/7</span></div>
+            <div class="flex items-center gap-2"><i class="fas fa-bolt text-brand-400"></i><span>Activation instantanée</span></div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+
+{# ══════════════════════════════════════════
+   SCRIPTS
+══════════════════════════════════════════ #}
+{% block extra_js %}
+<script>
+/* ============================================
+   THREE.JS - NETWORK 3D HERO
+   ============================================ */
+(function() {
+    const canvas = document.getElementById('about-canvas');
+    if (!canvas) return;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Réseau de nœuds connectés
+    const nodes = [];
+    const nodeCount = 40;
+    const nodeGeo = new THREE.SphereGeometry(0.08, 16, 16);
+
+    for (let i = 0; i < nodeCount; i++) {
+        const color = Math.random() > 0.3 ? 0x10b981 : 0xfbbf24;
+        const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85 });
+        const mesh = new THREE.Mesh(nodeGeo, mat);
+        mesh.position.set(
+            (Math.random() - 0.5) * 14,
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 8 - 3
+        );
+        mesh.userData = {
+            baseY: mesh.position.y,
+            baseX: mesh.position.x,
+            speed: 0.3 + Math.random() * 0.5,
+            offset: Math.random() * Math.PI * 2
+        };
+        scene.add(mesh);
+        nodes.push(mesh);
+    }
+
+    // Connections entre nœuds proches
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.15 });
+    const connections = [];
+    for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+            if (nodes[i].position.distanceTo(nodes[j].position) < 4.5) {
+                const geo = new THREE.BufferGeometry().setFromPoints([nodes[i].position, nodes[j].position]);
+                const line = new THREE.Line(geo, lineMat);
+                scene.add(line);
+                connections.push({ line, i, j });
+            }
+        }
+    }
+
+    // Particules d'ambiance
+    const pGeo = new THREE.BufferGeometry();
+    const pCount = 400;
+    const pPos = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount * 3; i++) pPos[i] = (Math.random() - 0.5) * 18;
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    const pMat = new THREE.PointsMaterial({ size: 0.02, color: 0x10b981, transparent: true, opacity: 0.4 });
+    const particles = new THREE.Points(pGeo, pMat);
+    scene.add(particles);
+
+    // Lumières
+    scene.add(new THREE.AmbientLight(0x404040, 1.5));
+    const pl1 = new THREE.PointLight(0x10b981, 2, 100);
+    pl1.position.set(5, 5, 5);
+    scene.add(pl1);
+    const pl2 = new THREE.PointLight(0xfbbf24, 1, 100);
+    pl2.position.set(-5, -5, 5);
+    scene.add(pl2);
+
+    camera.position.z = 8;
+
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', e => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const t = Date.now() * 0.001;
+
+        // Animation des nœuds
+        nodes.forEach(n => {
+            n.position.y = n.userData.baseY + Math.sin(t * n.userData.speed + n.userData.offset) * 0.4;
+            n.position.x = n.userData.baseX + Math.cos(t * n.userData.speed * 0.5 + n.userData.offset) * 0.2;
+        });
+
+        // Mise à jour des lignes
+        connections.forEach(c => {
+            const positions = c.line.geometry.attributes.position.array;
+            positions[0] = nodes[c.i].position.x;
+            positions[1] = nodes[c.i].position.y;
+            positions[2] = nodes[c.i].position.z;
+            positions[3] = nodes[c.j].position.x;
+            positions[4] = nodes[c.j].position.y;
+            positions[5] = nodes[c.j].position.z;
+            c.line.geometry.attributes.position.needsUpdate = true;
+        });
+
+        // Rotation globale basée sur la souris
+        particles.rotation.y += 0.0005;
+        scene.rotation.y += (mouseX * 0.15 - scene.rotation.y) * 0.03;
+        scene.rotation.x += (mouseY * 0.1 - scene.rotation.x) * 0.03;
+
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+})();
+
+/* ============================================
+   GSAP SCROLL ANIMATIONS
+   ============================================ */
+if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+
+    document.querySelectorAll('.reveal').forEach((el, i) => {
+        gsap.fromTo(el,
+            { opacity: 0, y: 40 },
+            {
+                opacity: 1, y: 0,
+                duration: 0.9,
+                ease: 'power3.out',
+                scrollTrigger: {
+                    trigger: el,
+                    start: 'top 88%',
+                    toggleActions: 'play none none none'
+                },
+                delay: (i % 4) * 0.08
+            }
+        );
+    });
+
+    // Parallax sur les éléments flottants
+    gsap.utils.toArray('.hero-floating > div').forEach((el, i) => {
+        gsap.to(el, {
+            y: -100,
+            ease: 'none',
+            scrollTrigger: {
+                trigger: '.hero-about',
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 1
+            }
+        });
+    });
+}
+
+/* ============================================
+   3D CARD MOUSE TRACKING
+   ============================================ */
+document.querySelectorAll('.glass-card-3d').forEach(card => {
+    card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--mx', x + '%');
+        card.style.setProperty('--my', y + '%');
+    });
+});
+</script>
+{% endblock %}

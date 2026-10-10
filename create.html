@@ -1,0 +1,774 @@
+{% extends "base.html" %}
+
+{% block title %}Publier une opportunité | TURIHO{% endblock %}
+{% block meta_description %}Publiez votre formation, financement ou appel à projets sur TURIHO.{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== LAYOUT ===== */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2rem;
+  }
+  @media (max-width: 1024px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .sidebar-sticky { position: static !important; }
+  }
+
+  /* ===== FORM SECTION ===== */
+  .form-section {
+    position: relative;
+    transition: all 0.3s;
+  }
+  .form-section:hover { border-color: rgba(16, 185, 129, 0.15); }
+
+  .section-number {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; color: white;
+    box-shadow: 0 8px 20px -8px rgba(16, 185, 129, 0.5);
+  }
+
+  /* ===== INPUTS PREMIUM ===== */
+  .input-premium {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+    color: white;
+    font-size: 14px;
+    transition: all 0.25s;
+    font-family: inherit;
+  }
+  .input-premium::placeholder { color: #64748b; }
+  .input-premium:hover { border-color: rgba(255,255,255,0.15); }
+  .input-premium:focus {
+    outline: none;
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.03);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+  }
+  .input-premium.error {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.03);
+  }
+
+  textarea.input-premium { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+  /* ===== LABELS ===== */
+  .label-premium {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+  }
+  .label-premium .required {
+    color: #ef4444;
+    font-size: 14px;
+  }
+  .label-hint {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 0.375rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  /* ===== CATEGORY SELECTOR ===== */
+  .category-card {
+    position: relative;
+    padding: 1.25rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+  .category-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+    transform: translateY(-2px);
+  }
+  .category-card.selected {
+    border-color: rgba(16, 185, 129, 0.6);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(251, 191, 36, 0.03));
+    box-shadow: 0 20px 40px -20px rgba(16, 185, 129, 0.25);
+  }
+  .category-card.selected::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, #10b981, #fbbf24);
+  }
+  .category-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 0.75rem;
+    transition: transform 0.3s;
+  }
+  .category-card:hover .category-icon { transform: scale(1.08) rotate(-3deg); }
+  .category-check {
+    position: absolute; top: 12px; right: 12px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0.5);
+    transition: all 0.3s;
+  }
+  .category-card.selected .category-check {
+    opacity: 1; transform: scale(1);
+  }
+
+  /* ===== DROPZONE ===== */
+  .dropzone {
+    border: 2px dashed rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: rgba(255,255,255,0.01);
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.03);
+  }
+  .dropzone-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 1rem;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ===== DATE INPUT ===== */
+  input[type="date"].input-premium,
+  input[type="datetime-local"].input-premium,
+  input[type="number"].input-premium {
+    color-scheme: dark;
+  }
+
+  /* ===== PROGRESS INDICATOR ===== */
+  .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .progress-step:hover { background: rgba(255,255,255,0.03); }
+  .progress-step.active {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(251, 191, 36, 0.05));
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+  .progress-step.completed .step-dot {
+    background: linear-gradient(135deg, #10b981, #059669);
+  }
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .progress-step.active .step-dot {
+    background: linear-gradient(135deg, #10b981, #fbbf24);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+  }
+
+  /* ===== TIP CARD ===== */
+  .tip-card {
+    position: relative;
+    padding: 1.25rem;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(251, 191, 36, 0.04));
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    overflow: hidden;
+  }
+  .tip-card::before {
+    content: '';
+    position: absolute; top: -30px; right: -30px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.2), transparent 70%);
+  }
+
+  /* ===== CHAR COUNTER ===== */
+  .char-counter {
+    font-size: 11px;
+    color: #64748b;
+    text-align: right;
+    margin-top: 0.25rem;
+    transition: color 0.2s;
+  }
+  .char-counter.warning { color: #f59e0b; }
+  .char-counter.danger { color: #ef4444; }
+
+  /* ===== SUBMIT BUTTONS ===== */
+  .btn-submit {
+    position: relative;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.6);
+  }
+  .btn-submit::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+  }
+  .btn-submit:hover::before { transform: translateX(100%); }
+  .btn-submit:disabled {
+    opacity: 0.5; cursor: not-allowed; transform: none;
+  }
+
+  /* ===== CURRENCY SUFFIX ===== */
+  .input-with-suffix {
+    position: relative;
+  }
+  .input-suffix {
+    position: absolute;
+    right: 1rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+    pointer-events: none;
+  }
+  .input-with-suffix .input-premium { padding-right: 4rem; }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up { animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+  @keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+  }
+  .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+  /* ===== PREVIEW BADGE ===== */
+  .preview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    font-size: 11px;
+    font-weight: 600;
+    color: #34d399;
+  }
+
+  /* ===== FIELD GROUP ===== */
+  .field-group {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .field-row-2 { grid-template-columns: 1fr 1fr; }
+  .field-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 640px) {
+    .field-row-2, .field-row-3 { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% set current_cat = request.args.get('categorie', '')|lower %}
+
+{# ============================================================
+   HERO COMPACT
+   ============================================================ #}
+<section class="relative pt-28 pb-10 overflow-hidden">
+  <div class="absolute inset-0" style="background: radial-gradient(600px circle at 20% 30%, rgba(16, 185, 129, 0.08), transparent 50%), radial-gradient(500px circle at 80% 70%, rgba(251, 191, 36, 0.05), transparent 50%);"></div>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    {# Breadcrumb #}
+    <nav class="flex items-center gap-2 text-xs text-gray-500 mb-6">
+      <a href="{{ url_for('public.index') }}" class="hover:text-white transition-colors">Accueil</a>
+      <i class="fas fa-chevron-right text-[8px]"></i>
+      <a href="{{ url_for('opportunites.afficher_opportunites') }}" class="hover:text-white transition-colors">Opportunités</a>
+      <i class="fas fa-chevron-right text-[8px]"></i>
+      <span class="text-brand-400">Publier</span>
+    </nav>
+
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-4">
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-400 pulse-dot"></span>
+          <span class="text-[11px] font-semibold text-brand-400 tracking-wider uppercase">Nouvelle publication</span>
+        </div>
+        <h1 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-3">
+          Créez votre <span class="gradient-text">opportunité</span>
+        </h1>
+        <p class="text-gray-400 max-w-2xl">
+          Touchez des milliers d'entrepreneurs burundais. Remplissez les informations ci-dessous pour publier.
+        </p>
+      </div>
+
+      <div class="preview-badge">
+        <i class="fas fa-eye text-[10px]"></i>
+        Aperçu en temps réel
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ============================================================
+   MAIN FORM LAYOUT
+   ============================================================ #}
+<section class="pb-24">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <form method="POST" action="{{ url_for('opportunites.create') }}" enctype="multipart/form-data" id="create-form" class="form-grid">
+
+      {# ══════════ COLONNE PRINCIPALE ══════════ #}
+      <div class="space-y-6">
+
+        {# ─── ÉTAPE 1 : CATÉGORIE ─── #}
+        <div class="form-section glass rounded-2xl p-6 lg:p-8 animate-slide-up">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="section-number">1</div>
+            <div class="flex-1">
+              <h2 class="font-display text-xl font-bold mb-1">Type d'opportunité</h2>
+              <p class="text-sm text-gray-400">Choisissez la catégorie qui correspond le mieux à votre publication.</p>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-3 gap-3">
+            {# Formation #}
+            <label class="category-card {% if current_cat == 'formation' %}selected{% endif %}" data-category="formation">
+              <input type="radio" name="categorie" value="formation" class="hidden" {% if current_cat == 'formation' %}checked{% endif %}>
+              <div class="category-check"><i class="fas fa-check text-white text-[10px]"></i></div>
+              <div class="category-icon bg-gradient-to-br from-blue-500 to-cyan-600">
+                <i class="fas fa-graduation-cap text-white"></i>
+              </div>
+              <div class="font-display font-bold mb-1">Formation</div>
+              <div class="text-xs text-gray-500">Cours, ateliers, certifications</div>
+            </label>
+
+            {# Financement #}
+            <label class="category-card {% if current_cat == 'financement' %}selected{% endif %}" data-category="financement">
+              <input type="radio" name="categorie" value="financement" class="hidden" {% if current_cat == 'financement' %}checked{% endif %}>
+              <div class="category-check"><i class="fas fa-check text-white text-[10px]"></i></div>
+              <div class="category-icon bg-gradient-to-br from-brand-500 to-emerald-700">
+                <i class="fas fa-money-bill-wave text-white"></i>
+              </div>
+              <div class="font-display font-bold mb-1">Financement</div>
+              <div class="text-xs text-gray-500">Subventions, bourses, prêts</div>
+            </label>
+
+            {# Opportunité #}
+            <label class="category-card {% if current_cat == 'opportunite' or current_cat == '' %}selected{% endif %}" data-category="opportunite">
+              <input type="radio" name="categorie" value="opportunite" class="hidden" {% if current_cat in ['opportunite', ''] %}checked{% endif %}>
+              <div class="category-check"><i class="fas fa-check text-white text-[10px]"></i></div>
+              <div class="category-icon bg-gradient-to-br from-purple-500 to-pink-600">
+                <i class="fas fa-star text-white"></i>
+              </div>
+              <div class="font-display font-bold mb-1">Appel à projets</div>
+              <div class="text-xs text-gray-500">Partenariats, compétitions</div>
+            </label>
+          </div>
+        </div>
+
+        {# ─── ÉTAPE 2 : INFORMATIONS GÉNÉRALES ─── #}
+        <div class="form-section glass rounded-2xl p-6 lg:p-8 animate-slide-up" style="animation-delay: 0.1s;">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="section-number">2</div>
+            <div class="flex-1">
+              <h2 class="font-display text-xl font-bold mb-1">Informations générales</h2>
+              <p class="text-sm text-gray-400">Les informations essentielles visibles par tous les visiteurs.</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            {# Titre #}
+            <div>
+              <label class="label-premium">
+                <i class="fas fa-heading text-brand-400 text-[10px]"></i>
+                Titre de l'opportunité
+                <span class="required">*</span>
+              </label>
+              <input type="text" name="titre" required maxlength="150"
+                     class="input-premium" placeholder="Ex: Formation en marketing digital pour entrepreneurs"
+                     data-counter="titre-counter" data-max="150">
+              <div class="flex items-center justify-between mt-1">
+                <div class="label-hint">Un titre clair et accrocheur attire plus de candidats.</div>
+                <div id="titre-counter" class="char-counter">0 / 150</div>
+              </div>
+            </div>
+
+            {# Description #}
+            <div>
+              <label class="label-premium">
+                <i class="fas fa-align-left text-brand-400 text-[10px]"></i>
+                Description détaillée
+                <span class="required">*</span>
+              </label>
+              <textarea name="description" required maxlength="2000" rows="6"
+                        class="input-premium" placeholder="Décrivez en détail votre opportunité : objectifs, contenu, bénéfices pour les participants..."
+                        data-counter="desc-counter" data-max="2000"></textarea>
+              <div class="flex items-center justify-between mt-1">
+                <div class="label-hint">Soyez précis : objectifs, public cible, bénéfices.</div>
+                <div id="desc-counter" class="char-counter">0 / 2000</div>
+              </div>
+            </div>
+
+            {# Type & Lieu #}
+            <div class="field-row-2">
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-tag text-brand-400 text-[10px]"></i>
+                  Type / Sous-catégorie
+                </label>
+                <input type="text" name="type" class="input-premium" placeholder="Ex: Atelier, Bourse, Compétition">
+              </div>
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-map-marker-alt text-brand-400 text-[10px]"></i>
+                  Lieu
+                </label>
+                <input type="text" name="lieu" class="input-premium" placeholder="Ex: Bujumbura, En ligne...">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# ─── ÉTAPE 3 : DATES & TARIFS ─── #}
+        <div class="form-section glass rounded-2xl p-6 lg:p-8 animate-slide-up" style="animation-delay: 0.2s;">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="section-number">3</div>
+            <div class="flex-1">
+              <h2 class="font-display text-xl font-bold mb-1">Dates & Conditions</h2>
+              <p class="text-sm text-gray-400">Période de validité et informations financières.</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-row-2">
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-calendar-plus text-brand-400 text-[10px]"></i>
+                  Date de début
+                </label>
+                <input type="date" name="date_debut" class="input-premium">
+              </div>
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-calendar-check text-brand-400 text-[10px]"></i>
+                  Date limite / fin
+                </label>
+                <input type="date" name="date_fin" class="input-premium">
+                <div class="label-hint">Laissez vide si l'offre est permanente.</div>
+              </div>
+            </div>
+
+            <div class="field-row-2">
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-tag text-gold-400 text-[10px]"></i>
+                  Prix d'inscription
+                </label>
+                <div class="input-with-suffix">
+                  <input type="number" name="prix" min="0" class="input-premium" placeholder="0">
+                  <span class="input-suffix">FBU</span>
+                </div>
+                <div class="label-hint">0 ou vide = gratuit.</div>
+              </div>
+              <div>
+                <label class="label-premium">
+                  <i class="fas fa-coins text-gold-400 text-[10px]"></i>
+                  Montant maximum
+                </label>
+                <div class="input-with-suffix">
+                  <input type="number" name="montant_max" min="0" class="input-premium" placeholder="0">
+                  <span class="input-suffix">FBU</span>
+                </div>
+                <div class="label-hint">Pour les financements : montant max accordé.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# ─── ÉTAPE 4 : MÉDIA ─── #}
+        <div class="form-section glass rounded-2xl p-6 lg:p-8 animate-slide-up" style="animation-delay: 0.3s;">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="section-number">4</div>
+            <div class="flex-1">
+              <h2 class="font-display text-xl font-bold mb-1">Image de couverture</h2>
+              <p class="text-sm text-gray-400">Une image de qualité augmente la visibilité de <span class="text-brand-400 font-semibold">+40%</span>.</p>
+            </div>
+          </div>
+
+          <label class="dropzone block" id="dropzone">
+            <input type="file" name="image" accept="image/*" class="hidden" id="image-input">
+            <div class="dropzone-icon">
+              <i class="fas fa-cloud-upload-alt text-brand-400 text-xl"></i>
+            </div>
+            <div class="font-semibold mb-1">Glissez une image ou cliquez</div>
+            <div class="text-xs text-gray-500 mb-3">PNG, JPG ou WEBP · Max 5 Mo</div>
+            <div id="preview-container" class="hidden mt-4">
+              <img id="image-preview" class="max-h-48 mx-auto rounded-xl">
+            </div>
+          </label>
+        </div>
+
+        {# ─── ACTIONS ─── #}
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+          <a href="{{ url_for('opportunites.afficher_opportunites') }}"
+             class="btn-ghost px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 order-2 sm:order-1">
+            <i class="fas fa-times text-xs"></i>
+            Annuler
+          </a>
+
+          <div class="flex items-center gap-3 order-1 sm:order-2">
+            <button type="submit" name="action" value="draft"
+                    class="px-6 py-3 rounded-xl font-semibold text-sm border border-white/10 hover:bg-white/5 transition-colors">
+              <i class="fas fa-save mr-2 text-xs"></i>
+              Brouillon
+            </button>
+            <button type="submit" class="btn-submit px-8 py-3 rounded-xl font-semibold text-white text-sm flex items-center gap-2">
+              <i class="fas fa-paper-plane text-xs"></i>
+              Publier l'opportunité
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {# ══════════ SIDEBAR ══════════ #}
+      <aside class="space-y-5">
+        <div class="sidebar-sticky" style="position: sticky; top: 100px;">
+
+          {# Progress #}
+          <div class="glass rounded-2xl p-5 mb-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-display font-bold text-sm">Progression</h3>
+              <span id="progress-percent" class="text-xs font-bold text-brand-400">0%</span>
+            </div>
+            <div class="h-1.5 bg-white/5 rounded-full overflow-hidden mb-5">
+              <div id="progress-bar" class="h-full bg-gradient-to-r from-brand-500 to-gold-400 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+
+            <div class="space-y-1">
+              <div class="progress-step active" data-step="1">
+                <div class="step-dot">1</div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Catégorie</div>
+                  <div class="text-xs text-gray-500">Type d'opportunité</div>
+                </div>
+              </div>
+              <div class="progress-step" data-step="2">
+                <div class="step-dot">2</div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Informations</div>
+                  <div class="text-xs text-gray-500">Titre et description</div>
+                </div>
+              </div>
+              <div class="progress-step" data-step="3">
+                <div class="step-dot">3</div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Dates & Tarifs</div>
+                  <div class="text-xs text-gray-500">Conditions</div>
+                </div>
+              </div>
+              <div class="progress-step" data-step="4">
+                <div class="step-dot">4</div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Média</div>
+                  <div class="text-xs text-gray-500">Image de couverture</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {# Tips #}
+          <div class="tip-card mb-5">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-gold-500 flex items-center justify-center">
+                <i class="fas fa-lightbulb text-white text-xs"></i>
+              </div>
+              <div class="font-semibold text-sm">Conseil IA</div>
+            </div>
+            <p class="text-xs text-gray-300 leading-relaxed mb-3" id="ai-tip">
+              Les opportunités avec une description de <span class="text-brand-400 font-semibold">+200 mots</span> reçoivent 3x plus de candidatures.
+            </p>
+            <button class="text-[11px] font-semibold text-brand-400 hover:text-brand-300 transition-colors">
+              Voir plus de conseils →
+            </button>
+          </div>
+
+          {# Stats #}
+          <div class="glass rounded-2xl p-5">
+            <div class="text-xs text-gray-500 uppercase tracking-wider mb-3">Audience potentielle</div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-users text-brand-400 text-xs"></i>
+                  <span class="text-sm text-gray-300">Entrepreneurs actifs</span>
+                </div>
+                <span class="font-display font-bold gradient-text">1 247</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-eye text-gold-400 text-xs"></i>
+                  <span class="text-sm text-gray-300">Vues estimées</span>
+                </div>
+                <span class="font-display font-bold gradient-text">~850</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-handshake text-purple-400 text-xs"></i>
+                  <span class="text-sm text-gray-300">Candidatures moy.</span>
+                </div>
+                <span class="font-display font-bold gradient-text">~42</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+    </form>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  // ══════════ CATEGORY SELECTION ══════════
+  document.querySelectorAll('.category-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      card.querySelector('input').checked = true;
+    });
+  });
+
+  // ══════════ CHAR COUNTERS ══════════
+  document.querySelectorAll('[data-counter]').forEach(input => {
+    const counterId = input.dataset.counter;
+    const max = parseInt(input.dataset.max);
+    const counter = document.getElementById(counterId);
+    if (!counter) return;
+
+    const update = () => {
+      const len = input.value.length;
+      counter.textContent = `${len} / ${max}`;
+      counter.classList.remove('warning', 'danger');
+      if (len > max * 0.9) counter.classList.add('danger');
+      else if (len > max * 0.75) counter.classList.add('warning');
+      updateProgress();
+    };
+    input.addEventListener('input', update);
+  });
+
+  // ══════════ PROGRESS TRACKING ══════════
+  const requiredFields = ['categorie', 'titre', 'description'];
+  const updateProgress = () => {
+    let filled = 0;
+    requiredFields.forEach(name => {
+      const field = document.querySelector(`[name="${name}"]:checked, [name="${name}"]`);
+      if (field && field.value && field.value.trim()) filled++;
+    });
+    const percent = Math.round((filled / requiredFields.length) * 100);
+    const bar = document.getElementById('progress-bar');
+    const percentEl = document.getElementById('progress-percent');
+    if (bar) bar.style.width = percent + '%';
+    if (percentEl) percentEl.textContent = percent + '%';
+
+    // Update steps
+    document.querySelectorAll('.progress-step').forEach((step, i) => {
+      step.classList.remove('completed');
+      if (i < filled) step.classList.add('completed');
+    });
+  };
+
+  document.querySelectorAll('input, textarea').forEach(el => {
+    el.addEventListener('input', updateProgress);
+    el.addEventListener('change', updateProgress);
+  });
+
+  // ══════════ IMAGE PREVIEW ══════════
+  const imageInput = document.getElementById('image-input');
+  const dropzone = document.getElementById('dropzone');
+  const preview = document.getElementById('image-preview');
+  const previewContainer = document.getElementById('preview-container');
+
+  if (imageInput) {
+    imageInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          preview.src = ev.target.result;
+          previewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      });
+    });
+    dropzone.addEventListener('drop', e => {
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        imageInput.files = e.dataTransfer.files;
+        imageInput.dispatchEvent(new Event('change'));
+      }
+    });
+  }
+
+  // ══════════ PROGRESS STEP CLICK ══════════
+  document.querySelectorAll('.progress-step').forEach(step => {
+    step.addEventListener('click', () => {
+      const idx = parseInt(step.dataset.step) - 1;
+      const sections = document.querySelectorAll('.form-section');
+      if (sections[idx]) {
+        sections[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Initial update
+  updateProgress();
+})();
+</script>
+{% endblock %}

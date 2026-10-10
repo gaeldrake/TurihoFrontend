@@ -1,0 +1,280 @@
+{# ══════════════════════════════════════════
+   TAB: DESCRIPTION / ORGANISATION
+   ══════════════════════════════════════════ #}
+
+<div class="grid lg:grid-cols-3 gap-6">
+    {# ══════════ COLONNE PRINCIPALE ══════════ #}
+    <div class="lg:col-span-2 space-y-6">
+        
+        {# Présentation #}
+        <div class="content-card">
+            <div class="content-card-header">
+                <div class="content-card-title">
+                    <i class="fas fa-building" style="color: #34d399;"></i>
+                    À propos
+                </div>
+                <button class="btn-dashboard ghost sm" onclick="toggleEdit('description')">
+                    <i class="fas fa-edit"></i> Modifier
+                </button>
+            </div>
+            
+            {# Mode lecture #}
+            <div id="description-view" class="description-content">
+                {% if org.description %}
+                    {{ org.description|e|replace('\n', '<br>')|safe }}
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div style="font-weight: 600; color: white; margin-bottom: 0.25rem;">Aucune description</div>
+                        <div style="font-size: 0.875rem;">Présentez votre organisation pour attirer membres et partenaires.</div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            {# Mode édition (caché par défaut) #}
+            <form id="description-edit" class="hidden" method="POST" action="{{ url_for('dashboard.modifier_description') }}">
+                <textarea name="description" class="form-textarea" rows="8" placeholder="Décrivez votre organisation...">{{ org.description|e if org.description else '' }}</textarea>
+                <div class="flex items-center justify-between mt-3">
+                    <span style="font-size: 0.75rem; color: #64748b;">
+                        <span id="desc-counter">0</span> / 2000 caractères
+                    </span>
+                    <div class="flex gap-2">
+                        <button type="button" class="btn-dashboard ghost sm" onclick="toggleEdit('description')">Annuler</button>
+                        <button type="submit" class="btn-dashboard primary sm">
+                            <i class="fas fa-check"></i> Enregistrer
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# Mission & Vision #}
+        {% if org.mission or org.vision %}
+        <div class="grid md:grid-cols-2 gap-4">
+            {% if org.mission %}
+            <div style="padding: 1.25rem; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: 14px;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-bullseye" style="color: #34d399;"></i>
+                    </div>
+                    <span style="font-weight: 700; font-size: 0.9375rem;">Mission</span>
+                </div>
+                <div style="font-size: 0.875rem; color: #cbd5e1; line-height: 1.6;">{{ org.mission|e }}</div>
+            </div>
+            {% endif %}
+            
+            {% if org.vision %}
+            <div style="padding: 1.25rem; background: rgba(251, 191, 36, 0.05); border: 1px solid rgba(251, 191, 36, 0.15); border-radius: 14px;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(251, 191, 36, 0.15); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-eye" style="color: #fbbf24;"></i>
+                    </div>
+                    <span style="font-weight: 700; font-size: 0.9375rem;">Vision</span>
+                </div>
+                <div style="font-size: 0.875rem; color: #cbd5e1; line-height: 1.6;">{{ org.vision|e }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {# Galerie Photos #}
+        <div class="content-card">
+            <div class="content-card-header">
+                <div class="content-card-title">
+                    <i class="fas fa-images" style="color: #34d399;"></i>
+                    Galerie
+                    {% if photos %}
+                    <span class="content-card-count">{{ photos|length }}</span>
+                    {% endif %}
+                </div>
+                <button class="btn-dashboard ghost sm" onclick="openModal('upload-photos-modal')">
+                    <i class="fas fa-plus"></i> Ajouter
+                </button>
+            </div>
+            
+            {% if photos %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.75rem;">
+                {% for photo in photos[:12] %}
+                <div style="aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.02); position: relative; cursor: pointer; transition: all 0.3s;"
+                     onmouseover="this.style.transform='scale(1.05)'"
+                     onmouseout="this.style.transform='scale(1)'">
+                    <img src="{{ get_url(photo.filename) }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                {% endfor %}
+            </div>
+            {% if photos|length > 12 %}
+            <div style="text-align: center; margin-top: 1rem;">
+                <button class="btn-dashboard ghost sm">
+                    Voir toutes les photos ({{ photos|length }})
+                </button>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <div style="font-weight: 600; color: white; margin-bottom: 0.25rem;">Aucune photo</div>
+                <div style="font-size: 0.875rem; margin-bottom: 1rem;">Ajoutez des photos pour présenter votre organisation.</div>
+                <button class="btn-dashboard primary sm" onclick="openModal('upload-photos-modal')">
+                    <i class="fas fa-cloud-upload-alt"></i> Ajouter des photos
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ══════════ COLONNE LATÉRALE ══════════ #}
+    <div class="space-y-6">
+        
+        {# Informations clés #}
+        <div class="content-card">
+            <div class="content-card-header">
+                <div class="content-card-title">
+                    <i class="fas fa-info-circle" style="color: #34d399;"></i>
+                    Informations
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                {% if org.type %}
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: 10px;">
+                    <span style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Type</span>
+                    <span style="font-weight: 600; font-size: 0.875rem;">{{ org.type|capitalize|e }}</span>
+                </div>
+                {% endif %}
+                
+                {% if org.category %}
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: 10px;">
+                    <span style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Catégorie</span>
+                    <span style="font-weight: 600; font-size: 0.875rem;">{{ org.category|capitalize|e }}</span>
+                </div>
+                {% endif %}
+                
+                {% if org.creation_date %}
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: 10px;">
+                    <span style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Fondée</span>
+                    <span style="font-weight: 600; font-size: 0.875rem;">{{ org.creation_date.strftime('%Y') }}</span>
+                </div>
+                {% endif %}
+                
+                {% if org.website %}
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: 10px;">
+                    <span style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Site web</span>
+                    <a href="{{ org.website|e }}" target="_blank" style="font-weight: 600; font-size: 0.875rem; color: #34d399; text-decoration: none;">
+                        Voir <i class="fas fa-external-link-alt" style="font-size: 0.7rem;"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Réseaux sociaux #}
+        {% if org.links %}
+        <div class="content-card">
+            <div class="content-card-header">
+                <div class="content-card-title">
+                    <i class="fas fa-share-alt" style="color: #34d399;"></i>
+                    Réseaux sociaux
+                </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                {% set social_icons = {
+                    'facebook':  {'icon': 'fa-facebook-f',     'color': '#1877f2'},
+                    'twitter':   {'icon': 'fa-x-twitter',      'color': '#ffffff'},
+                    'instagram': {'icon': 'fa-instagram',      'color': '#e4405f'},
+                    'youtube':   {'icon': 'fa-youtube',        'color': '#ff0000'},
+                    'linkedin':  {'icon': 'fa-linkedin-in',    'color': '#0a66c2'},
+                    'tiktok':    {'icon': 'fa-tiktok',         'color': '#ffffff'},
+                    'telegram':  {'icon': 'fa-telegram-plane', 'color': '#0088cc'},
+                    'whatsapp':  {'icon': 'fa-whatsapp',       'color': '#25d366'}
+                } %}
+                {% for link in org.links %}
+                    {% set platform = link.platform|lower %}
+                    {% set config = social_icons.get(platform, {'icon': 'fa-link', 'color': '#94a3b8'}) %}
+                    <a href="{{ link.url|e }}" target="_blank" rel="noopener"
+                       style="width: 40px; height: 40px; border-radius: 10px; background: {{ config.color }}20; border: 1px solid {{ config.color }}40; display: flex; align-items: center; justify-content: center; color: {{ config.color }}; transition: all 0.2s;"
+                       onmouseover="this.style.transform='translateY(-2px)'"
+                       onmouseout="this.style.transform='none'">
+                        <i class="fab {{ config.icon }}"></i>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# Score de visibilité #}
+        <div class="content-card">
+            <div class="content-card-header">
+                <div class="content-card-title">
+                    <i class="fas fa-chart-line" style="color: #fbbf24;"></i>
+                    Visibilité
+                </div>
+            </div>
+            <div style="text-align: center; padding: 1rem 0;">
+                <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #34d399, #fbbf24); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                    {{ org.visibility_score|default(0) }}%
+                </div>
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">Score de profil</div>
+                <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 999px; margin-top: 1rem; overflow: hidden;">
+                    <div style="height: 100%; width: {{ org.visibility_score|default(0) }}%; background: linear-gradient(90deg, #10b981, #fbbf24); border-radius: 999px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ══════════ MODAL UPLOAD PHOTOS ══════════ #}
+<div id="upload-photos-modal" class="modal-overlay">
+    <div class="modal-content">
+        <form method="POST" action="{{ url_for('dashboard.upload_photos') }}" enctype="multipart/form-data">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-images" style="color: #34d399;"></i>
+                    Ajouter des photos
+                </div>
+                <button type="button" class="btn-dashboard ghost icon" onclick="closeModal('upload-photos-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label class="dropzone" style="display: block;">
+                    <input type="file" name="photos" multiple accept="image/*" required style="display: none;">
+                    <div class="dropzone-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Glissez vos photos ici</div>
+                    <div style="font-size: 0.75rem; color: #64748b;">PNG, JPG, GIF, WebP — max 5 Mo par fichier</div>
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-dashboard ghost" onclick="closeModal('upload-photos-modal')">Annuler</button>
+                <button type="submit" class="btn-dashboard primary">
+                    <i class="fas fa-cloud-upload-alt"></i> Envoyer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleEdit(section) {
+    const view = document.getElementById(section + '-view');
+    const edit = document.getElementById(section + '-edit');
+    if (view && edit) {
+        view.classList.toggle('hidden');
+        edit.classList.toggle('hidden');
+    }
+}
+
+// Compteur de caractères
+const descTextarea = document.querySelector('#description-edit textarea');
+const descCounter = document.getElementById('desc-counter');
+if (descTextarea && descCounter) {
+    descTextarea.addEventListener('input', () => {
+        descCounter.textContent = descTextarea.value.length;
+    });
+    descCounter.textContent = descTextarea.value.length;
+}
+</script>

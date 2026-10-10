@@ -1,0 +1,468 @@
+{% extends 'admin/basee.html' %}
+{% block title %}Configuration sécurité{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cyber-green: #00ff88;
+        --cyber-red: #ff3344;
+        --cyber-blue: #00aaff;
+        --cyber-amber: #ffaa00;
+        --cyber-card: rgba(10, 15, 20, 0.7);
+    }
+    
+    .security-tabs {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        background: rgba(10, 15, 20, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+    }
+    
+    .security-tab {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        border-radius: 10px;
+        color: #94a3b8;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    
+    .security-tab:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .security-tab.active {
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 170, 255, 0.05));
+        color: var(--cyber-green);
+        border: 1px solid rgba(0, 255, 136, 0.2);
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
+    }
+    
+    .page-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.875rem;
+        font-weight: 800;
+        color: white;
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .page-subtitle {
+        color: #64748b;
+        font-size: 0.9375rem;
+        margin: 0;
+    }
+    
+    .config-card {
+        background: var(--cyber-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 1.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .section-title i {
+        color: var(--cyber-green);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-input,
+    .form-select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        color: white;
+        font-size: 0.875rem;
+        font-family: inherit;
+        transition: all 0.2s;
+        outline: none;
+    }
+    
+    .form-input:focus,
+    .form-select:focus {
+        border-color: rgba(0, 255, 136, 0.5);
+        background: rgba(0, 255, 136, 0.03);
+        box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.08);
+    }
+    
+    .form-select option {
+        background: #0a0d12;
+        color: white;
+    }
+    
+    .form-hint {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.375rem;
+    }
+    
+    /* Toggle switch */
+    .toggle-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        margin-bottom: 0.75rem;
+    }
+    
+    .toggle-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .toggle-desc {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-top: 0.125rem;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        width: 48px;
+        height: 26px;
+        flex-shrink: 0;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 26px;
+        transition: 0.3s;
+    }
+    
+    .toggle-slider::before {
+        content: '';
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+    
+    .toggle-switch input:checked + .toggle-slider {
+        background: var(--cyber-green);
+    }
+    
+    .toggle-switch input:checked + .toggle-slider::before {
+        transform: translateX(22px);
+    }
+    
+    .btn-cyber {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+    
+    .btn-cyber.primary {
+        background: linear-gradient(135deg, var(--cyber-green), #00cc66);
+        color: #030507;
+        box-shadow: 0 4px 12px -4px rgba(0, 255, 136, 0.4);
+    }
+    
+    .btn-cyber.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px -4px rgba(0, 255, 136, 0.5);
+    }
+    
+    .btn-cyber.ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-sliders-h" style="color: var(--cyber-purple, #aa44ff);"></i>
+        Configuration Sécurité
+    </h1>
+    <p class="page-subtitle">
+        Paramétrez les règles de sécurité de la plateforme
+    </p>
+</div>
+
+{# Tabs #}
+<div class="security-tabs">
+    <a href="{{ url_for('admin.security_dashboard') }}" class="security-tab">
+        <i class="fas fa-tachometer-alt"></i>
+        Vue d'ensemble
+    </a>
+    <a href="{{ url_for('admin.security_logs') }}" class="security-tab">
+        <i class="fas fa-list"></i>
+        Logs
+    </a>
+    <a href="{{ url_for('admin.security_sessions') }}" class="security-tab">
+        <i class="fas fa-desktop"></i>
+        Sessions
+    </a>
+    <a href="{{ url_for('admin.security_ip_rules') }}" class="security-tab">
+        <i class="fas fa-network-wired"></i>
+        Règles IP
+    </a>
+    <a href="{{ url_for('admin.security_config') }}" class="security-tab active">
+        <i class="fas fa-sliders-h"></i>
+        Configuration
+    </a>
+</div>
+
+<form method="POST" action="{{ url_for('admin.security_config') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    {# ══════ Authentification ══════ #}
+    <div class="config-card">
+        <h3 class="section-title">
+            <i class="fas fa-sign-in-alt"></i>
+            Authentification
+        </h3>
+        
+        <div class="toggle-wrapper">
+            <div>
+                <div class="toggle-label">2FA obligatoire</div>
+                <div class="toggle-desc">Exiger l'authentification à deux facteurs pour tous les admins</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="hidden" name="2fa_required" value="false">
+                <input type="checkbox" name="2fa_required" value="true" 
+                       {% if config['2fa_required'] == 'true' %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="max_login_attempts" class="form-label">Tentatives max avant verrouillage</label>
+                <input type="number" id="max_login_attempts" name="max_login_attempts" 
+                       class="form-input" value="{{ config['max_login_attempts'] }}" 
+                       min="3" max="20">
+                <div class="form-hint">Nombre de tentatives échouées avant verrouillage du compte</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="lockout_duration" class="form-label">Durée de verrouillage (minutes)</label>
+                <input type="number" id="lockout_duration" name="lockout_duration" 
+                       class="form-input" value="{{ config['lockout_duration'] }}" 
+                       min="5" max="1440">
+                <div class="form-hint">Durée du verrouillage après dépassement des tentatives</div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="session_timeout" class="form-label">Expiration de session (minutes)</label>
+            <input type="number" id="session_timeout" name="session_timeout" 
+                   class="form-input" value="{{ config['session_timeout'] }}" 
+                   min="5" max="480">
+            <div class="form-hint">Durée d'inactivité avant déconnexion automatique</div>
+        </div>
+    </div>
+    
+    {# ══════ Mot de passe ══════ #}
+    <div class="config-card">
+        <h3 class="section-title">
+            <i class="fas fa-key"></i>
+            Politique de mot de passe
+        </h3>
+        
+        <div class="form-group">
+            <label for="password_min_length" class="form-label">Longueur minimale</label>
+            <input type="number" id="password_min_length" name="password_min_length" 
+                   class="form-input" value="{{ config['password_min_length'] }}" 
+                   min="8" max="32">
+        </div>
+        
+        <div class="toggle-wrapper">
+            <div>
+                <div class="toggle-label">Lettre majuscule requise</div>
+                <div class="toggle-desc">Au moins une lettre majuscule (A-Z)</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="hidden" name="password_require_uppercase" value="false">
+                <input type="checkbox" name="password_require_uppercase" value="true" 
+                       {% if config['password_require_uppercase'] == 'true' %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        
+        <div class="toggle-wrapper">
+            <div>
+                <div class="toggle-label">Chiffre requis</div>
+                <div class="toggle-desc">Au moins un chiffre (0-9)</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="hidden" name="password_require_number" value="false">
+                <input type="checkbox" name="password_require_number" value="true" 
+                       {% if config['password_require_number'] == 'true' %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        
+        <div class="toggle-wrapper">
+            <div>
+                <div class="toggle-label">Caractère spécial requis</div>
+                <div class="toggle-desc">Au moins un caractère spécial (!@#$%...)</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="hidden" name="password_require_special" value="false">
+                <input type="checkbox" name="password_require_special" value="true" 
+                       {% if config['password_require_special'] == 'true' %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+    </div>
+    
+    {# ══════ Protection ══════ #}
+    <div class="config-card">
+        <h3 class="section-title">
+            <i class="fas fa-shield-alt"></i>
+            Protection
+        </h3>
+        
+        <div class="toggle-wrapper">
+            <div>
+                <div class="toggle-label">CAPTCHA activé</div>
+                <div class="toggle-desc">Protection anti-bot sur les formulaires sensibles</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="hidden" name="captcha_enabled" value="false">
+                <input type="checkbox" name="captcha_enabled" value="true" 
+                       {% if config['captcha_enabled'] == 'true' %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        
+        <div class="toggle-wrapper">
+            <div>
+                <div class="toggle-label">Protection CSRF</div>
+                <div class="toggle-desc">Validation des tokens CSRF sur tous les formulaires</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="hidden" name="csrf_protection" value="false">
+                <input type="checkbox" name="csrf_protection" value="true" 
+                       {% if config['csrf_protection'] == 'true' %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        
+        <div class="form-group">
+            <label for="ip_rate_limit" class="form-label">Limite de requêtes par IP (par minute)</label>
+            <input type="number" id="ip_rate_limit" name="ip_rate_limit" 
+                   class="form-input" value="{{ config['ip_rate_limit'] }}" 
+                   min="10" max="1000">
+            <div class="form-hint">Nombre maximum de requêtes autorisées par IP et par minute</div>
+        </div>
+    </div>
+    
+    {# ══════ Notifications ══════ #}
+    <div class="config-card">
+        <h3 class="section-title">
+            <i class="fas fa-bell"></i>
+            Notifications
+        </h3>
+        
+        <div class="form-group">
+            <label for="alert_email" class="form-label">Email d'alerte</label>
+            <input type="email" id="alert_email" name="alert_email" 
+                   class="form-input" value="{{ config['alert_email'] }}" 
+                   placeholder="admin@turiho.org">
+            <div class="form-hint">Adresse email pour recevoir les alertes de sécurité critiques</div>
+        </div>
+    </div>
+    
+    {# ══════ Actions ══════ #}
+    <div class="form-actions">
+        <a href="{{ url_for('admin.security_dashboard') }}" class="btn-cyber ghost">
+            <i class="fas fa-times"></i>
+            Annuler
+        </a>
+        <button type="submit" class="btn-cyber primary">
+            <i class="fas fa-check"></i>
+            Enregistrer la configuration
+        </button>
+    </div>
+</form>
+{% endblock %}

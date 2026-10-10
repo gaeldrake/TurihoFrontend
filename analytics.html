@@ -1,0 +1,990 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — {{ org.org_name|e }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════
+       LAYOUT ANALYTICS
+       ══════════════════════════════════════════ */
+    .analytics-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .analytics-container { padding: 1rem 0.5rem; }
+    }
+
+    /* ══════════════════════════════════════════
+       HEADER ANALYTICS
+       ══════════════════════════════════════════ */
+    .analytics-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .analytics-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .analytics-title-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #34d399;
+        font-size: 1.25rem;
+    }
+
+    /* ══════════════════════════════════════════
+       PERIOD SELECTOR
+       ══════════════════════════════════════════ */
+    .period-selector {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        background: rgba(20, 25, 33, 0.55);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+    }
+    
+    .period-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #94a3b8;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        text-decoration: none;
+    }
+    
+    .period-btn:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .period-btn.active {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.05));
+        color: #34d399;
+        box-shadow: 0 4px 12px -4px rgba(16, 185, 129, 0.2);
+    }
+
+    /* ══════════════════════════════════════════
+       STATS CARDS
+       ══════════════════════════════════════════ */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: rgba(20, 25, 33, 0.55);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 1.25rem;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, var(--stat-color, rgba(16, 185, 129, 0.1)), transparent 70%);
+        opacity: 0.5;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(16, 185, 129, 0.3);
+        box-shadow: 0 20px 40px -20px rgba(16, 185, 129, 0.2);
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+    }
+    
+    .stat-value {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #34d399, #fbbf24);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.25rem;
+        font-variant-numeric: tabular-nums;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+    }
+    
+    .stat-trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 999px;
+    }
+    
+    .stat-trend.up {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+    }
+
+    /* ══════════════════════════════════════════
+       CHART CARDS
+       ══════════════════════════════════════════ */
+    .chart-card {
+        background: rgba(20, 25, 33, 0.55);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .chart-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .chart-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.125rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .chart-title i {
+        color: #34d399;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    
+    @media (max-width: 768px) {
+        .chart-container { height: 250px; }
+    }
+
+    /* ══════════════════════════════════════════
+       VISIBILITY SCORE
+       ══════════════════════════════════════════ */
+    .visibility-card {
+        background: rgba(20, 25, 33, 0.55);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .visibility-gauge {
+        position: relative;
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 1.5rem;
+    }
+    
+    .visibility-gauge svg {
+        transform: rotate(-90deg);
+    }
+    
+    .visibility-gauge circle {
+        fill: none;
+        stroke-width: 12;
+    }
+    
+    .gauge-bg {
+        stroke: rgba(255, 255, 255, 0.05);
+    }
+    
+    .gauge-fill {
+        stroke: url(#gaugeGradient);
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    
+    .gauge-value {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .gauge-number {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #34d399, #fbbf24);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+    
+    .gauge-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 0.25rem;
+    }
+    
+    .visibility-details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    
+    .visibility-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        font-size: 0.8125rem;
+    }
+    
+    .visibility-item i {
+        color: #34d399;
+    }
+
+    /* ══════════════════════════════════════════
+       RECENT ACTIVITIES TIMELINE
+       ══════════════════════════════════════════ */
+    .activities-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .activities-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(180deg, #10b981, rgba(16, 185, 129, 0.1));
+    }
+    
+    .activity-item {
+        position: relative;
+        padding: 0.875rem 1rem;
+        margin-bottom: 0.75rem;
+        background: rgba(20, 25, 33, 0.55);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        transition: all 0.3s;
+        animation: slideIn 0.4s ease-out both;
+    }
+    
+    .activity-item:hover {
+        border-color: rgba(16, 185, 129, 0.3);
+        transform: translateX(4px);
+    }
+    
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: -1.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--activity-color, #34d399);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    }
+    
+    .activity-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.875rem;
+    }
+    
+    .activity-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .activity-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.125rem;
+    }
+    
+    .activity-time {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ══════════════════════════════════════════
+       GRID LAYOUTS
+       ══════════════════════════════════════════ */
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    .grid-2-equal {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .grid-2, .grid-2-equal {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ══════════════════════════════════════════
+       BUTTONS
+       ══════════════════════════════════════════ */
+    .btn-analytics {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    
+    .btn-analytics.primary {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 4px 12px -4px rgba(16, 185, 129, 0.4);
+    }
+    
+    .btn-analytics.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.5);
+    }
+    
+    .btn-analytics.ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+    
+    .btn-analytics.ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    /* ══════════════════════════════════════════
+       LEGEND
+       ══════════════════════════════════════════ */
+    .chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.8125rem;
+    }
+    
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    
+    {# ══════════ HEADER ══════════ #}
+    <div class="analytics-header">
+        <div>
+            <div class="analytics-title">
+                <div class="analytics-title-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div>
+                    <h1 style="margin: 0; font-size: 1.75rem;">Performance</h1>
+                    <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
+                        {{ org.org_name|e }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="period-selector">
+            {% for key, opt in period_options.items() %}
+            <a href="{{ url_for('analytics.analytics_dashboard', period=key) }}" 
+               class="period-btn {% if period == key %}active{% endif %}">
+                {{ opt.label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# ══════════ STATS CARDS ══════════ #}
+    <div class="stats-grid">
+        {% set stats_cards = [
+            ('Visites totales', stats.visits, '+18%', 'fa-eye', '#10b981'),
+            ('Contacts reçus', stats.contacts, '+12%', 'fa-envelope', '#3b82f6'),
+            ('Téléchargements', stats.downloads, '+8%', 'fa-download', '#a855f7'),
+            ('Partages', stats.shares, '+24%', 'fa-share-alt', '#fbbf24'),
+        ] %}
+        
+        {% for label, value, trend, icon, color in stats_cards %}
+        <div class="stat-card" style="--stat-color: {{ color }}25;">
+            <div class="stat-icon" style="background: {{ color }}25; color: {{ color }};">
+                <i class="fas {{ icon }}"></i>
+            </div>
+            <div class="stat-value" data-count="{{ value }}">0</div>
+            <div class="stat-label">{{ label }}</div>
+            <div class="stat-trend up">
+                <i class="fas fa-arrow-up"></i> {{ trend }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {# ══════════ GRAPHIQUE 1: VISITES ══════════ #}
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <i class="fas fa-chart-area"></i>
+                Évolution des visites
+            </div>
+            <span style="font-size: 0.75rem; color: #64748b;">
+                Total: <strong style="color: #34d399;">{{ stats.visits }}</strong> visiteurs
+            </span>
+        </div>
+        <div class="chart-container">
+            <canvas id="visitsChart"></canvas>
+        </div>
+    </div>
+
+    {# ══════════ GRID: TRAFIC + ENGAGEMENT ══════════ #}
+    <div class="grid-2-equal">
+        {# GRAPHIQUE 2: SOURCES DE TRAFIC #}
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-chart-pie"></i>
+                    D'où viennent vos visiteurs ?
+                </div>
+            </div>
+            <div class="chart-container" style="height: 280px;">
+                <canvas id="trafficChart"></canvas>
+            </div>
+            <div class="chart-legend">
+                {% for source in traffic_sources %}
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: {{ source.color }};"></div>
+                    <span style="color: #94a3b8;">{{ source.source }}</span>
+                    <strong style="color: white;">{{ source.value }}%</strong>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# GRAPHIQUE 3: ENGAGEMENT #}
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Interactions reçues
+                </div>
+            </div>
+            <div class="chart-container" style="height: 280px;">
+                <canvas id="engagementChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════ GRID: CROISSANCE + SCORE ══════════ #}
+    <div class="grid-2">
+        {# GRAPHIQUE 4: CROISSANCE #}
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-chart-line"></i>
+                    Croissance du profil
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+
+        {# SCORE VISIBILITÉ #}
+        <div class="visibility-card">
+            <div style="font-size: 0.875rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                Score visibilité
+            </div>
+            
+            <div class="visibility-gauge">
+                <svg width="180" height="180">
+                    <defs>
+                        <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#10b981"/>
+                            <stop offset="100%" stop-color="#fbbf24"/>
+                        </linearGradient>
+                    </defs>
+                    <circle class="gauge-bg" cx="90" cy="90" r="75"></circle>
+                    <circle class="gauge-fill" cx="90" cy="90" r="75"
+                            stroke-dasharray="471"
+                            stroke-dashoffset="471"
+                            data-target="{{ visibility_score }}"></circle>
+                </svg>
+                <div class="gauge-value">
+                    <div class="gauge-number">{{ visibility_score }}%</div>
+                    <div class="gauge-label">Complétude</div>
+                </div>
+            </div>
+
+            <div class="visibility-details">
+                <div class="visibility-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Profil complet</span>
+                </div>
+                <div class="visibility-item">
+                    <i class="fas fa-images"></i>
+                    <span>Images ajoutées</span>
+                </div>
+                <div class="visibility-item">
+                    <i class="fas fa-tasks"></i>
+                    <span>Activités</span>
+                </div>
+                <div class="visibility-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Documents</span>
+                </div>
+            </div>
+
+            <a href="{{ url_for('dashboard.modifier_organisation', id=org.id) }}" 
+               class="btn-analytics primary" style="margin-top: 1.5rem; width: 100%; justify-content: center;">
+                <i class="fas fa-arrow-up"></i>
+                Améliorer mon score
+            </a>
+        </div>
+    </div>
+
+    {# ══════════ ACTIVITÉS RÉCENTES ══════════ #}
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <i class="fas fa-history"></i>
+                Activités récentes
+            </div>
+            <span style="font-size: 0.75rem; color: #64748b;">
+                <i class="fas fa-circle" style="color: #10b981; font-size: 0.5rem; animation: pulse 2s infinite;"></i>
+                En temps réel
+            </span>
+        </div>
+        
+        <div class="activities-timeline">
+            {% for activity in recent_activities %}
+            <div class="activity-item" style="--activity-color: {{ activity.color }}; animation-delay: {{ loop.index0 * 0.1 }}s;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="activity-icon" style="background: {{ activity.color }}20; color: {{ activity.color }};">
+                        <i class="fas {{ activity.icon }}"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text">{{ activity.text }}</div>
+                        <div class="activity-time">
+                            <i class="fas fa-clock"></i>
+                            {{ activity.time }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# ══════════ ACTIONS ══════════ #}
+    <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 2rem;">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn-analytics ghost">
+            <i class="fas fa-arrow-left"></i>
+            Retour au dashboard
+        </a>
+        <button class="btn-analytics primary" onclick="window.print()">
+            <i class="fas fa-download"></i>
+            Exporter le rapport
+        </button>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ══════════════════════════════════════════
+// DONNÉES FLASK → JAVASCRIPT
+// ══════════════════════════════════════════
+const visitsData = {{ visits_data|tojson }};
+const trafficSources = {{ traffic_sources|tojson }};
+const engagementStats = {{ engagement_stats|tojson }};
+const growthData = {{ growth_data|tojson }};
+
+// ══════════════════════════════════════════
+// CONFIGURATION CHART.JS GLOBALE
+// ══════════════════════════════════════════
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.plugins.legend.display = false;
+
+// ══════════════════════════════════════════
+// GRAPHIQUE 1: VISITES (LIGNE)
+// ══════════════════════════════════════════
+const visitsCtx = document.getElementById('visitsChart').getContext('2d');
+const visitsGradient = visitsCtx.createLinearGradient(0, 0, 0, 300);
+visitsGradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+visitsGradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+new Chart(visitsCtx, {
+    type: 'line',
+    data: {
+        labels: visitsData.map(d => d.label),
+        datasets: [{
+            label: 'Visites',
+            data: visitsData.map(d => d.visits),
+            borderColor: '#10b981',
+            backgroundColor: visitsGradient,
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#10b981',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+            duration: 1500,
+            easing: 'easeOutQuart'
+        },
+        plugins: {
+            tooltip: {
+                backgroundColor: 'rgba(10, 13, 18, 0.95)',
+                borderColor: 'rgba(16, 185, 129, 0.3)',
+                borderWidth: 1,
+                padding: 12,
+                titleFont: { size: 13, weight: '600' },
+                bodyFont: { size: 12 },
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y + ' visiteurs';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: { display: false },
+                ticks: { maxTicksLimit: 10 }
+            },
+            y: {
+                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                ticks: { maxTicksLimit: 5 }
+            }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        }
+    }
+});
+
+// ══════════════════════════════════════════
+// GRAPHIQUE 2: TRAFIC (DOUGHNUT)
+// ══════════════════════════════════════════
+const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+new Chart(trafficCtx, {
+    type: 'doughnut',
+    data: {
+        labels: trafficSources.map(s => s.source),
+        datasets: [{
+            data: trafficSources.map(s => s.value),
+            backgroundColor: trafficSources.map(s => s.color),
+            borderWidth: 0,
+            hoverOffset: 10
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '70%',
+        animation: {
+            animateRotate: true,
+            duration: 1500,
+            easing: 'easeOutQuart'
+        },
+        plugins: {
+            tooltip: {
+                backgroundColor: 'rgba(10, 13, 18, 0.95)',
+                borderColor: 'rgba(16, 185, 129, 0.3)',
+                borderWidth: 1,
+                padding: 12,
+                callbacks: {
+                    label: function(context) {
+                        return context.label + ': ' + context.parsed + '%';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// ══════════════════════════════════════════
+// GRAPHIQUE 3: ENGAGEMENT (BARRES)
+// ══════════════════════════════════════════
+const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+new Chart(engagementCtx, {
+    type: 'bar',
+    data: {
+        labels: engagementStats.map(s => s.type),
+        datasets: [{
+            label: 'Interactions',
+            data: engagementStats.map(s => s.count),
+            backgroundColor: engagementStats.map(s => s.color + '80'),
+            borderColor: engagementStats.map(s => s.color),
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+            duration: 1500,
+            easing: 'easeOutQuart'
+        },
+        plugins: {
+            tooltip: {
+                backgroundColor: 'rgba(10, 13, 18, 0.95)',
+                borderColor: 'rgba(16, 185, 129, 0.3)',
+                borderWidth: 1,
+                padding: 12,
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y + ' interactions';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: { display: false }
+            },
+            y: {
+                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                ticks: { maxTicksLimit: 5 }
+            }
+        }
+    }
+});
+
+// ══════════════════════════════════════════
+// GRAPHIQUE 4: CROISSANCE (MULTI-LIGNES)
+// ══════════════════════════════════════════
+const growthCtx = document.getElementById('growthChart').getContext('2d');
+new Chart(growthCtx, {
+    type: 'line',
+    data: {
+        labels: growthData.dates,
+        datasets: [
+            {
+                label: 'Abonnés',
+                data: growthData.followers,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+            },
+            {
+                label: 'Favoris',
+                data: growthData.favorites,
+                borderColor: '#fbbf24',
+                backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+            },
+            {
+                label: 'Contacts',
+                data: growthData.contacts,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+            duration: 1500,
+            easing: 'easeOutQuart'
+        },
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    padding: 20,
+                    font: { size: 12 }
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(10, 13, 18, 0.95)',
+                borderColor: 'rgba(16, 185, 129, 0.3)',
+                borderWidth: 1,
+                padding: 12
+            }
+        },
+        scales: {
+            x: {
+                grid: { display: false },
+                ticks: { maxTicksLimit: 10 }
+            },
+            y: {
+                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                ticks: { maxTicksLimit: 5 }
+            }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        }
+    }
+});
+
+// ══════════════════════════════════════════
+// ANIMATION COMPTEURS
+// ══════════════════════════════════════════
+document.querySelectorAll('.stat-value[data-count]').forEach(el => {
+    const target = parseInt(el.dataset.count);
+    const duration = 1500;
+    const start = performance.now();
+    
+    function animate(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 4);
+        const current = Math.round(target * eased);
+        el.textContent = current.toLocaleString('fr-FR');
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        }
+    }
+    
+    requestAnimationFrame(animate);
+});
+
+// ══════════════════════════════════════════
+// ANIMATION JAUGE VISIBILITÉ
+// ══════════════════════════════════════════
+const gaugeFill = document.querySelector('.gauge-fill');
+if (gaugeFill) {
+    const target = parseInt(gaugeFill.dataset.target);
+    const circumference = 2 * Math.PI * 75;
+    const offset = circumference - (target / 100) * circumference;
+    
+    setTimeout(() => {
+        gaugeFill.style.strokeDashoffset = offset;
+    }, 300);
+}
+</script>
+{% endblock %}

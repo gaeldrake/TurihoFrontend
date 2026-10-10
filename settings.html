@@ -1,0 +1,2341 @@
+{% extends 'admin/basee.html' %}
+
+{% block title %}Paramètres{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════
+       DESIGN SYSTEM — SETTINGS
+       ══════════════════════════════════════════ */
+    :root {
+        --cyber-green: #00ff88;
+        --cyber-red: #ff3344;
+        --cyber-blue: #00aaff;
+        --cyber-amber: #ffaa00;
+        --cyber-purple: #aa44ff;
+        --cyber-card: rgba(10, 15, 20, 0.7);
+        --settings-sidebar-width: 260px;
+    }
+    
+    .settings-layout {
+        display: grid;
+        grid-template-columns: var(--settings-sidebar-width) 1fr;
+        gap: 2rem;
+        min-height: calc(100vh - 120px);
+    }
+    
+    @media (max-width: 1024px) {
+        .settings-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* ══════════════════════════════════════════
+       SIDEBAR NAVIGATION
+       ══════════════════════════════════════════ */
+    .settings-sidebar {
+        position: sticky;
+        top: 80px;
+        height: fit-content;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        background: var(--cyber-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 1rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .settings-sidebar {
+            position: static;
+            max-height: none;
+        }
+    }
+    
+    .settings-sidebar-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #64748b;
+        padding: 0.75rem 0.75rem 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .settings-sidebar-title:first-child {
+        margin-top: 0;
+    }
+    
+    .settings-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 0.75rem;
+        margin: 0.125rem 0;
+        border-radius: 10px;
+        color: #94a3b8;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        text-decoration: none;
+    }
+    
+    .settings-nav-item:hover {
+        background: rgba(255, 255, 255, 0.03);
+        color: white;
+    }
+    
+    .settings-nav-item.active {
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 170, 255, 0.05));
+        color: var(--cyber-green);
+        border-color: rgba(0, 255, 136, 0.2);
+    }
+    
+    .settings-nav-item i {
+        width: 1.125rem;
+        text-align: center;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+    
+    /* ══════════════════════════════════════════
+       MAIN CONTENT
+       ══════════════════════════════════════════ */
+    .settings-main {
+        min-width: 0;
+    }
+    
+    .settings-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .settings-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.875rem;
+        font-weight: 800;
+        color: white;
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .settings-subtitle {
+        color: #64748b;
+        font-size: 0.9375rem;
+        margin: 0;
+    }
+    
+    /* ══════════════════════════════════════════
+       SEARCH BAR
+       ══════════════════════════════════════════ */
+    .settings-search {
+        position: relative;
+        max-width: 400px;
+        width: 100%;
+    }
+    
+    .settings-search input {
+        width: 100%;
+        background: var(--cyber-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 0.75rem 1rem 0.75rem 2.75rem;
+        color: white;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        outline: none;
+    }
+    
+    .settings-search input:focus {
+        border-color: rgba(0, 255, 136, 0.5);
+        background: rgba(0, 255, 136, 0.03);
+        box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.08);
+    }
+    
+    .settings-search i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 0.875rem;
+        pointer-events: none;
+    }
+    
+    .settings-search-shortcut {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .kbd {
+        padding: 0.125rem 0.375rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.6875rem;
+        color: #94a3b8;
+    }
+    
+    /* ══════════════════════════════════════════
+       TABS CONTENT
+       ══════════════════════════════════════════ */
+    .settings-tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    .settings-tab-content.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* ══════════════════════════════════════════
+       SETTINGS CARDS
+       ══════════════════════════════════════════ */
+    .settings-card {
+        background: var(--cyber-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .settings-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .settings-card-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 0.25rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .settings-card-title i {
+        color: var(--cyber-green);
+    }
+    
+    .settings-card-description {
+        font-size: 0.8125rem;
+        color: #94a3b8;
+        margin: 0;
+        line-height: 1.5;
+    }
+    
+    /* ══════════════════════════════════════════
+       FORM FIELDS
+       ══════════════════════════════════════════ */
+    .settings-field {
+        margin-bottom: 1.5rem;
+    }
+    
+    .settings-field:last-child {
+        margin-bottom: 0;
+    }
+    
+    .settings-field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    @media (max-width: 640px) {
+        .settings-field-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .settings-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #cbd5e1;
+        margin-bottom: 0.5rem;
+    }
+    
+    .settings-label-hint {
+        font-size: 0.6875rem;
+        color: #64748b;
+        font-weight: 400;
+    }
+    
+    .settings-input,
+    .settings-textarea,
+    .settings-select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        color: white;
+        font-size: 0.875rem;
+        font-family: inherit;
+        transition: all 0.2s;
+        outline: none;
+    }
+    
+    .settings-textarea {
+        resize: vertical;
+        min-height: 100px;
+        line-height: 1.6;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8125rem;
+    }
+    
+    .settings-input:focus,
+    .settings-textarea:focus,
+    .settings-select:focus {
+        border-color: rgba(0, 255, 136, 0.5);
+        background: rgba(0, 255, 136, 0.03);
+        box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.08);
+    }
+    
+    .settings-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem;
+        cursor: pointer;
+    }
+    
+    .settings-select option {
+        background: #0a0d12;
+        color: white;
+    }
+    
+    .settings-help {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.375rem;
+        line-height: 1.5;
+    }
+    
+    .settings-help code {
+        font-family: 'JetBrains Mono', monospace;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.125rem 0.375rem;
+        border-radius: 4px;
+        font-size: 0.6875rem;
+        color: var(--cyber-green);
+    }
+    
+    /* ══════════════════════════════════════════
+       TOGGLE SWITCHES
+       ══════════════════════════════════════════ */
+    .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+    }
+    
+    .toggle-row:hover {
+        border-color: rgba(0, 255, 136, 0.2);
+        background: rgba(0, 255, 136, 0.02);
+    }
+    
+    .toggle-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .toggle-info {
+        flex: 1;
+        min-width: 0;
+        padding-right: 1rem;
+    }
+    
+    .toggle-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.125rem;
+    }
+    
+    .toggle-description {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        line-height: 1.5;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        transition: 0.3s;
+    }
+    
+    .toggle-slider::before {
+        content: '';
+        position: absolute;
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+    
+    .toggle-switch input:checked + .toggle-slider {
+        background: var(--cyber-green);
+        box-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+    }
+    
+    .toggle-switch input:checked + .toggle-slider::before {
+        transform: translateX(20px);
+    }
+    
+    /* ══════════════════════════════════════════
+       COLOR PICKER
+       ══════════════════════════════════════════ */
+    .color-picker {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .color-preview {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .color-preview:hover {
+        border-color: rgba(0, 255, 136, 0.5);
+        transform: scale(1.05);
+    }
+    
+    .color-input {
+        flex: 1;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    
+    /* ══════════════════════════════════════════
+       RANGE SLIDER
+       ══════════════════════════════════════════ */
+    .range-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .range-slider {
+        flex: 1;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        outline: none;
+    }
+    
+    .range-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        background: var(--cyber-green);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+        transition: transform 0.2s;
+    }
+    
+    .range-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+    }
+    
+    .range-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.875rem;
+        color: var(--cyber-green);
+        min-width: 50px;
+        text-align: right;
+    }
+    
+    /* ══════════════════════════════════════════
+       BUTTONS
+       ══════════════════════════════════════════ */
+    .btn-settings {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        text-decoration: none;
+    }
+    
+    .btn-settings.primary {
+        background: linear-gradient(135deg, var(--cyber-green), #00cc66);
+        color: #030507;
+        box-shadow: 0 4px 12px -4px rgba(0, 255, 136, 0.4);
+    }
+    
+    .btn-settings.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px -4px rgba(0, 255, 136, 0.5);
+    }
+    
+    .btn-settings.ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+    
+    .btn-settings.ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(0, 255, 136, 0.3);
+    }
+    
+    .btn-settings.danger {
+        background: rgba(255, 51, 68, 0.15);
+        border-color: rgba(255, 51, 68, 0.3);
+        color: var(--cyber-red);
+    }
+    
+    .btn-settings.danger:hover {
+        background: rgba(255, 51, 68, 0.25);
+    }
+    
+    .btn-settings.sm {
+        padding: 0.375rem 0.875rem;
+        font-size: 0.8125rem;
+    }
+    
+    /* ══════════════════════════════════════════
+       API KEYS
+       ══════════════════════════════════════════ */
+    .api-key-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.875rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .api-key-name {
+        flex: 1;
+        font-size: 0.875rem;
+        color: white;
+        font-family: inherit;
+    }
+    
+    .api-key-value {
+        flex: 2;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.375rem 0.625rem;
+        border-radius: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    /* ══════════════════════════════════════════
+       MONITORING METRICS
+       ══════════════════════════════════════════ */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .metric-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--metric-color, var(--cyber-green));
+        box-shadow: 0 0 10px var(--metric-color, var(--cyber-green));
+    }
+    
+    .metric-label {
+        font-size: 0.6875rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-value {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: white;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+    
+    .metric-unit {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    
+    .metric-bar {
+        height: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 2px;
+        margin-top: 0.75rem;
+        overflow: hidden;
+    }
+    
+    .metric-bar-fill {
+        height: 100%;
+        background: var(--metric-color, var(--cyber-green));
+        border-radius: 2px;
+        transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    
+    /* ══════════════════════════════════════════
+       BACKUPS TIMELINE
+       ══════════════════════════════════════════ */
+    .backup-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+    }
+    
+    .backup-item:hover {
+        border-color: rgba(0, 255, 136, 0.3);
+        background: rgba(0, 255, 136, 0.02);
+    }
+    
+    .backup-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(0, 170, 255, 0.1);
+        border: 1px solid rgba(0, 170, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyber-blue);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .backup-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .backup-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.125rem;
+    }
+    
+    .backup-meta {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    
+    .backup-size {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--cyber-green);
+    }
+    
+    /* ══════════════════════════════════════════
+       STORAGE USAGE
+       ══════════════════════════════════════════ */
+    .storage-visual {
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    
+    .storage-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 1rem;
+    }
+    
+    .storage-used {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: white;
+    }
+    
+    .storage-total {
+        font-size: 0.875rem;
+        color: #94a3b8;
+    }
+    
+    .storage-bar {
+        height: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+    
+    .storage-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--cyber-green), var(--cyber-blue));
+        border-radius: 6px;
+        transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+    }
+    
+    .storage-breakdown {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .storage-type {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    
+    .storage-type-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+    
+    /* ══════════════════════════════════════════
+       STATUS INDICATORS
+       ══════════════════════════════════════════ */
+    .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 0.375rem;
+    }
+    
+    .status-dot.online {
+        background: var(--cyber-green);
+        box-shadow: 0 0 8px var(--cyber-green);
+        animation: pulse-status 2s infinite;
+    }
+    
+    .status-dot.warning {
+        background: var(--cyber-amber);
+        box-shadow: 0 0 8px var(--cyber-amber);
+    }
+    
+    .status-dot.offline {
+        background: var(--cyber-red);
+        box-shadow: 0 0 8px var(--cyber-red);
+    }
+    
+    @keyframes pulse-status {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    /* ══════════════════════════════════════════
+       SAVE BAR
+       ══════════════════════════════════════════ */
+    .save-bar {
+        position: sticky;
+        bottom: 1rem;
+        background: rgba(10, 15, 20, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-top: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 10px 40px -10px rgba(0, 255, 136, 0.2);
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s;
+        pointer-events: none;
+    }
+    
+    .save-bar.visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: all;
+    }
+    
+    .save-bar-info {
+        font-size: 0.875rem;
+        color: #cbd5e1;
+    }
+    
+    .save-bar-info i {
+        color: var(--cyber-amber);
+        margin-right: 0.375rem;
+    }
+    
+    .save-bar-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    /* ══════════════════════════════════════════
+       SECTION HEADER
+       ══════════════════════════════════════════ */
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 2rem 0 1rem 0;
+    }
+    
+    .section-header:first-child {
+        margin-top: 0;
+    }
+    
+    .section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title i {
+        color: var(--cyber-green);
+    }
+    
+    /* ══════════════════════════════════════════
+       BADGE
+       ══════════════════════════════════════════ */
+    .settings-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .settings-badge.new {
+        background: rgba(0, 255, 136, 0.15);
+        color: var(--cyber-green);
+        border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+    
+    .settings-badge.beta {
+        background: rgba(170, 68, 255, 0.15);
+        color: var(--cyber-purple);
+        border: 1px solid rgba(170, 68, 255, 0.3);
+    }
+    
+    .settings-badge.pro {
+        background: rgba(251, 191, 36, 0.15);
+        color: var(--cyber-amber);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+    
+    /* ══════════════════════════════════════════
+       CHART CONTAINER
+       ══════════════════════════════════════════ */
+    .chart-container {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .chart-wrapper {
+        height: 250px;
+        position: relative;
+    }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" />
+{% endblock %}
+
+{% block content %}
+<div class="settings-header">
+    <div>
+        <h1 class="settings-title">
+            <i class="fas fa-cog" style="color: var(--cyber-green);"></i>
+            Paramètres
+        </h1>
+        <p class="settings-subtitle">
+            Configurez et personnalisez votre plateforme TURIHO
+        </p>
+    </div>
+    
+    <div class="settings-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="settings-search" placeholder="Rechercher un paramètre...">
+        <div class="settings-search-shortcut">
+            <span class="kbd">⌘</span>
+            <span class="kbd">K</span>
+        </div>
+    </div>
+</div>
+
+<div class="settings-layout">
+    {# ══════════════════════════════════════════
+       SIDEBAR NAVIGATION
+       ══════════════════════════════════════════ #}
+    <aside class="settings-sidebar">
+        <div class="settings-sidebar-title">Configuration</div>
+        <a class="settings-nav-item active" data-tab="general">
+            <i class="fas fa-sliders-h"></i>
+            Général
+        </a>
+        <a class="settings-nav-item" data-tab="appearance">
+            <i class="fas fa-palette"></i>
+            Apparence
+        </a>
+        <a class="settings-nav-item" data-tab="users">
+            <i class="fas fa-users-cog"></i>
+            Utilisateurs
+        </a>
+        
+        <div class="settings-sidebar-title">Intégrations</div>
+        <a class="settings-nav-item" data-tab="email">
+            <i class="fas fa-envelope"></i>
+            Email
+        </a>
+        <a class="settings-nav-item" data-tab="storage">
+            <i class="fas fa-cloud"></i>
+            Stockage
+        </a>
+        <a class="settings-nav-item" data-tab="api">
+            <i class="fas fa-code"></i>
+            API & OAuth
+            <span class="settings-badge beta" style="margin-left: auto;">BETA</span>
+        </a>
+        
+        <div class="settings-sidebar-title">Optimisation</div>
+        <a class="settings-nav-item" data-tab="seo">
+            <i class="fas fa-search"></i>
+            SEO
+        </a>
+        <a class="settings-nav-item" data-tab="security">
+            <i class="fas fa-shield-alt"></i>
+            Sécurité
+        </a>
+        <a class="settings-nav-item" data-tab="backups">
+            <i class="fas fa-database"></i>
+            Sauvegardes
+        </a>
+        
+        <div class="settings-sidebar-title">Système</div>
+        <a class="settings-nav-item" data-tab="maintenance">
+            <i class="fas fa-tools"></i>
+            Maintenance
+        </a>
+        <a class="settings-nav-item" data-tab="monitoring">
+            <i class="fas fa-chart-line"></i>
+            Monitoring
+            <span class="settings-badge new" style="margin-left: auto;">NEW</span>
+        </a>
+    </aside>
+    
+    {# ══════════════════════════════════════════
+       MAIN CONTENT
+       ══════════════════════════════════════════ #}
+    <main class="settings-main">
+        
+        {# ══════════ TAB: GÉNÉRAL ══════════ #}
+        <div class="settings-tab-content active" data-tab="general">
+            <form method="POST" action="{{ url_for('admin.admin_settings_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section" value="general">
+                
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div>
+                            <h3 class="settings-card-title">
+                                <i class="fas fa-info-circle"></i>
+                                Informations plateforme
+                            </h3>
+                            <p class="settings-card-description">
+                                Identité et métadonnées principales de TURIHO
+                            </p>
+                        </div>
+                        <button type="submit" class="btn-settings primary sm">
+                            <i class="fas fa-save"></i>
+                            Sauvegarder
+                        </button>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label" for="platform-name">Nom de la plateforme</label>
+                        <input type="text" id="platform-name" name="platform_name" 
+                               class="settings-input" value="{{ config.platform_name }}">
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label" for="platform-description">Description</label>
+                        <textarea id="platform-description" name="platform_description" 
+                                  class="settings-textarea">{{ config.platform_description }}</textarea>
+                    </div>
+                    
+                    <div class="settings-field-row">
+                        <div class="settings-field">
+                            <label class="settings-label" for="platform-language">Langue par défaut</label>
+                            <select id="platform-language" name="platform_language" class="settings-select">
+                                <option value="fr" {% if config.platform_language == 'fr' %}selected{% endif %}>🇫🇷 Français</option>
+                                <option value="en" {% if config.platform_language == 'en' %}selected{% endif %}>🇬🇧 English</option>
+                                <option value="rn" {% if config.platform_language == 'rn' %}selected{% endif %}>🇧🇮 Kirundi</option>
+                            </select>
+                        </div>
+                        
+                        <div class="settings-field">
+                            <label class="settings-label" for="platform-timezone">Fuseau horaire</label>
+                            <select id="platform-timezone" name="platform_timezone" class="settings-select">
+                                <option value="Africa/Bujumbura" {% if config.platform_timezone == 'Africa/Bujumbura' %}selected{% endif %}>(UTC+2) Bujumbura</option>
+                                <option value="Europe/Paris" {% if config.platform_timezone == 'Europe/Paris' %}selected{% endif %}>(UTC+1) Paris</option>
+                                <option value="UTC" {% if config.platform_timezone == 'UTC' %}selected{% endif %}>(UTC+0) UTC</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-field-row">
+                        <div class="settings-field">
+                            <label class="settings-label" for="platform-currency">Devise</label>
+                            <select id="platform-currency" name="platform_currency" class="settings-select">
+                                <option value="BIF" {% if config.platform_currency == 'BIF' %}selected{% endif %}>🇧🇮 Franc burundais (BIF)</option>
+                                <option value="EUR" {% if config.platform_currency == 'EUR' %}selected{% endif %}>🇪🇺 Euro (EUR)</option>
+                                <option value="USD" {% if config.platform_currency == 'USD' %}selected{% endif %}>🇺🇸 Dollar US (USD)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="settings-field">
+                            <label class="settings-label" for="platform-date-format">Format de date</label>
+                            <select id="platform-date-format" name="platform_date_format" class="settings-select">
+                                <option value="DD/MM/YYYY" {% if config.platform_date_format == 'DD/MM/YYYY' %}selected{% endif %}>JJ/MM/AAAA</option>
+                                <option value="MM/DD/YYYY" {% if config.platform_date_format == 'MM/DD/YYYY' %}selected{% endif %}>MM/JJ/AAAA</option>
+                                <option value="YYYY-MM-DD" {% if config.platform_date_format == 'YYYY-MM-DD' %}selected{% endif %}>AAAA-MM-JJ</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ══════════ TAB: APPARENCE ══════════ #}
+        <div class="settings-tab-content" data-tab="appearance">
+            <form method="POST" action="{{ url_for('admin.admin_settings_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section" value="appearance">
+                
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div>
+                            <h3 class="settings-card-title">
+                                <i class="fas fa-moon"></i>
+                                Thème
+                            </h3>
+                            <p class="settings-card-description">
+                                Personnalisez l'apparence visuelle de la plateforme
+                            </p>
+                        </div>
+                        <button type="submit" class="btn-settings primary sm">
+                            <i class="fas fa-save"></i>
+                            Sauvegarder
+                        </button>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label">Mode d'affichage</label>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+                            {% for mode, icon, label in [('light', 'fa-sun', 'Clair'), ('dark', 'fa-moon', 'Sombre'), ('auto', 'fa-adjust', 'Auto')] %}
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="theme_mode" value="{{ mode }}" 
+                                       {% if config.theme_mode == mode %}checked{% endif %} 
+                                       style="display: none;">
+                                <div style="padding: 1rem; background: {% if config.theme_mode == mode %}rgba(0, 255, 136, 0.05){% else %}rgba(255, 255, 255, 0.03){% endif %}; border: 1px solid {% if config.theme_mode == mode %}rgba(0, 255, 136, 0.3){% else %}rgba(255, 255, 255, 0.08){% endif %}; border-radius: 12px; text-align: center;">
+                                    <i class="fas {{ icon }}" style="font-size: 1.5rem; color: {% if config.theme_mode == mode %}var(--cyber-green){% else %}var(--cyber-amber){% endif %}; margin-bottom: 0.5rem;"></i>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: {% if config.theme_mode == mode %}var(--cyber-green){% else %}white{% endif %};">{{ label }}</div>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="settings-field-row">
+                        <div class="settings-field">
+                            <label class="settings-label">Couleur principale</label>
+                            <div class="color-picker">
+                                <input type="color" name="primary_color" value="{{ config.primary_color }}" class="color-preview">
+                                <input type="text" name="primary_color_text" value="{{ config.primary_color }}" class="settings-input color-input">
+                            </div>
+                        </div>
+                        
+                        <div class="settings-field">
+                            <label class="settings-label">Couleur secondaire</label>
+                            <div class="color-picker">
+                                <input type="color" name="secondary_color" value="{{ config.secondary_color }}" class="color-preview">
+                                <input type="text" name="secondary_color_text" value="{{ config.secondary_color }}" class="settings-input color-input">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label" for="platform-font">Police d'écriture</label>
+                        <select id="platform-font" name="platform_font" class="settings-select">
+                            <option value="inter" {% if config.platform_font == 'inter' %}selected{% endif %}>Inter (par défaut)</option>
+                            <option value="plus-jakarta" {% if config.platform_font == 'plus-jakarta' %}selected{% endif %}>Plus Jakarta Sans</option>
+                            <option value="roboto" {% if config.platform_font == 'roboto' %}selected{% endif %}>Roboto</option>
+                            <option value="poppins" {% if config.platform_font == 'poppins' %}selected{% endif %}>Poppins</option>
+                        </select>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label">
+                            Rayon des cartes
+                            <span class="settings-label-hint">Border radius</span>
+                        </label>
+                        <div class="range-wrapper">
+                            <input type="range" name="border_radius" min="0" max="24" 
+                                   value="{{ config.border_radius }}" 
+                                   class="range-slider" id="border-radius">
+                            <span class="range-value" id="border-radius-value">{{ config.border_radius }}px</span>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">Animations</div>
+                            <div class="toggle-description">Active les transitions et animations dans l'interface</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="animations_enabled" 
+                                   {% if config.animations_enabled == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ══════════ TAB: UTILISATEURS ══════════ #}
+        <div class="settings-tab-content" data-tab="users">
+            <form method="POST" action="{{ url_for('admin.admin_settings_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section" value="users">
+                
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div>
+                            <h3 class="settings-card-title">
+                                <i class="fas fa-user-plus"></i>
+                                Inscription
+                            </h3>
+                            <p class="settings-card-description">
+                                Contrôle l'accès et l'inscription des nouveaux utilisateurs
+                            </p>
+                        </div>
+                        <button type="submit" class="btn-settings primary sm">
+                            <i class="fas fa-save"></i>
+                            Sauvegarder
+                        </button>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">Inscription ouverte</div>
+                            <div class="toggle-description">Autoriser les nouveaux utilisateurs à créer un compte</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="registration_open" 
+                                   {% if config.registration_open == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">Validation manuelle</div>
+                            <div class="toggle-description">Les nouvelles inscriptions doivent être approuvées par un admin</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="manual_validation" 
+                                   {% if config.manual_validation == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">Email obligatoire</div>
+                            <div class="toggle-description">Exiger une adresse email valide pour l'inscription</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="email_required" 
+                                   {% if config.email_required == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">
+                                Authentification à deux facteurs (2FA)
+                                <span class="settings-badge pro">RECOMMANDÉ</span>
+                            </div>
+                            <div class="toggle-description">Exiger la 2FA pour tous les comptes administrateurs</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="2fa_required" 
+                                   {% if config['2fa_required'] == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="settings-field" style="margin-top: 1.5rem;">
+                        <label class="settings-label" for="default-role">Rôle par défaut</label>
+                        <select id="default-role" name="default_role" class="settings-select">
+                            <option value="user" {% if config.default_role == 'user' %}selected{% endif %}>Utilisateur</option>
+                            <option value="moderator" {% if config.default_role == 'moderator' %}selected{% endif %}>Modérateur</option>
+                            <option value="admin" {% if config.default_role == 'admin' %}selected{% endif %}>Administrateur</option>
+                        </select>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label" for="org-quota">Quota d'organisations par utilisateur</label>
+                        <input type="number" id="org-quota" name="org_quota" 
+                               class="settings-input" value="{{ config.org_quota }}" min="1" max="100">
+                        <div class="settings-help">
+                            Nombre maximum d'organisations qu'un utilisateur peut créer
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ══════════ TAB: EMAIL ══════════ #}
+        <div class="settings-tab-content" data-tab="email">
+            <form method="POST" action="{{ url_for('admin.admin_settings_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section" value="email">
+                
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div>
+                            <h3 class="settings-card-title">
+                                <i class="fas fa-server"></i>
+                                Configuration SMTP
+                            </h3>
+                            <p class="settings-card-description">
+                                Paramètres du serveur d'envoi d'emails
+                            </p>
+                        </div>
+                        {% if config.smtp_host %}
+                        <span class="status-dot online"></span>
+                        <span style="font-size: 0.75rem; color: var(--cyber-green);">Configuré</span>
+                        {% else %}
+                        <span class="status-dot offline"></span>
+                        <span style="font-size: 0.75rem; color: var(--cyber-red);">Non configuré</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="settings-field-row">
+                        <div class="settings-field">
+                            <label class="settings-label" for="smtp-host">Serveur SMTP</label>
+                            <input type="text" id="smtp-host" name="smtp_host" 
+                                   class="settings-input" value="{{ config.smtp_host }}">
+                        </div>
+                        
+                        <div class="settings-field">
+                            <label class="settings-label" for="smtp-port">Port</label>
+                            <input type="number" id="smtp-port" name="smtp_port" 
+                                   class="settings-input" value="{{ config.smtp_port }}">
+                        </div>
+                    </div>
+                    
+                    <div class="settings-field-row">
+                        <div class="settings-field">
+                            <label class="settings-label" for="smtp-user">Utilisateur</label>
+                            <input type="text" id="smtp-user" name="smtp_user" 
+                                   class="settings-input" value="{{ config.smtp_user }}">
+                        </div>
+                        
+                        <div class="settings-field">
+                            <label class="settings-label" for="smtp-password">Mot de passe</label>
+                            <input type="password" id="smtp-password" name="smtp_password" 
+                                   class="settings-input" value="{{ config.smtp_password }}">
+                        </div>
+                    </div>
+                    
+                    <div class="settings-field-row">
+                        <div class="settings-field">
+                            <label class="settings-label" for="smtp-encryption">Chiffrement</label>
+                            <select id="smtp-encryption" name="smtp_encryption" class="settings-select">
+                                <option value="tls" {% if config.smtp_encryption == 'tls' %}selected{% endif %}>TLS</option>
+                                <option value="ssl" {% if config.smtp_encryption == 'ssl' %}selected{% endif %}>SSL</option>
+                                <option value="none" {% if config.smtp_encryption == 'none' %}selected{% endif %}>Aucun</option>
+                            </select>
+                        </div>
+                        
+                        <div class="settings-field">
+                            <label class="settings-label" for="smtp-from">Email expéditeur</label>
+                            <input type="email" id="smtp-from" name="smtp_from" 
+                                   class="settings-input" value="{{ config.smtp_from }}">
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                        <button type="submit" class="btn-settings primary">
+                            <i class="fas fa-save"></i>
+                            Sauvegarder
+                        </button>
+                    </div>
+                </div>
+            </form>
+            
+            {# Test email - formulaire séparé #}
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div>
+                        <h3 class="settings-card-title">
+                            <i class="fas fa-paper-plane"></i>
+                            Tester l'envoi
+                        </h3>
+                        <p class="settings-card-description">
+                            Envoyez un email de test pour vérifier la configuration
+                        </p>
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('admin.admin_test_email') }}" style="display: flex; gap: 0.75rem;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="email" name="test_email" class="settings-input" 
+                           placeholder="votre@email.com" required style="flex: 1;">
+                    <button type="submit" class="btn-settings primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Envoyer le test
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {# ══════════ TAB: STOCKAGE ══════════ #}
+        <div class="settings-tab-content" data-tab="storage">
+            <form method="POST" action="{{ url_for('admin.admin_settings_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section" value="storage">
+                
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div>
+                            <h3 class="settings-card-title">
+                                <i class="fas fa-cloud"></i>
+                                Fournisseur de stockage
+                            </h3>
+                            <p class="settings-card-description">
+                                Configurez où sont stockés les fichiers uploadés
+                            </p>
+                        </div>
+                        <button type="submit" class="btn-settings primary sm">
+                            <i class="fas fa-save"></i>
+                            Sauvegarder
+                        </button>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label" for="storage-provider">Fournisseur</label>
+                        <select id="storage-provider" name="storage_provider" class="settings-select">
+                            <option value="supabase" {% if config.storage_provider == 'supabase' %}selected{% endif %}>Supabase Storage</option>
+                            <option value="aws" {% if config.storage_provider == 'aws' %}selected{% endif %}>AWS S3</option>
+                            <option value="cloudinary" {% if config.storage_provider == 'cloudinary' %}selected{% endif %}>Cloudinary</option>
+                            <option value="local" {% if config.storage_provider == 'local' %}selected{% endif %}>Stockage local</option>
+                        </select>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label" for="storage-bucket">Nom du bucket</label>
+                        <input type="text" id="storage-bucket" name="storage_bucket" 
+                               class="settings-input" value="{{ config.storage_bucket }}">
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label">
+                            Taille maximale par fichier (MB)
+                        </label>
+                        <div class="range-wrapper">
+                            <input type="range" name="storage_max_size" min="1" max="50" 
+                                   value="{{ config.storage_max_size }}" 
+                                   class="range-slider" id="max-file-size">
+                            <span class="range-value" id="max-file-size-value">{{ config.storage_max_size }} MB</span>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">Nettoyage automatique</div>
+                            <div class="toggle-description">Supprimer les fichiers orphelins après 30 jours</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="storage_auto_cleanup" 
+                                   {% if config.storage_auto_cleanup == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </form>
+            
+            {# Utilisation du stockage - données réelles #}
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div>
+                        <h3 class="settings-card-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Utilisation du stockage
+                        </h3>
+                        <p class="settings-card-description">
+                            Répartition de l'espace utilisé (données réelles)
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="storage-visual">
+                    <div class="storage-header">
+                        <div class="storage-used">{{ metrics.storage.used_mb }} MB</div>
+                        <div class="storage-total">{{ metrics.storage.files_count }} fichiers</div>
+                    </div>
+                    <div class="storage-bar">
+                        <div class="storage-bar-fill" style="width: {{ [metrics.storage.used_mb / 100, 100]|min * 10 }}%;"></div>
+                    </div>
+                    <div class="storage-breakdown">
+                        <div class="storage-type">
+                            <span class="storage-type-dot" style="background: var(--cyber-green);"></span>
+                            Photos · {{ metrics.storage.photos }}
+                        </div>
+                        <div class="storage-type">
+                            <span class="storage-type-dot" style="background: var(--cyber-blue);"></span>
+                            Documents · {{ metrics.storage.documents }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ══════════ TAB: SÉCURITÉ ══════════ #}
+        <div class="settings-tab-content" data-tab="security">
+            <form method="POST" action="{{ url_for('admin.admin_settings_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section" value="security">
+                
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div>
+                            <h3 class="settings-card-title">
+                                <i class="fas fa-shield-alt"></i>
+                                Protection
+                            </h3>
+                            <p class="settings-card-description">
+                                Sécurité globale de la plateforme
+                            </p>
+                        </div>
+                        <button type="submit" class="btn-settings primary sm">
+                            <i class="fas fa-save"></i>
+                            Sauvegarder
+                        </button>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">Protection CSRF</div>
+                            <div class="toggle-description">Validation des tokens sur tous les formulaires</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="csrf_protection" 
+                                   {% if config.csrf_protection == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">Cookies sécurisés</div>
+                            <div class="toggle-description">Flag Secure et HttpOnly sur tous les cookies</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="secure_cookies" 
+                                   {% if config.secure_cookies == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">CORS strict</div>
+                            <div class="toggle-description">Restreindre les origines autorisées pour l'API</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="cors_strict" 
+                                   {% if config.cors_strict == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">
+                                CAPTCHA
+                                <span class="settings-badge new">NEW</span>
+                            </div>
+                            <div class="toggle-description">Protection anti-bot sur les formulaires sensibles</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="captcha_enabled" 
+                                   {% if config.captcha_enabled == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div>
+                            <h3 class="settings-card-title">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Limitation de requêtes
+                            </h3>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label">Requêtes par minute (par IP)</label>
+                        <div class="range-wrapper">
+                            <input type="range" name="rate_limit" min="10" max="1000" 
+                                   value="{{ config.rate_limit }}" 
+                                   class="range-slider" id="rate-limit">
+                            <span class="range-value" id="rate-limit-value">{{ config.rate_limit }}/min</span>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label">Tentatives de connexion (par email)</label>
+                        <div class="range-wrapper">
+                            <input type="range" name="login_attempts" min="3" max="20" 
+                                   value="{{ config.login_attempts }}" 
+                                   class="range-slider" id="login-attempts">
+                            <span class="range-value" id="login-attempts-value">{{ config.login_attempts }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label" for="lockout-duration">Durée de verrouillage (minutes)</label>
+                        <input type="number" id="lockout-duration" name="lockout_duration" 
+                               class="settings-input" value="{{ config.lockout_duration }}" min="5" max="1440">
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ══════════ TAB: SAUVEGARDES ══════════ #}
+        <div class="settings-tab-content" data-tab="backups">
+            <form method="POST" action="{{ url_for('admin.admin_settings_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section" value="backups">
+                
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div>
+                            <h3 class="settings-card-title">
+                                <i class="fas fa-database"></i>
+                                Sauvegardes automatiques
+                            </h3>
+                            <p class="settings-card-description">
+                                Planifiez des sauvegardes régulières de votre base de données
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="submit" class="btn-settings ghost sm">
+                                <i class="fas fa-save"></i>
+                                Sauvegarder
+                            </button>
+                            <form method="POST" action="{{ url_for('admin.admin_create_backup') }}" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-settings primary sm">
+                                    <i class="fas fa-plus"></i>
+                                    Créer maintenant
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-title">Sauvegardes automatiques</div>
+                            <div class="toggle-description">Créer automatiquement une sauvegarde selon la fréquence définie</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="backup_auto" 
+                                   {% if config.backup_auto == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="settings-field" style="margin-top: 1rem;">
+                        <label class="settings-label" for="backup-frequency">Fréquence</label>
+                        <select id="backup-frequency" name="backup_frequency" class="settings-select">
+                            <option value="hourly" {% if config.backup_frequency == 'hourly' %}selected{% endif %}>Toutes les heures</option>
+                            <option value="daily" {% if config.backup_frequency == 'daily' %}selected{% endif %}>Quotidienne</option>
+                            <option value="weekly" {% if config.backup_frequency == 'weekly' %}selected{% endif %}>Hebdomadaire</option>
+                            <option value="monthly" {% if config.backup_frequency == 'monthly' %}selected{% endif %}>Mensuelle</option>
+                        </select>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label" for="backup-retention">Rétention (jours)</label>
+                        <input type="number" id="backup-retention" name="backup_retention" 
+                               class="settings-input" value="{{ config.backup_retention }}" min="7" max="365">
+                    </div>
+                </div>
+            </form>
+            
+            {# Historique des sauvegardes - données réelles #}
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div>
+                        <h3 class="settings-card-title">
+                            <i class="fas fa-history"></i>
+                            Historique des sauvegardes
+                        </h3>
+                        <p class="settings-card-description">
+                            {{ backups|length }} sauvegarde{{ 's' if backups|length != 1 else '' }}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if backups %}
+                    {% for backup in backups %}
+                    <div class="backup-item">
+                        <div class="backup-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="backup-info">
+                            <div class="backup-name">{{ backup.filename }}</div>
+                            <div class="backup-meta">
+                                {{ backup.created_at.strftime('%d/%m/%Y à %H:%M') if backup.created_at else '—' }}
+                                · {{ backup.type_label }}
+                            </div>
+                        </div>
+                        <div class="backup-size">{{ backup.size_mb }} MB</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 2rem; color: #64748b;">
+                        <i class="fas fa-database" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                        <p>Aucune sauvegarde disponible</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ══════════ TAB: MAINTENANCE ══════════ #}
+        <div class="settings-tab-content" data-tab="maintenance">
+            <form method="POST" action="{{ url_for('admin.admin_settings_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section" value="maintenance">
+                
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div>
+                            <h3 class="settings-card-title">
+                                <i class="fas fa-tools"></i>
+                                Mode maintenance
+                            </h3>
+                            <p class="settings-card-description">
+                                Désactivez temporairement l'accès public pour maintenance
+                            </p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="maintenance_mode" 
+                                   {% if config.maintenance_mode == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="settings-field">
+                        <label class="settings-label" for="maintenance-message">Message personnalisé</label>
+                        <textarea id="maintenance-message" name="maintenance_message" 
+                                  class="settings-textarea">{{ config.maintenance_message }}</textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                        <button type="submit" class="btn-settings primary">
+                            <i class="fas fa-save"></i>
+                            Sauvegarder
+                        </button>
+                    </div>
+                </div>
+            </form>
+            
+            {# Actions de maintenance #}
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div>
+                        <h3 class="settings-card-title">
+                            <i class="fas fa-broom"></i>
+                            Optimisation
+                        </h3>
+                        <p class="settings-card-description">
+                            Actions de maintenance et nettoyage
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <form method="POST" action="{{ url_for('admin.admin_clear_cache') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-settings ghost" style="width: 100%; flex-direction: column; padding: 1.5rem; text-align: center;">
+                            <i class="fas fa-trash" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                            Vider le cache
+                        </button>
+                    </form>
+                    
+                    <form method="POST" action="{{ url_for('admin.admin_terminate_all_sessions') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-settings danger" style="width: 100%; flex-direction: column; padding: 1.5rem; text-align: center;"
+                                onclick="return confirm('Terminer TOUTES les sessions actives ?')">
+                            <i class="fas fa-power-off" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                            Terminer sessions
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            {# Journal des erreurs - données réelles #}
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div>
+                        <h3 class="settings-card-title">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Journal des erreurs
+                        </h3>
+                        <p class="settings-card-description">
+                            {{ error_logs|length }} alerte{{ 's' if error_logs|length != 1 else '' }} récente{{ 's' if error_logs|length != 1 else '' }}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if error_logs %}
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; padding: 1rem; max-height: 300px; overflow-y: auto;">
+                        {% for log in error_logs %}
+                        <div style="color: {% if log.severity == 'critical' %}var(--cyber-red){% else %}var(--cyber-amber){% endif %}; margin-bottom: 0.5rem;">
+                            [{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') if log.created_at else '—' }}] 
+                            {{ log.severity|upper }}: {{ log.action|e if log.action else '—' }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 2rem; color: #64748b;">
+                        <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--cyber-green); margin-bottom: 0.5rem;"></i>
+                        <p>Aucune erreur récente</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ══════════ TAB: MONITORING ══════════ #}
+        <div class="settings-tab-content" data-tab="monitoring">
+            {# Métriques système - données RÉELLES #}
+            <div class="metrics-grid">
+                <div class="metric-card" style="--metric-color: {% if metrics.cpu.percent < 70 %}var(--cyber-green){% elif metrics.cpu.percent < 90 %}var(--cyber-amber){% else %}var(--cyber-red){% endif %};">
+                    <div class="metric-label">
+                        <span class="status-dot {% if metrics.cpu.percent < 90 %}online{% else %}warning{% endif %}"></span>
+                        CPU
+                    </div>
+                    <div class="metric-value">{{ metrics.cpu.percent }}%</div>
+                    <div class="metric-unit">{{ metrics.cpu.cores }} cores · {{ metrics.cpu.frequency }}</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: {{ metrics.cpu.percent }}%;"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card" style="--metric-color: {% if metrics.ram.percent < 70 %}var(--cyber-blue){% elif metrics.ram.percent < 90 %}var(--cyber-amber){% else %}var(--cyber-red){% endif %};">
+                    <div class="metric-label">
+                        <span class="status-dot {% if metrics.ram.percent < 90 %}online{% else %}warning{% endif %}"></span>
+                        RAM
+                    </div>
+                    <div class="metric-value">{{ metrics.ram.used_gb }} GB</div>
+                    <div class="metric-unit">sur {{ metrics.ram.total_gb }} GB</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: {{ metrics.ram.percent }}%;"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card" style="--metric-color: {% if metrics.disk.percent < 70 %}var(--cyber-purple){% elif metrics.disk.percent < 90 %}var(--cyber-amber){% else %}var(--cyber-red){% endif %};">
+                    <div class="metric-label">
+                        <span class="status-dot {% if metrics.disk.percent < 90 %}online{% else %}warning{% endif %}"></span>
+                        Disque
+                    </div>
+                    <div class="metric-value">{{ metrics.disk.used_gb }} GB</div>
+                    <div class="metric-unit">sur {{ metrics.disk.total_gb }} GB</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: {{ metrics.disk.percent }}%;"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card" style="--metric-color: {% if metrics.database.status == 'online' %}var(--cyber-green){% else %}var(--cyber-red){% endif %};">
+                    <div class="metric-label">
+                        <span class="status-dot {% if metrics.database.status == 'online' %}online{% else %}offline{% endif %}"></span>
+                        Base de données
+                    </div>
+                    <div class="metric-value">{{ metrics.database.response_ms }} ms</div>
+                    <div class="metric-unit">Temps de réponse</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: {{ min(metrics.database.response_ms / 5, 100) }}%;"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card" style="--metric-color: var(--cyber-green);">
+                    <div class="metric-label">
+                        <span class="status-dot online"></span>
+                        Emails
+                    </div>
+                    <div class="metric-value">{{ metrics.email.sent }}</div>
+                    <div class="metric-unit">Envoyés · {{ metrics.email.success_rate }}% succès</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: {{ metrics.email.success_rate }}%;"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card" style="--metric-color: var(--cyber-purple);">
+                    <div class="metric-label">
+                        <span class="status-dot online"></span>
+                        Stockage
+                    </div>
+                    <div class="metric-value">{{ metrics.storage.used_mb }} MB</div>
+                    <div class="metric-unit">{{ metrics.storage.files_count }} fichiers</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: {{ min(metrics.storage.used_mb / 100, 100) * 10 }}%;"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card" style="--metric-color: var(--cyber-blue);">
+                    <div class="metric-label">
+                        <span class="status-dot online"></span>
+                        Sessions
+                    </div>
+                    <div class="metric-value">{{ active_sessions|length }}</div>
+                    <div class="metric-unit">Actives actuellement</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: {{ min(active_sessions|length * 10, 100) }}%;"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card" style="--metric-color: var(--cyber-green);">
+                    <div class="metric-label">
+                        <span class="status-dot online"></span>
+                        Clés API
+                    </div>
+                    <div class="metric-value">{{ api_keys|selectattr('is_active')|list|length }}</div>
+                    <div class="metric-unit">Actives sur {{ api_keys|length }}</div>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: {{ (api_keys|selectattr('is_active')|list|length / max(api_keys|length, 1)) * 100 }}%;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            {# Sessions actives - données réelles #}
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div>
+                        <h3 class="settings-card-title">
+                            <i class="fas fa-desktop"></i>
+                            Sessions actives
+                        </h3>
+                        <p class="settings-card-description">
+                            {{ active_sessions|length }} session{{ 's' if active_sessions|length != 1 else '' }} en cours
+                        </p>
+                    </div>
+                    <form method="POST" action="{{ url_for('admin.admin_terminate_all_sessions') }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-settings danger sm"
+                                onclick="return confirm('Terminer TOUTES les sessions ?')">
+                            <i class="fas fa-power-off"></i>
+                            Tout terminer
+                        </button>
+                    </form>
+                </div>
+                
+                {% if active_sessions %}
+                    {% for s in active_sessions %}
+                    <div class="session-item">
+                        <div class="session-device">
+                            <i class="fas {% if s.device_type == 'mobile' %}fa-mobile-alt{% elif s.device_type == 'tablet' %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i>
+                        </div>
+                        <div class="session-info">
+                            <div class="session-title">{{ s.browser }} · {{ s.os }}</div>
+                            <div class="session-meta">{{ s.ip_address }} · {{ s.country or '—' }}</div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #64748b;">{{ s.time_ago }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 2rem; color: #64748b;">
+                        Aucune session active
+                    </div>
+                {% endif %}
+            </div>
+            
+            {# Clés API - données réelles #}
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div>
+                        <h3 class="settings-card-title">
+                            <i class="fas fa-key"></i>
+                            Clés API
+                        </h3>
+                        <p class="settings-card-description">
+                            {{ api_keys|length }} clé{{ 's' if api_keys|length != 1 else '' }}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if api_keys %}
+                    {% for key in api_keys %}
+                    <div class="api-key-item">
+                        <div class="api-key-name">
+                            {{ key.name }}
+                            {% if not key.is_active %}
+                            <span class="settings-badge" style="background: rgba(239, 68, 68, 0.15); color: var(--cyber-red); border: 1px solid rgba(239, 68, 68, 0.3);">RÉVOQUÉE</span>
+                            {% endif %}
+                        </div>
+                        <div class="api-key-value">{{ key.masked_key }}</div>
+                        {% if key.is_active %}
+                        <form method="POST" action="{{ url_for('admin.admin_revoke_api_key', id=key.id) }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-settings danger sm"
+                                    onclick="return confirm('Révoquer cette clé API ?')">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 2rem; color: #64748b;">
+                        Aucune clé API
+                    </div>
+                {% endif %}
+                
+                {# Formulaire création clé #}
+                <form method="POST" action="{{ url_for('admin.admin_create_api_key') }}" style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" name="name" class="settings-input" placeholder="Nom de la clé" required style="flex: 1;">
+                    <select name="key_type" class="settings-select" style="width: auto;">
+                        <option value="live">Production</option>
+                        <option value="test">Test</option>
+                    </select>
+                    <button type="submit" class="btn-settings primary">
+                        <i class="fas fa-plus"></i>
+                        Créer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+
+<script>
+// ══════════════════════════════════════════
+// TAB NAVIGATION
+// ══════════════════════════════════════════
+const navItems = document.querySelectorAll('.settings-nav-item');
+const tabContents = document.querySelectorAll('.settings-tab-content');
+
+navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tabName = item.dataset.tab;
+        
+        // Update nav
+        navItems.forEach(nav => nav.classList.remove('active'));
+        item.classList.add('active');
+        
+        // Update content
+        tabContents.forEach(content => {
+            content.classList.remove('active');
+            if (content.dataset.tab === tabName) {
+                content.classList.add('active');
+            }
+        });
+        
+        // Animate
+        if (typeof gsap !== 'undefined') {
+            gsap.from(`.settings-tab-content[data-tab="${tabName}"] .settings-card`, {
+                y: 20,
+                opacity: 0,
+                duration: 0.4,
+                stagger: 0.05,
+                ease: 'power3.out'
+            });
+        }
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+});
+
+// ══════════════════════════════════════════
+// SEARCH FUNCTIONALITY
+// ══════════════════════════════════════════
+const searchInput = document.getElementById('settings-search');
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        
+        if (!query) {
+            // Reset
+            document.querySelectorAll('.settings-card, .toggle-row, .settings-field').forEach(el => {
+                el.style.display = '';
+            });
+            return;
+        }
+        
+        // Filter cards
+        document.querySelectorAll('.settings-card').forEach(card => {
+            const text = card.textContent.toLowerCase();
+            card.style.display = text.includes(query) ? '' : 'none';
+        });
+    });
+    
+    // Keyboard shortcut ⌘K
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            searchInput.focus();
+        }
+    });
+}
+
+// ══════════════════════════════════════════
+// RANGE SLIDERS
+// ══════════════════════════════════════════
+function setupRangeSlider(sliderId, valueId, suffix = '') {
+    const slider = document.getElementById(sliderId);
+    const value = document.getElementById(valueId);
+    
+    if (slider && value) {
+        slider.addEventListener('input', () => {
+            value.textContent = slider.value + suffix;
+        });
+    }
+}
+
+setupRangeSlider('border-radius', 'border-radius-value', 'px');
+setupRangeSlider('max-file-size', 'max-file-size-value', ' MB');
+setupRangeSlider('rate-limit', 'rate-limit-value', '/min');
+setupRangeSlider('login-attempts', 'login-attempts-value', '');
+
+// ══════════════════════════════════════════
+// COLOR PICKER SYNC
+// ══════════════════════════════════════════
+document.querySelectorAll('.color-preview').forEach(preview => {
+    preview.addEventListener('input', (e) => {
+        const textInput = e.target.parentElement.querySelector('.color-input');
+        if (textInput) {
+            textInput.value = e.target.value;
+        }
+    });
+});
+
+document.querySelectorAll('.color-input').forEach(input => {
+    input.addEventListener('input', (e) => {
+        const preview = e.target.parentElement.querySelector('.color-preview');
+        if (preview && /^#[0-9A-F]{6}$/i.test(e.target.value)) {
+            preview.value = e.target.value;
+        }
+    });
+});
+
+// ══════════════════════════════════════════
+// SAVE BAR DETECTION
+// ══════════════════════════════════════════
+const saveBar = document.getElementById('save-bar');
+let hasChanges = false;
+
+document.querySelectorAll('.settings-input, .settings-textarea, .settings-select').forEach(input => {
+    input.addEventListener('input', () => {
+        hasChanges = true;
+        saveBar.classList.add('visible');
+    });
+    
+    input.addEventListener('change', () => {
+        hasChanges = true;
+        saveBar.classList.add('visible');
+    });
+});
+
+document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+    toggle.addEventListener('change', () => {
+        hasChanges = true;
+        saveBar.classList.add('visible');
+    });
+});
+
+function saveChanges() {
+    // Simulate save
+    hasChanges = false;
+    saveBar.classList.remove('visible');
+    
+    // Show success notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: rgba(0, 255, 136, 0.15);
+        border: 1px solid rgba(0, 255, 136, 0.3);
+        color: #00ff88;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    notification.innerHTML = '<i class="fas fa-check-circle"></i> Paramètres sauvegardés';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+function discardChanges() {
+    if (confirm('Êtes-vous sûr de vouloir annuler toutes les modifications ?')) {
+        location.reload();
+    }
+}
+
+// ══════════════════════════════════════════
+// MONITORING CHARTS
+// ══════════════════════════════════════════
+if (document.getElementById('trafficChart')) {
+    const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+    const gradient = trafficCtx.createLinearGradient(0, 0, 0, 250);
+    gradient.addColorStop(0, 'rgba(0, 255, 136, 0.3)');
+    gradient.addColorStop(1, 'rgba(0, 255, 136, 0)');
+    
+    new Chart(trafficCtx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 24}, (_, i) => `${i}h`),
+            datasets: [{
+                label: 'Requêtes',
+                data: [120, 98, 85, 72, 65, 78, 145, 234, 312, 289, 267, 245, 278, 312, 345, 323, 298, 267, 234, 198, 167, 145, 132, 125],
+                borderColor: '#00ff88',
+                backgroundColor: gradient,
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 15, 20, 0.95)',
+                    borderColor: 'rgba(0, 255, 136, 0.3)',
+                    borderWidth: 1,
+                    padding: 12,
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace" } }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace" } }
+                }
+            }
+        }
+    });
+}
+
+if (document.getElementById('resourceChart')) {
+    const resourceCtx = document.getElementById('resourceChart').getContext('2d');
+    
+    new Chart(resourceCtx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 24}, (_, i) => `${i}h`),
+            datasets: [
+                {
+                    label: 'CPU %',
+                    data: [22, 18, 15, 12, 10, 14, 28, 45, 52, 48, 42, 38, 42, 48, 52, 48, 42, 38, 32, 28, 24, 22, 20, 18],
+                    borderColor: '#00ff88',
+                    backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 0,
+                },
+                {
+                    label: 'RAM %',
+                    data: [42, 40, 38, 36, 35, 38, 48, 58, 65, 62, 58, 55, 58, 62, 65, 62, 58, 55, 52, 48, 45, 42, 40, 38],
+                    borderColor: '#00aaff',
+                    backgroundColor: 'rgba(0, 170, 255, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 0,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#94a3b8',
+                        usePointStyle: true,
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 15, 20, 0.95)',
+                    borderColor: 'rgba(0, 255, 136, 0.3)',
+                    borderWidth: 1,
+                    padding: 12,
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace" } }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace" } },
+                    max: 100
+                }
+            }
+        }
+    });
+}
+
+// ══════════════════════════════════════════
+// INITIAL ANIMATIONS
+// ══════════════════════════════════════════
+if (typeof gsap !== 'undefined') {
+    gsap.from('.settings-sidebar', {
+        x: -20,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power3.out'
+    });
+    
+    gsap.from('.settings-tab-content.active .settings-card', {
+        y: 20,
+        opacity: 0,
+        duration: 0.5,
+        stagger: 0.05,
+        ease: 'power3.out',
+        delay: 0.1
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier — {{ org.org_name|e }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container { max-width: 720px; margin: 0 auto; padding: 2rem 1rem; }
+    
+    .form-header {
+        display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;
+    }
+    
+    .form-header-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        display: flex; align-items: center; justify-content: center;
+        color: #34d399; font-size: 1.25rem;
+    }
+    
+    .form-card {
+        background: rgba(20, 25, 33, 0.55);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 2rem;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem; padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    
+    .form-section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.9375rem; font-weight: 700;
+        margin-bottom: 1.25rem;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .form-section-title i { color: #34d399; }
+    
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    
+    .form-group { margin-bottom: 1.25rem; }
+    
+    .form-label {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-size: 0.75rem; font-weight: 600; color: #94a3b8;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .form-label .required { color: #ef4444; font-size: 0.875rem; }
+    .form-label .optional {
+        color: #64748b; text-transform: none;
+        letter-spacing: normal; font-weight: 400;
+    }
+    
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        color: white; font-size: 0.875rem;
+        transition: all 0.2s; font-family: inherit;
+    }
+    .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        outline: none;
+        border-color: rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.03);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+    }
+    .form-select option { background: #141921; color: white; }
+    
+    .form-hint { font-size: 0.7rem; color: #64748b; margin-top: 0.375rem; }
+    
+    /* Logo preview */
+    .logo-preview-wrapper {
+        display: flex; align-items: center; gap: 1.5rem;
+    }
+    .logo-preview {
+        width: 80px; height: 80px; border-radius: 16px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+        border: 2px dashed rgba(255, 255, 255, 0.1);
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden; flex-shrink: 0;
+        transition: all 0.3s;
+    }
+    .logo-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .logo-preview.has-image { border-style: solid; border-color: rgba(16, 185, 129, 0.3); }
+    
+    /* Social links */
+    .social-links-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .social-link-row {
+        display: flex; gap: 0.5rem; align-items: center;
+    }
+    .social-link-row input { flex: 1; }
+    .social-link-row button {
+        width: 40px; height: 40px; border-radius: 10px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #f87171; cursor: pointer;
+        transition: all 0.2s;
+    }
+    .social-link-row button:hover {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.4);
+    }
+    
+    /* Password section */
+    .password-section {
+        background: rgba(251, 191, 36, 0.03);
+        border: 1px solid rgba(251, 191, 36, 0.1);
+        border-radius: 14px;
+        padding: 1.25rem;
+    }
+    
+    /* Buttons */
+    .form-actions {
+        display: flex; justify-content: flex-end; gap: 0.75rem;
+        margin-top: 2rem; padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .btn-form {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        padding: 0.75rem 1.5rem; border-radius: 12px;
+        font-size: 0.875rem; font-weight: 600;
+        transition: all 0.2s; border: none; cursor: pointer;
+    }
+    .btn-form.primary {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 4px 12px -4px rgba(16, 185, 129, 0.4);
+    }
+    .btn-form.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.5);
+    }
+    .btn-form.ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+    .btn-form.ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    .btn-form.sm { padding: 0.5rem 1rem; font-size: 0.8125rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn-form ghost" style="padding: 0.5rem;">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="form-header-icon">
+            <i class="fas fa-building"></i>
+        </div>
+        <div>
+            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 800; margin: 0;">
+                Modifier l'organisation
+            </h1>
+            <p style="font-size: 0.8125rem; color: #64748b; margin: 0;">
+                {{ org.org_name|e }}
+            </p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('dashboard.modifier_organisation', id=org.id) }}" enctype="multipart/form-data" class="form-card">
+        {% if csrf_token is defined %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% endif %}
+
+        {# ═══ Identité ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-id-card"></i>
+                Identité
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="org_name">
+                    Nom de l'organisation <span class="required">*</span>
+                </label>
+                <input type="text" id="org_name" name="org_name" class="form-input"
+                       value="{{ org.org_name|e }}" required maxlength="100"
+                       placeholder="Ex: Association Espoir des Jeunes">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="type">
+                        Type <span class="required">*</span>
+                    </label>
+                    <select id="type" name="type" class="form-select" required>
+                        <option value="">— Choisir un type —</option>
+                        {% set types = [
+                            ('association', 'Association'),
+                            ('cooperative', 'Coopérative'),
+                            ('company', 'Société'),
+                            ('ong', 'ONG'),
+                            ('fondation', 'Fondation'),
+                            ('startup', 'Startup'),
+                            ('pme', 'PME')
+                        ] %}
+                        {% for value, display in types %}
+                        <option value="{{ value }}" {% if org.type == value %}selected{% endif %}>
+                            {{ display }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="category">
+                        Catégorie <span class="optional">(optionnel)</span>
+                    </label>
+                    <select id="category" name="category" class="form-select">
+                        <option value="">— Non spécifiée —</option>
+                        {% set categories = [
+                            ('éducation', 'Éducation'),
+                            ('santé', 'Santé'),
+                            ('agriculture', 'Agriculture'),
+                            ('environnement', 'Environnement'),
+                            ('culture', 'Culture'),
+                            ('technologie', 'Technologie'),
+                            ('commerce', 'Commerce'),
+                            ('social', 'Action sociale'),
+                            ('jeunesse', 'Jeunesse'),
+                            ('autre', 'Autre')
+                        ] %}
+                        {% for value, display in categories %}
+                        <option value="{{ value }}" {% if org.category == value %}selected{% endif %}>
+                            {{ display }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">
+                    Email <span class="required">*</span>
+                </label>
+                <input type="email" id="email" name="email" class="form-input"
+                       value="{{ org.email|e }}" required maxlength="120"
+                       placeholder="contact@organisation.bi">
+            </div>
+        </div>
+
+        {# ═══ Logo ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-image"></i>
+                Logo
+            </div>
+
+            <div class="form-group">
+                <div class="logo-preview-wrapper">
+                    <div class="logo-preview {% if org.logo %}has-image{% endif %}" id="logo-preview">
+                        {% if org.logo %}
+                            <img src="{{ get_url(org.logo) }}" alt="Logo actuel">
+                        {% else %}
+                            <i class="fas fa-building" style="font-size: 1.5rem; color: #34d399;"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="logo" class="btn-form ghost sm" style="cursor: pointer;">
+                            <i class="fas fa-camera"></i>
+                            {% if org.logo %}Changer le logo{% else %}Ajouter un logo{% endif %}
+                        </label>
+                        <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;">
+                        <div class="form-hint">JPG, PNG, GIF, WebP — max 5 Mo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ═══ Site web & Réseaux ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-globe"></i>
+                Présence en ligne
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="website">
+                    Site web <span class="optional">(optionnel)</span>
+                </label>
+                <input type="url" id="website" name="website" class="form-input"
+                       value="{{ org.website|e }}" maxlength="255"
+                       placeholder="https://www.organisation.bi">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Réseaux sociaux <span class="optional">(optionnel)</span>
+                </label>
+                <div class="social-links-list" id="social-links-list">
+                    {% if org.links %}
+                        {% for link in org.links %}
+                        <div class="social-link-row">
+                            <input type="url" name="links" class="form-input"
+                                   value="{{ link.url|e }}" placeholder="https://facebook.com/organisation">
+                            <button type="button" onclick="this.parentElement.remove()" title="Supprimer">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" class="btn-form ghost sm" style="margin-top: 0.5rem;" onclick="addSocialLink()">
+                    <i class="fas fa-plus"></i> Ajouter un réseau
+                </button>
+                <div class="form-hint">Séparez chaque URL par une ligne. La plateforme sera détectée automatiquement.</div>
+            </div>
+        </div>
+
+        {# ═══ Mot de passe ═══ #}
+        <div class="form-section">
+            <div class="password-section">
+                <div class="form-section-title" style="margin-bottom: 1rem;">
+                    <i class="fas fa-lock" style="color: #fbbf24;"></i>
+                    Changer le mot de passe
+                    <span class="optional">(optionnel)</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="password">
+                            Nouveau mot de passe
+                        </label>
+                        <input type="password" id="password" name="password" class="form-input"
+                               minlength="8" maxlength="128" placeholder="Minimum 8 caractères">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="password_confirm">
+                            Confirmer
+                        </label>
+                        <input type="password" id="password_confirm" name="password_confirm" class="form-input"
+                               maxlength="128" placeholder="Retapez le mot de passe">
+                    </div>
+                </div>
+                <div class="form-hint">Laissez vide pour conserver le mot de passe actuel.</div>
+            </div>
+        </div>
+
+        {# ═══ Actions ═══ #}
+        <div class="form-actions">
+            <a href="{{ url_for('dashboard.dashboard') }}" class="btn-form ghost">
+                Annuler
+            </a>
+            <button type="submit" class="btn-form primary">
+                <i class="fas fa-check"></i>
+                Enregistrer les modifications
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Preview logo
+document.getElementById('logo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('logo-preview');
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
+            preview.classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Ajouter un lien réseau social
+function addSocialLink() {
+    const list = document.getElementById('social-links-list');
+    const row = document.createElement('div');
+    row.className = 'social-link-row';
+    row.innerHTML = `
+        <input type="url" name="links" class="form-input" placeholder="https://facebook.com/organisation">
+        <button type="button" onclick="this.parentElement.remove()" title="Supprimer">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    list.appendChild(row);
+    row.querySelector('input').focus();
+}
+
+// Validation mot de passe
+const pwd = document.getElementById('password');
+const pwdConfirm = document.getElementById('password_confirm');
+if (pwd && pwdConfirm) {
+    pwdConfirm.addEventListener('input', function() {
+        if (pwd.value && this.value && pwd.value !== this.value) {
+            this.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+        } else {
+            this.style.borderColor = '';
+        }
+    });
+}
+</script>
+{% endblock %}

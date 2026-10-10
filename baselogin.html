@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+          content="{% block meta_description %}Plateforme communautaire{% endblock %}">
+    <meta name="theme-color"
+          content="#16a34a">
+    {# ← ADDED: meta description + theme color #}
+
+    {# CSRF meta tag for AJAX requests #}
+    <meta name="csrf-token"
+          content="{{ csrf_token() }}">
+
+    <title>{% block title %}Plateforme Communautaire{% endblock %}</title>
+    {# ← FIXED: default title so <title> is never empty #}
+
+    {# ——— Stylesheets (load ONCE each) ——— #}
+
+    {# Tailwind — use ONLY the compiled local version #}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/tailwind.min.css') }}">
+
+    {# Font Awesome — use ONLY the local copy #}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/all.min.css') }}">
+    {# ← FIXED: removed CDN duplicate #}
+
+    {# Page-specific CSS #}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/register.css') }}">
+    {# TODO: consider making this a block so only registration
+       pages load it:
+       {% block extra_css %}{% endblock %} #}
+
+    {% block extra_css %}{% endblock %}
+    {# ← ADDED: block for page-specific stylesheets #}
+</head>
+
+<body class="min-h-screen bg-gray-50 text-gray-800 antialiased">
+{# ← FIXED: added <body> tag — this was completely missing
+     All child templates had to add their own, creating
+     invalid nested <body> elements #}
+
+    {# ——— Skip to content (accessibility) ——— #}
+    <a href="#main-content"
+       class="sr-only focus:not-sr-only focus:absolute focus:top-2
+              focus:left-2 focus:z-50 focus:px-4 focus:py-2
+              focus:bg-green-600 focus:text-white focus:rounded-lg
+              focus:outline-none focus:ring-2 focus:ring-green-400">
+        Aller au contenu principal
+    </a>
+    {# ← ADDED: skip link for keyboard/screen reader users #}
+
+    {# ——— Flash messages (global) ——— #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="fixed top-4 right-4 z-50 space-y-2 w-full max-w-sm"
+         role="alert"
+         aria-live="polite"
+         id="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flex items-center gap-2 px-4 py-3
+                    text-sm rounded-lg shadow-lg backdrop-blur-sm
+                    animate-slide-in
+            {% if category == 'danger' -%}
+                bg-red-50/95 text-red-700 border border-red-200
+            {%- elif category == 'success' -%}
+                bg-green-50/95 text-green-700 border border-green-200
+            {%- elif category == 'warning' -%}
+                bg-yellow-50/95 text-yellow-700 border border-yellow-200
+            {%- else -%}
+                bg-blue-50/95 text-blue-700 border border-blue-200
+            {%- endif %}">
+            <i class="fas flex-shrink-0
+                {% if category == 'danger' %}fa-circle-xmark
+                {% elif category == 'success' %}fa-circle-check
+                {% elif category == 'warning' %}fa-triangle-exclamation
+                {% else %}fa-circle-info
+                {% endif %}"
+               aria-hidden="true"></i>
+            <span class="flex-1">{{ message }}</span>
+            <button type="button"
+                    class="flex-shrink-0 text-current opacity-50
+                           hover:opacity-100 transition-opacity"
+                    onclick="this.closest('.flash-message').remove()"
+                    aria-label="Fermer">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    {# ← ADDED: centralized flash messages so child templates
+         don't need to duplicate this block.
+         Positioned as toast notifications (top-right) #}
+
+    {# ——— Main content ——— #}
+    <main id="main-content">
+        {% block content %}
+        {# Child template content renders here #}
+        {% endblock %}
+    </main>
+
+    {# ——— Page-specific scripts ——— #}
+    {% block extra_js %}{% endblock %}
+    {# ← ADDED: was never declared despite child templates using it #}
+
+    {# ——— Auto-dismiss flash messages ——— #}
+    <script>
+    (function () {
+        "use strict";
+        var container = document.getElementById("flash-container");
+        if (container) {
+            // Auto-remove after 6 seconds
+            setTimeout(function () {
+                container
+                    .querySelectorAll(".flash-message")
+                    .forEach(function (el) {
+                        el.style.transition = "opacity 0.3s, transform 0.3s";
+                        el.style.opacity = "0";
+                        el.style.transform = "translateX(100%)";
+                        setTimeout(function () {
+                            el.remove();
+                        }, 300);
+                    });
+            }, 6000);
+        }
+    })();
+    </script>
+
+</body>
+</html>

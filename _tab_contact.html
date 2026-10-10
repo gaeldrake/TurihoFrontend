@@ -1,0 +1,144 @@
+{# ══════════════════════════════════════════
+   TAB: CONTACT
+   ══════════════════════════════════════════ #}
+
+<div class="content-card">
+    <div class="content-card-header">
+        <div class="content-card-title">
+            <i class="fas fa-address-card" style="color: #34d399;"></i>
+            Coordonnées
+        </div>
+        <button class="btn-dashboard ghost sm" onclick="openModal('edit-contact-modal')">
+            <i class="fas fa-edit"></i> Modifier
+        </button>
+    </div>
+
+    <div class="contact-grid">
+        {% set contact_items = [
+            ('fa-map-marker-alt', 'Adresse', [org.province, org.commune, org.colline, org.quartier]|select|join(', ') or 'Non renseignée', '#f87171'),
+            ('fa-phone-alt', 'Téléphone', org.telephone or 'Non renseigné', '#34d399'),
+            ('fa-envelope', 'Email', org.email or 'Non renseigné', '#60a5fa'),
+            ('fa-clock', 'Horaires', org.horaires or 'Non renseignés', '#fbbf24'),
+            ('fa-globe', 'Site web', org.website or 'Aucun', '#a78bfa')
+        ] %}
+        
+        {% for icon, label, value, color in contact_items %}
+        <div class="contact-item" style="animation: fadeIn 0.4s ease-out {{ loop.index0 * 0.08 }}s both;">
+            <div class="contact-icon" style="background: {{ color }}15; border-color: {{ color }}30; color: {{ color }};">
+                <i class="fas {{ icon }}"></i>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <div class="contact-label">{{ label }}</div>
+                <div class="contact-value">
+                    {% if icon == 'fa-globe' and org.website %}
+                        <a href="{{ org.website|e }}" target="_blank" style="color: #34d399; text-decoration: none; word-break: break-all;">
+                            {{ org.website|e }} <i class="fas fa-external-link-alt" style="font-size: 0.7rem;"></i>
+                        </a>
+                    {% elif icon == 'fa-envelope' and org.email %}
+                        <a href="mailto:{{ org.email|e }}" style="color: white; text-decoration: none; word-break: break-all;">
+                            {{ org.email|e }}
+                        </a>
+                    {% elif icon == 'fa-phone-alt' and org.telephone %}
+                        <a href="tel:{{ org.telephone|e }}" style="color: white; text-decoration: none;">
+                            {{ org.telephone|e }}
+                        </a>
+                    {% else %}
+                        {{ value|e }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{# ══════════ RÉSEAUX SOCIAUX ══════════ #}
+{% if org.links %}
+<div class="content-card">
+    <div class="content-card-header">
+        <div class="content-card-title">
+            <i class="fas fa-share-alt" style="color: #34d399;"></i>
+            Réseaux sociaux
+        </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+        {% set social_config = {
+            'facebook':  {'icon': 'fa-facebook-f',     'color': '#1877f2', 'label': 'Facebook'},
+            'twitter':   {'icon': 'fa-x-twitter',      'color': '#ffffff', 'label': 'X (Twitter)'},
+            'instagram': {'icon': 'fa-instagram',      'color': '#e4405f', 'label': 'Instagram'},
+            'youtube':   {'icon': 'fa-youtube',        'color': '#ff0000', 'label': 'YouTube'},
+            'linkedin':  {'icon': 'fa-linkedin-in',    'color': '#0a66c2', 'label': 'LinkedIn'},
+            'tiktok':    {'icon': 'fa-tiktok',         'color': '#ffffff', 'label': 'TikTok'},
+            'telegram':  {'icon': 'fa-telegram-plane', 'color': '#0088cc', 'label': 'Telegram'},
+            'whatsapp':  {'icon': 'fa-whatsapp',       'color': '#25d366', 'label': 'WhatsApp'}
+        } %}
+        {% for link in org.links %}
+            {% set platform = link.platform|lower %}
+            {% set config = social_config.get(platform, {'icon': 'fa-link', 'color': '#94a3b8', 'label': platform}) %}
+            <a href="{{ link.url|e }}" target="_blank" rel="noopener"
+               style="display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: {{ config.color }}15; border: 1px solid {{ config.color }}30; border-radius: 12px; color: {{ config.color }}; font-size: 0.875rem; font-weight: 600; text-decoration: none; transition: all 0.2s;"
+               onmouseover="this.style.transform='translateY(-2px)'"
+               onmouseout="this.style.transform='none'">
+                <i class="fab {{ config.icon }}"></i>
+                {{ config.label }}
+            </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{# ══════════ MODAL ÉDITION CONTACT ══════════ #}
+<div id="edit-contact-modal" class="modal-overlay">
+    <div class="modal-content">
+        <form method="POST" action="{{ url_for('dashboard.modifier_contact') }}">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-address-card" style="color: #34d399;"></i>
+                    Modifier les coordonnées
+                </div>
+                <button type="button" class="btn-dashboard ghost icon" onclick="closeModal('edit-contact-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                {% set fields = [
+                    ('province', 'Province', 'text', org.province),
+                    ('commune', 'Commune', 'text', org.commune),
+                    ('colline', 'Colline', 'text', org.colline),
+                    ('quartier', 'Quartier', 'text', org.quartier),
+                    ('telephone', 'Téléphone', 'tel', org.telephone),
+                    ('email', 'Email', 'email', org.email),
+                    ('website', 'Site web', 'url', org.website),
+                ] %}
+                
+                {% for name, label, type, value in fields %}
+                <div class="form-group">
+                    <label class="form-label">{{ label }}</label>
+                    <input type="{{ type }}" name="{{ name }}" class="form-input" 
+                           value="{{ value|e if value else '' }}"
+                           placeholder="Saisir {{ label|lower }}">
+                </div>
+                {% endfor %}
+                
+                <div class="form-group">
+                    <label class="form-label">Horaires</label>
+                    <textarea name="horaires" class="form-textarea" rows="3" 
+                              placeholder="Ex: Lun-Ven 9h-18h">{{ org.horaires|e if org.horaires else '' }}</textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-dashboard ghost" onclick="closeModal('edit-contact-modal')">Annuler</button>
+                <button type="submit" class="btn-dashboard primary">
+                    <i class="fas fa-check"></i> Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>

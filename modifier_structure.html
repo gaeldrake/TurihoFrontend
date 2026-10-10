@@ -1,0 +1,366 @@
+{% extends 'admin/basee.html' %}
+{% block title %}Modifier — {{ s.org_name|e }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    
+    .page-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.875rem;
+        font-weight: 800;
+        color: white;
+        margin: 0;
+    }
+    
+    .form-container {
+        background: rgba(20, 25, 33, 0.6);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 2rem;
+        max-width: 800px;
+    }
+    
+    .form-intro {
+        font-size: 0.9375rem;
+        color: #94a3b8;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+        margin: 2rem 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title:first-of-type {
+        margin-top: 0;
+    }
+    
+    .section-title i {
+        color: #34d399;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    @media (max-width: 640px) {
+        .form-row { grid-template-columns: 1fr; }
+    }
+    
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label .required {
+        color: #ef4444;
+    }
+    
+    .form-input,
+    .form-textarea,
+    .form-select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        color: white;
+        font-size: 0.875rem;
+        font-family: inherit;
+        transition: all 0.2s;
+        outline: none;
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 120px;
+        line-height: 1.6;
+    }
+    
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+        border-color: rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.03);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+    }
+    
+    .form-select option {
+        background: #141921;
+        color: white;
+    }
+    
+    .form-hint {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.375rem;
+    }
+    
+    /* Status card */
+    .status-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .status-indicator {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .status-indicator.active {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+    }
+    
+    .status-indicator.inactive {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+    }
+    
+    .status-content {
+        flex: 1;
+    }
+    
+    .status-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .status-value {
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: white;
+        margin-top: 0.125rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{# ══════════════════════════════════════════
+   PAGE HEADER
+   ══════════════════════════════════════════ #}
+<div class="page-header">
+    <a href="{{ url_for('admin.admin_structures') }}" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h1 class="page-title">Modifier la structure</h1>
+</div>
+
+{# ══════════════════════════════════════════
+   FORM
+   ══════════════════════════════════════════ #}
+<div class="form-container">
+    <p class="form-intro">
+        Modification de « <strong class="text-white">{{ s.org_name|e }}</strong> »
+    </p>
+    
+    {# Status card #}
+    <div class="status-card">
+        <div class="status-indicator {% if s.is_active %}active{% else %}inactive{% endif %}">
+            <i class="fas {% if s.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+        </div>
+        <div class="status-content">
+            <div class="status-label">Statut actuel</div>
+            <div class="status-value">
+                {% if s.is_active %}
+                <span style="color: #34d399;">Active</span>
+                {% else %}
+                <span style="color: #f87171;">Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+        {% if s.creation_date %}
+        <div style="text-align: right;">
+            <div class="status-label">Date de création</div>
+            <div class="status-value">{{ s.creation_date.strftime('%d/%m/%Y') }}</div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <form method="POST" action="{{ url_for('admin.modifier_structure', id=s.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        {# ——— Section: Informations principales ——— #}
+        <div class="section-title">
+            <i class="fas fa-info-circle"></i>
+            Informations principales
+        </div>
+        
+        <div class="form-group">
+            <label for="org_name" class="form-label">
+                Nom de l'organisation <span class="required">*</span>
+            </label>
+            <input type="text" id="org_name" name="org_name" class="form-input" 
+                   required maxlength="100" 
+                   value="{{ s.org_name|e if s.org_name else '' }}"
+                   placeholder="Ex: Association Espoir des Jeunes">
+            <div class="form-hint">100 caractères maximum</div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="type" class="form-label">Type</label>
+                <select id="type" name="type" class="form-select">
+                    {% set types = [
+                        ('', '— Choisir un type —'),
+                        ('association', 'Association'),
+                        ('cooperative', 'Coopérative'),
+                        ('company', 'Société'),
+                        ('ong', 'ONG'),
+                        ('fondation', 'Fondation'),
+                        ('startup', 'Startup'),
+                        ('pme', 'PME'),
+                    ] %}
+                    {% for value, display in types %}
+                    <option value="{{ value }}" {% if s.type == value %}selected{% endif %}>
+                        {{ display }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="category" class="form-label">
+                    Catégorie <span class="required">*</span>
+                </label>
+                <select id="category" name="category" class="form-select">
+                    {% set categories = [
+                        ('', '-- Aucune catégorie --'),
+                        ('education', 'Éducation'),
+                        ('sante', 'Santé'),
+                        ('agriculture', 'Agriculture'),
+                        ('environnement', 'Environnement'),
+                        ('culture', 'Culture'),
+                        ('technologie', 'Technologie'),
+                        ('commerce', 'Commerce'),
+                        ('social', 'Action sociale'),
+                        ('jeunesse', 'Jeunesse'),
+                        ('autre', 'Autre'),
+                    ] %}
+                    {% for value, display in categories %}
+                    <option value="{{ value }}" {% if s.category == value %}selected{% endif %}>
+                        {{ display }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        {# ——— Section: Contact ——— #}
+        <div class="section-title">
+            <i class="fas fa-envelope"></i>
+            Coordonnées
+        </div>
+        
+        <div class="form-group">
+            <label for="email" class="form-label">
+                Adresse e-mail <span class="required">*</span>
+            </label>
+            <input type="email" id="email" name="email" class="form-input" 
+                   required maxlength="120" 
+                   value="{{ s.email|e if s.email else '' }}"
+                   placeholder="contact@organisation.bi">
+        </div>
+        
+        <div class="form-group">
+            <label for="website" class="form-label">Site web</label>
+            <input type="url" id="website" name="website" class="form-input" 
+                   maxlength="255" 
+                   value="{{ s.website|e if s.website else '' }}"
+                   placeholder="https://www.organisation.bi">
+        </div>
+        
+        {# ——— Section: Description ——— #}
+        <div class="section-title">
+            <i class="fas fa-align-left"></i>
+            Description
+        </div>
+        
+        <div class="form-group">
+            <label for="description" class="form-label">Description</label>
+            <textarea id="description" name="description" class="form-textarea" 
+                      maxlength="5000" 
+                      placeholder="Présentez l'organisation en quelques phrases.">{{ s.description|e if s.description else '' }}</textarea>
+        </div>
+        
+        {# ——— Actions ——— #}
+        <div class="form-actions">
+            <a href="{{ url_for('admin.admin_structures') }}" class="btn-admin ghost">
+                <i class="fas fa-times"></i>
+                Annuler
+            </a>
+            <button type="submit" class="btn-admin primary">
+                <i class="fas fa-check"></i>
+                Enregistrer les modifications
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

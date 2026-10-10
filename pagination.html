@@ -1,0 +1,84 @@
+{# ══════════════════════════════════════════
+   PARTIAL: Pagination Premium
+   Usage: {% include "partials/pagination.html" %}
+   Requiert: variable `pagination` (objet Flask Pagination)
+   ══════════════════════════════════════════ #}
+
+{% if pagination is defined and pagination and pagination.pages > 1 %}
+
+{# ——— Paramètres personnalisables ——— #}
+{% set endpoint = pagination_endpoint|default(request.endpoint) %}
+{% set view_args = pagination_args|default(request.view_args) %}
+{% set left_edge = pagination_left_edge|default(1) %}
+{% set right_edge = pagination_right_edge|default(1) %}
+{% set left_current = pagination_left_current|default(2) %}
+{% set right_current = pagination_right_current|default(2) %}
+
+<nav aria-label="Pagination" class="flex items-center justify-center gap-1.5 mt-12">
+
+    {# ——— Bouton Précédent ——— #}
+    {% if pagination.has_prev %}
+    <a href="{{ url_for(endpoint, page=pagination.prev_num, **view_args) }}"
+       class="pagination-btn group flex items-center gap-2 px-4 py-2.5 rounded-xl glass text-sm font-semibold text-gray-300 hover:text-white hover:border-brand-500/30 hover:bg-brand-500/5 transition-all">
+        <i class="fas fa-chevron-left text-xs group-hover:-translate-x-0.5 transition-transform"></i>
+        <span class="hidden sm:inline">Précédent</span>
+    </a>
+    {% else %}
+    <span class="flex items-center gap-2 px-4 py-2.5 rounded-xl glass text-sm font-semibold text-gray-600 cursor-not-allowed opacity-50">
+        <i class="fas fa-chevron-left text-xs"></i>
+        <span class="hidden sm:inline">Précédent</span>
+    </span>
+    {% endif %}
+
+    {# ——— Numéros de pages ——— #}
+    {% for p in pagination.iter_pages(left_edge=left_edge, right_edge=right_edge, left_current=left_current, right_current=right_current) %}
+        {% if p %}
+            {% if p == pagination.page %}
+                {# Page active #}
+                <span class="pagination-btn-active flex items-center justify-center min-w-[40px] h-10 px-3 rounded-xl text-sm font-bold text-white shadow-lg shadow-brand-500/30"
+                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    {{ p }}
+                </span>
+            {% else %}
+                {# Page cliquable #}
+                <a href="{{ url_for(endpoint, page=p, **view_args) }}"
+                   class="pagination-btn flex items-center justify-center min-w-[40px] h-10 px-3 rounded-xl glass text-sm font-semibold text-gray-300 hover:text-white hover:border-brand-500/30 hover:bg-brand-500/5 hover:-translate-y-0.5 transition-all">
+                    {{ p }}
+                </a>
+            {% endif %}
+        {% else %}
+            {# Séparateur (trou) #}
+            <span class="flex items-center justify-center min-w-[40px] h-10 px-3 text-gray-600 text-sm">
+                <i class="fas fa-ellipsis text-xs"></i>
+            </span>
+        {% endif %}
+    {% endfor %}
+
+    {# ——— Bouton Suivant ——— #}
+    {% if pagination.has_next %}
+    <a href="{{ url_for(endpoint, page=pagination.next_num, **view_args) }}"
+       class="pagination-btn group flex items-center gap-2 px-4 py-2.5 rounded-xl glass text-sm font-semibold text-gray-300 hover:text-white hover:border-brand-500/30 hover:bg-brand-500/5 transition-all">
+        <span class="hidden sm:inline">Suivant</span>
+        <i class="fas fa-chevron-right text-xs group-hover:translate-x-0.5 transition-transform"></i>
+    </a>
+    {% else %}
+    <span class="flex items-center gap-2 px-4 py-2.5 rounded-xl glass text-sm font-semibold text-gray-600 cursor-not-allowed opacity-50">
+        <span class="hidden sm:inline">Suivant</span>
+        <i class="fas fa-chevron-right text-xs"></i>
+    </span>
+    {% endif %}
+
+</nav>
+
+{# ——— Info pagination (optionnel) ——— #}
+{% if pagination_show_info|default(false) %}
+<div class="text-center mt-4">
+    <p class="text-xs text-gray-500">
+        Page <span class="font-semibold text-brand-400">{{ pagination.page }}</span>
+        sur <span class="font-semibold text-white">{{ pagination.pages }}</span>
+        · {{ pagination.total }} résultat{{ 's' if pagination.total > 1 else '' }} au total
+    </p>
+</div>
+{% endif %}
+
+{% endif %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier les coordonnées — {{ org.org_name|e }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container { max-width: 720px; margin: 0 auto; padding: 2rem 1rem; }
+    .form-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .form-header-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(251, 191, 36, 0.08));
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        display: flex; align-items: center; justify-content: center;
+        color: #34d399; font-size: 1.25rem;
+    }
+    .form-card {
+        background: rgba(20, 25, 33, 0.55);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 2rem;
+    }
+    .form-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .form-section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.9375rem; font-weight: 700;
+        margin-bottom: 1.25rem;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .form-section-title i { color: #34d399; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-size: 0.75rem; font-weight: 600; color: #94a3b8;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .form-label .optional {
+        color: #64748b; text-transform: none;
+        letter-spacing: normal; font-weight: 400;
+    }
+    .form-input, .form-textarea {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        color: white; font-size: 0.875rem;
+        transition: all 0.2s; font-family: inherit;
+    }
+    .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .form-input:focus, .form-textarea:focus {
+        outline: none;
+        border-color: rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.03);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+    }
+    .form-hint { font-size: 0.7rem; color: #64748b; margin-top: 0.375rem; }
+    .form-actions {
+        display: flex; justify-content: flex-end; gap: 0.75rem;
+        margin-top: 2rem; padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .btn-form {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        padding: 0.75rem 1.5rem; border-radius: 12px;
+        font-size: 0.875rem; font-weight: 600;
+        transition: all 0.2s; border: none; cursor: pointer;
+    }
+    .btn-form.primary {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 4px 12px -4px rgba(16, 185, 129, 0.4);
+    }
+    .btn-form.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.5);
+    }
+    .btn-form.ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+    .btn-form.ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn-form ghost" style="padding: 0.5rem;">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="form-header-icon">
+            <i class="fas fa-address-card"></i>
+        </div>
+        <div>
+            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 800; margin: 0;">
+                Modifier les coordonnées
+            </h1>
+            <p style="font-size: 0.8125rem; color: #64748b; margin: 0;">
+                {{ org.org_name|e }}
+            </p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('dashboard.modifier_contact') }}" class="form-card">
+        {% if csrf_token is defined %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% endif %}
+
+        {# ═══ Localisation ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-map-marker-alt"></i>
+                Localisation
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="province">Province</label>
+                    <input type="text" id="province" name="province" class="form-input"
+                           value="{{ (form_data.province if form_data is defined and form_data else org.province)|e }}"
+                           maxlength="100" placeholder="Ex: Bujumbura">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="commune">Commune</label>
+                    <input type="text" id="commune" name="commune" class="form-input"
+                           value="{{ (form_data.commune if form_data is defined and form_data else org.commune)|e }}"
+                           maxlength="100" placeholder="Ex: Mukaza">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="colline">Colline</label>
+                    <input type="text" id="colline" name="colline" class="form-input"
+                           value="{{ (form_data.colline if form_data is defined and form_data else org.colline)|e }}"
+                           maxlength="100" placeholder="Ex: Nyakabiga">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="quartier">Quartier</label>
+                    <input type="text" id="quartier" name="quartier" class="form-input"
+                           value="{{ (form_data.quartier if form_data is defined and form_data else org.quartier)|e }}"
+                           maxlength="100" placeholder="Ex: Centre-ville">
+                </div>
+            </div>
+        </div>
+
+        {# ═══ Coordonnées ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-phone-alt"></i>
+                Coordonnées
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="telephone">
+                        Téléphone <span class="optional">(optionnel)</span>
+                    </label>
+                    <input type="tel" id="telephone" name="telephone" class="form-input"
+                           value="{{ (form_data.telephone if form_data is defined and form_data else org.telephone)|e }}"
+                           maxlength="50" placeholder="+257 XX XX XX XX">
+                    <div class="form-hint">Format international recommandé</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">
+                        Email <span class="optional">(optionnel)</span>
+                    </label>
+                    <input type="email" id="email" name="email" class="form-input"
+                           value="{{ (form_data.email if form_data is defined and form_data else org.email)|e }}"
+                           maxlength="120" placeholder="contact@organisation.bi">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="website">
+                    Site web <span class="optional">(optionnel)</span>
+                </label>
+                <input type="url" id="website" name="website" class="form-input"
+                       value="{{ (form_data.website if form_data is defined and form_data else org.website)|e }}"
+                       maxlength="255" placeholder="https://www.organisation.bi">
+            </div>
+        </div>
+
+        {# ═══ Horaires ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-clock"></i>
+                Horaires
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="horaires">
+                    Horaires d'ouverture <span class="optional">(optionnel)</span>
+                </label>
+                <textarea id="horaires" name="horaires" class="form-textarea" rows="4"
+                          maxlength="500"
+                          placeholder="Lundi - Vendredi : 9h - 18h&#10;Samedi : 10h - 16h&#10;Dimanche : Fermé">{{ (form_data.horaires if form_data is defined and form_data else org.horaires)|e }}</textarea>
+                <div class="form-hint">Une ligne par jour ou période</div>
+            </div>
+        </div>
+
+        {# ═══ Actions ═══ #}
+        <div class="form-actions">
+            <a href="{{ url_for('dashboard.dashboard') }}" class="btn-form ghost">
+                Annuler
+            </a>
+            <button type="submit" class="btn-form primary">
+                <i class="fas fa-check"></i>
+                Enregistrer les modifications
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

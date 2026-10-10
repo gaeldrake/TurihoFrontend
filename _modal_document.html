@@ -1,0 +1,47 @@
+{# ══════════════════════════════════════════
+   MODAL: UPLOAD DOCUMENT
+   ══════════════════════════════════════════ #}
+
+<div id="upload-document-modal" class="modal-overlay">
+    <div class="modal-content">
+        <form method="POST" action="{{ url_for('dashboard.ajouter_document') }}" enctype="multipart/form-data">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-cloud-upload-alt" style="color: #34d399;"></i>
+                    Téléverser un document
+                </div>
+                <button type="button" class="btn-dashboard ghost icon" onclick="closeModal('upload-document-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nom du document *</label>
+                    <input type="text" name="nom" class="form-input" placeholder="Ex: Statuts 2025" required maxlength="120">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Fichier *</label>
+                    <label class="dropzone" style="display: block;">
+                        <input type="file" name="fichier" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png" required style="display: none;">
+                        <div class="dropzone-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;">Cliquez ou glissez un fichier</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">PDF, Word, Excel, Images — max 5 Mo</div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn-dashboard ghost" onclick="closeModal('upload-document-modal')">
+                    Annuler
+                </button>
+                <button type="submit" class="btn-dashboard primary">
+                    <i class="fas fa-cloud-upload-alt"></i> Téléverser
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

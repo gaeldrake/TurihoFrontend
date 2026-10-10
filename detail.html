@@ -1,0 +1,1010 @@
+{% extends "base.html" %}
+
+{% block title %}{{ programme.titre }} — TURIHO{% endblock %}
+{% block meta_description %}{{ programme.description|truncate(160) }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== HERO COVER ===== */
+  .detail-hero {
+    position: relative;
+    min-height: 420px;
+    overflow: hidden;
+  }
+  .detail-hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(5,7,10,0.3) 0%, rgba(5,7,10,0.7) 60%, #05070a 100%);
+  }
+  .detail-hero-img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scale(1.05);
+    transition: transform 8s ease-out;
+  }
+  .detail-hero.loaded .detail-hero-img { transform: scale(1); }
+
+  /* ===== CATEGORY COLORS ===== */
+  .cat-blue   { --cat-from: #3b82f6; --cat-to: #06b6d4; --cat-bg: rgba(59,130,246,0.1); --cat-border: rgba(59,130,246,0.25); --cat-text: #60a5fa; }
+  .cat-green  { --cat-from: #10b981; --cat-to: #34d399; --cat-bg: rgba(16,185,129,0.1); --cat-border: rgba(16,185,129,0.25); --cat-text: #34d399; }
+  .cat-purple { --cat-from: #8b5cf6; --cat-to: #ec4899; --cat-bg: rgba(139,92,246,0.1); --cat-border: rgba(139,92,246,0.25); --cat-text: #a78bfa; }
+
+  /* ===== LAYOUT ===== */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  @media (max-width: 1024px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .sidebar-sticky { position: static !important; }
+  }
+
+  /* ===== BADGES ===== */
+  .badge-category {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    background: var(--cat-bg);
+    border: 1px solid var(--cat-border);
+    color: var(--cat-text);
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+
+  .badge-new {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white; position: relative; overflow: hidden;
+  }
+  .badge-new::after {
+    content: ''; position: absolute; top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: badge-shimmer 2.5s infinite;
+  }
+  @keyframes badge-shimmer { 0% { left: -100%; } 100% { left: 100%; } }
+
+  .badge-urgent {
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    color: white;
+    animation: badge-pulse 2s infinite;
+  }
+  @keyframes badge-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+  }
+
+  .badge-popular {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24);
+    background-size: 200% 100%;
+    color: #0a0d12; font-weight: 800;
+    animation: shimmer 3s linear infinite;
+  }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+  /* ===== INFO CARDS ===== */
+  .info-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 1.25rem;
+    transition: all 0.3s;
+  }
+  .info-card:hover {
+    border-color: var(--cat-border);
+    background: var(--cat-bg);
+  }
+  .info-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: var(--cat-bg);
+    border: 1px solid var(--cat-border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--cat-text);
+    flex-shrink: 0;
+  }
+
+  /* ===== CTA SIDEBAR ===== */
+  .cta-sidebar {
+    background: linear-gradient(135deg, rgba(20,25,33,0.9), rgba(10,13,18,0.95));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  .cta-sidebar-header {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, var(--cat-from), var(--cat-to));
+    position: relative;
+  }
+  .cta-sidebar-header::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2), transparent 60%);
+  }
+
+  .btn-apply {
+    position: relative;
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--cat-from), var(--cat-to));
+    border-radius: 14px;
+    font-weight: 700; font-size: 15px;
+    color: white;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.3s;
+    overflow: hidden;
+  }
+  .btn-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);
+  }
+  .btn-apply::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform: translateX(-100%); transition: transform 0.6s;
+  }
+  .btn-apply:hover::before { transform: translateX(100%); }
+
+  /* ===== COUNTDOWN ===== */
+  .countdown-card {
+    background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(251,146,60,0.04));
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 16px;
+    padding: 1rem;
+  }
+  .countdown-unit {
+    text-align: center;
+  }
+  .countdown-value {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.75rem; font-weight: 800;
+    background: linear-gradient(135deg, #f87171, #fb923c);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+  }
+  .countdown-label {
+    font-size: 10px; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-top: 0.25rem;
+  }
+
+  /* ===== STATS ROW ===== */
+  .stat-pill {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    font-size: 13px;
+  }
+  .stat-pill i { color: var(--cat-text); font-size: 12px; }
+
+  /* ===== SECTION ===== */
+  .detail-section {
+    padding: 2rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .detail-section:last-child { border-bottom: none; }
+
+  .section-title {
+    display: flex; align-items: center; gap: 0.75rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.25rem; font-weight: 700;
+    margin-bottom: 1.25rem;
+  }
+  .section-title-icon {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    background: var(--cat-bg);
+    border: 1px solid var(--cat-border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--cat-text);
+    font-size: 13px;
+  }
+
+  /* ===== DESCRIPTION ===== */
+  .description-content {
+    color: #cbd5e1;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .description-content p { margin-bottom: 1rem; }
+  .description-content ul, .description-content ol {
+    margin: 1rem 0; padding-left: 1.5rem;
+  }
+  .description-content li { margin-bottom: 0.5rem; }
+  .description-content strong { color: white; }
+  .description-content h3 {
+    font-size: 1.1rem; font-weight: 700;
+    color: white; margin: 1.5rem 0 0.75rem;
+  }
+
+  /* ===== ORG CARD ===== */
+  .org-card {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1.25rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    transition: all 0.3s;
+  }
+  .org-card:hover {
+    border-color: var(--cat-border);
+    background: var(--cat-bg);
+  }
+  .org-avatar {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--cat-from), var(--cat-to));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800; font-size: 1.25rem;
+    color: white;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .org-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* ===== SHARE BUTTONS ===== */
+  .share-btn {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    color: #94a3b8;
+    transition: all 0.2s;
+  }
+  .share-btn:hover {
+    background: var(--cat-bg);
+    border-color: var(--cat-border);
+    color: var(--cat-text);
+    transform: translateY(-2px);
+  }
+
+  /* ===== GALLERY ===== */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  .gallery-item {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+  }
+  .gallery-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+  }
+  .gallery-item:hover img { transform: scale(1.1); }
+  .gallery-item::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.5));
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .gallery-item:hover::after { opacity: 1; }
+
+  /* ===== SIMILAR CARDS ===== */
+  .similar-card {
+    display: flex; gap: 0.875rem;
+    padding: 0.875rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .similar-card:hover {
+    border-color: rgba(16,185,129,0.3);
+    background: rgba(16,185,129,0.03);
+    transform: translateX(4px);
+  }
+  .similar-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--cat-from), var(--cat-to));
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  /* ===== REVEAL ===== */
+  .reveal { opacity: 0; transform: translateY(30px); }
+
+  /* ===== BREADCRUMB ===== */
+  .breadcrumb-link {
+    color: #64748b;
+    transition: color 0.2s;
+  }
+  .breadcrumb-link:hover { color: white; }
+
+  /* ===== OWNER ACTIONS ===== */
+  .owner-actions {
+    display: flex; gap: 0.5rem;
+  }
+  .owner-btn {
+    padding: 0.5rem 0.875rem;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    font-size: 12px; font-weight: 600;
+    color: #cbd5e1;
+    transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 0.375rem;
+  }
+  .owner-btn:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.15);
+  }
+  .owner-btn.danger:hover {
+    background: rgba(239,68,68,0.1);
+    border-color: rgba(239,68,68,0.3);
+    color: #f87171;
+  }
+
+  /* ===== MOBILE STICKY CTA ===== */
+  .mobile-cta {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    z-index: 40;
+    padding: 1rem;
+    background: rgba(10,13,18,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    transform: translateY(100%);
+    transition: transform 0.3s;
+  }
+  .mobile-cta.visible { transform: translateY(0); }
+  @media (min-width: 1025px) { .mobile-cta { display: none; } }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up { animation: slide-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ============================================================
+   VARIABLES & HELPERS
+   ============================================================ #}
+{% set user_logged_in = session.get('id') %}
+{% set is_owner = user_logged_in and programme.structure_id == user_logged_in %}
+
+{# Catégorie → classe couleur #}
+{% set cat_class = 'cat-blue' %}
+{% set cat_icon = 'book' %}
+{% set cat_label = 'Formation' %}
+{% if programme.categorie == 'financement' %}
+  {% set cat_class = 'cat-green' %}
+  {% set cat_icon = 'money-bill-wave' %}
+  {% set cat_label = 'Financement' %}
+{% elif programme.categorie == 'opportunite' or programme.categorie == 'projet' %}
+  {% set cat_class = 'cat-purple' %}
+  {% set cat_icon = 'star' %}
+  {% set cat_label = 'Appel à projets' %}
+{% endif %}
+
+{# Image de couverture #}
+{% set cover_image = programme.image or 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1600&q=80' %}
+
+{# Calcul deadline #}
+{% set days_left = None %}
+{% if programme.date_fin %}
+  {% set delta = (programme.date_fin - now()).days if now is defined else 30 %}
+  {% set days_left = delta if delta > 0 else 0 %}
+{% endif %}
+
+
+{# ============================================================
+   HERO AVEC COVER
+   ============================================================ #}
+<section class="detail-hero {{ cat_class }}" id="detail-hero">
+  <img src="{{ cover_image }}" alt="{{ programme.titre }}" class="detail-hero-img" loading="eager">
+
+  {# Contenu superposé #}
+  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12 h-full flex flex-col justify-end">
+
+    {# Breadcrumb #}
+    <nav class="flex items-center gap-2 text-xs mb-6 animate-slide-up">
+      <a href="{{ url_for('public.index') }}" class="breadcrumb-link">Accueil</a>
+      <i class="fas fa-chevron-right text-[8px] text-gray-600"></i>
+      <a href="{{ url_for('opportunites.afficher_opportunites') }}" class="breadcrumb-link">Opportunités</a>
+      <i class="fas fa-chevron-right text-[8px] text-gray-600"></i>
+      <span class="text-gray-400">{{ cat_label }}</span>
+    </nav>
+
+    {# Badges #}
+    <div class="flex flex-wrap items-center gap-2 mb-5 animate-slide-up delay-1">
+      <span class="badge-category">
+        <i class="fas fa-{{ cat_icon }} text-[10px]"></i>
+        {{ cat_label }}
+      </span>
+      {% if programme.type %}
+      <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300 font-medium">
+        {{ programme.type }}
+      </span>
+      {% endif %}
+      {% if days_left is not none and days_left <= 7 and days_left > 0 %}
+      <span class="badge-urgent px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5">
+        <i class="fas fa-bolt text-[10px]"></i> Plus que {{ days_left }}j
+      </span>
+      {% elif days_left is not none and days_left <= 30 and days_left > 7 %}
+      <span class="badge-new px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5">
+        <i class="fas fa-clock text-[10px]"></i> {{ days_left }} jours restants
+      </span>
+      {% endif %}
+    </div>
+
+    {# Titre #}
+    <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-5 max-w-4xl animate-slide-up delay-2">
+      {{ programme.titre }}
+    </h1>
+
+    {# Métadonnées principales #}
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-300 animate-slide-up delay-3">
+      {% if programme.organisation_nom %}
+      <div class="flex items-center gap-2">
+        <i class="fas fa-building text-xs" style="color: var(--cat-text);"></i>
+        <span>{{ programme.organisation_nom }}</span>
+      </div>
+      {% endif %}
+      {% if programme.lieu %}
+      <div class="flex items-center gap-2">
+        <i class="fas fa-map-marker-alt text-xs" style="color: var(--cat-text);"></i>
+        <span>{{ programme.lieu }}</span>
+      </div>
+      {% endif %}
+      {% if programme.date_debut %}
+      <div class="flex items-center gap-2">
+        <i class="fas fa-calendar text-xs" style="color: var(--cat-text);"></i>
+        <span>{{ programme.date_debut|format_date }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    {# Actions propriétaire #}
+    {% if is_owner %}
+    <div class="owner-actions mt-5 animate-slide-up delay-3">
+      {% if programme.categorie == 'formation' %}
+        <a href="{{ url_for('opportunites.edit_formation', id=programme.id) }}" class="owner-btn">
+          <i class="fas fa-edit text-[10px]"></i> Modifier
+        </a>
+      {% elif programme.categorie == 'financement' %}
+        <a href="{{ url_for('opportunites.edit_financement', id=programme.id) }}" class="owner-btn">
+          <i class="fas fa-edit text-[10px]"></i> Modifier
+        </a>
+      {% elif programme.categorie in ['opportunite', 'projet'] %}
+        <a href="{{ url_for('opportunites.edit_projet', id=programme.id) }}" class="owner-btn">
+          <i class="fas fa-edit text-[10px]"></i> Modifier
+        </a>
+      {% else %}
+        <a href="{{ url_for('opportunites.edit', id=programme.id) }}" class="owner-btn">
+          <i class="fas fa-edit text-[10px]"></i> Modifier
+        </a>
+      {% endif %}
+      <button class="owner-btn" onclick="navigator.clipboard.writeText(window.location.href)">
+        <i class="fas fa-link text-[10px]"></i> Copier le lien
+      </button>
+      <button class="owner-btn danger">
+        <i class="fas fa-trash text-[10px]"></i> Supprimer
+      </button>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+
+{# ============================================================
+   STATS BAR
+   ============================================================ #}
+<div class="border-b border-white/5 py-5 {{ cat_class }}">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="stat-pill">
+        <i class="fas fa-eye"></i>
+        <span class="font-semibold text-white">{{ programme.views_count|default(0) }}</span>
+        <span class="text-gray-500 text-xs">vues</span>
+      </div>
+      <div class="stat-pill">
+        <i class="fas fa-paper-plane"></i>
+        <span class="font-semibold text-white">{{ programme.applications_count|default(0) }}</span>
+        <span class="text-gray-500 text-xs">candidatures</span>
+      </div>
+      {% if programme.prix is defined and programme.prix %}
+      <div class="stat-pill">
+        <i class="fas fa-tag" style="color: #fbbf24;"></i>
+        <span class="font-semibold text-white">{{ "{:,.0f}".format(programme.prix) }}</span>
+        <span class="text-gray-500 text-xs">FBU</span>
+      </div>
+      {% elif programme.prix is defined %}
+      <div class="stat-pill">
+        <i class="fas fa-gift" style="color: #34d399;"></i>
+        <span class="font-semibold text-white">Gratuit</span>
+      </div>
+      {% endif %}
+      {% if programme.montant_max %}
+      <div class="stat-pill">
+        <i class="fas fa-coins" style="color: #fbbf24;"></i>
+        <span class="font-semibold text-white">Jusqu'à {{ "{:,.0f}".format(programme.montant_max) }}</span>
+        <span class="text-gray-500 text-xs">FBU</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+{# ============================================================
+   MAIN CONTENT GRID
+   ============================================================ #}
+<section class="py-12 lg:py-16 {{ cat_class }}">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="detail-grid">
+
+      {# ══════════ COLONNE PRINCIPALE ══════════ #}
+      <div class="space-y-2">
+
+        {# ─── DESCRIPTION ─── #}
+        <div class="detail-section reveal">
+          <div class="section-title">
+            <div class="section-title-icon"><i class="fas fa-align-left"></i></div>
+            Présentation détaillée
+          </div>
+          <div class="description-content">
+            {% if programme.description %}
+              {{ programme.description|replace('\n', '<br>')|safe }}
+            {% else %}
+              <p class="text-gray-500 italic">Aucune description fournie.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        {# ─── INFOS CLÉS ─── #}
+        <div class="detail-section reveal">
+          <div class="section-title">
+            <div class="section-title-icon"><i class="fas fa-info-circle"></i></div>
+            Informations clés
+          </div>
+          <div class="grid sm:grid-cols-2 gap-3">
+            {% if programme.date_debut %}
+            <div class="info-card flex items-start gap-3">
+              <div class="info-icon"><i class="fas fa-calendar-plus"></i></div>
+              <div>
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Date de début</div>
+                <div class="font-semibold">{{ programme.date_debut|format_date }}</div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if programme.date_fin %}
+            <div class="info-card flex items-start gap-3">
+              <div class="info-icon"><i class="fas fa-calendar-check"></i></div>
+              <div>
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Date limite</div>
+                <div class="font-semibold">{{ programme.date_fin|format_date }}</div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if programme.lieu %}
+            <div class="info-card flex items-start gap-3">
+              <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
+              <div>
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Lieu</div>
+                <div class="font-semibold">{{ programme.lieu }}</div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if programme.type %}
+            <div class="info-card flex items-start gap-3">
+              <div class="info-icon"><i class="fas fa-tag"></i></div>
+              <div>
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Type</div>
+                <div class="font-semibold">{{ programme.type }}</div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if programme.prix is defined %}
+            <div class="info-card flex items-start gap-3">
+              <div class="info-icon"><i class="fas fa-receipt"></i></div>
+              <div>
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Prix</div>
+                <div class="font-semibold">
+                  {% if programme.prix and programme.prix > 0 %}
+                    {{ "{:,.0f}".format(programme.prix) }} FBU
+                  {% else %}
+                    <span class="text-brand-400">Gratuit</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if programme.montant_max %}
+            <div class="info-card flex items-start gap-3">
+              <div class="info-icon" style="background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.25); color: #fbbf24;">
+                <i class="fas fa-coins"></i>
+              </div>
+              <div>
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Montant maximum</div>
+                <div class="font-semibold gradient-text">{{ "{:,.0f}".format(programme.montant_max) }} FBU</div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        {# ─── ORGANISATION ─── #}
+        {% if programme.organisation_nom %}
+        <div class="detail-section reveal">
+          <div class="section-title">
+            <div class="section-title-icon"><i class="fas fa-building"></i></div>
+            Organisation émettrice
+          </div>
+          <div class="org-card">
+            <div class="org-avatar">
+              {% if programme.organisation_logo %}
+                <img src="{{ programme.organisation_logo }}" alt="">
+              {% else %}
+                {{ programme.organisation_nom[0]|upper }}
+              {% endif %}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-display font-bold text-lg mb-0.5">{{ programme.organisation_nom }}</div>
+              <div class="text-xs text-gray-500">Émetteur de cette opportunité</div>
+            </div>
+            <a href="#" class="btn-ghost px-4 py-2 rounded-lg text-xs font-semibold flex-shrink-0">
+              Voir le profil
+            </a>
+          </div>
+        </div>
+        {% endif %}
+
+        {# ─── PARTAGER ─── #}
+        <div class="detail-section reveal">
+          <div class="section-title">
+            <div class="section-title-icon"><i class="fas fa-share-alt"></i></div>
+            Partager cette opportunité
+          </div>
+          {% set share_url = request.url %}
+          {% set share_title = programme.titre %}
+          <div class="flex flex-wrap gap-2">
+            <button class="share-btn" onclick="navigator.clipboard.writeText('{{ share_url }}')" title="Copier le lien">
+              <i class="fas fa-link"></i>
+            </button>
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}" target="_blank" class="share-btn" title="Facebook">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="https://twitter.com/intent/tweet?url={{ share_url|urlencode }}&text={{ share_title|urlencode }}" target="_blank" class="share-btn" title="X">
+              <i class="fab fa-x-twitter"></i>
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url|urlencode }}" target="_blank" class="share-btn" title="LinkedIn">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="https://api.whatsapp.com/send?text={{ share_url|urlencode }}" target="_blank" class="share-btn" title="WhatsApp">
+              <i class="fab fa-whatsapp"></i>
+            </a>
+            <a href="mailto:?subject={{ share_title|urlencode }}&body={{ share_url|urlencode }}" class="share-btn" title="Email">
+              <i class="fas fa-envelope"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      {# ══════════ SIDEBAR ══════════ #}
+      <aside>
+        <div class="sidebar-sticky space-y-5" style="position: sticky; top: 100px;">
+
+          {# ─── CTA PRINCIPAL ─── #}
+          <div class="cta-sidebar">
+            <div class="cta-sidebar-header relative">
+              <div class="relative z-10">
+                <div class="text-[10px] text-white/70 uppercase tracking-wider font-semibold mb-1">
+                  {% if programme.prix and programme.prix > 0 %}
+                    Participation
+                  {% elif programme.montant_max %}
+                    Financement disponible
+                  {% else %}
+                    Opportunité
+                  {% endif %}
+                </div>
+                <div class="font-display text-2xl font-bold text-white">
+                  {% if programme.prix and programme.prix > 0 %}
+                    {{ "{:,.0f}".format(programme.prix) }} <span class="text-base font-normal">FBU</span>
+                  {% elif programme.montant_max %}
+                    {{ "{:,.0f}".format(programme.montant_max) }} <span class="text-base font-normal">FBU max</span>
+                  {% else %}
+                    Gratuit
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="p-5 space-y-4">
+              {# Bouton postuler #}
+              {% if user_logged_in %}
+                <button class="btn-apply flex items-center justify-center gap-2">
+                  <i class="fas fa-paper-plane text-sm"></i>
+                  {% if programme.categorie == 'formation' %}
+                    S'inscrire à la formation
+                  {% elif programme.categorie == 'financement' %}
+                    Postuler au financement
+                  {% else %}
+                    Soumettre ma candidature
+                  {% endif %}
+                </button>
+              {% else %}
+                <a href="{{ url_for('auth.demande_inscription') }}" class="btn-apply flex items-center justify-center gap-2">
+                  <i class="fas fa-user-plus text-sm"></i>
+                  Créer un compte pour postuler
+                </a>
+              {% endif %}
+
+              {# Countdown si deadline proche #}
+              {% if days_left is not none and days_left > 0 and days_left <= 30 %}
+              <div class="countdown-card">
+                <div class="text-[10px] text-red-400 uppercase tracking-wider font-semibold mb-3 text-center">
+                  <i class="fas fa-hourglass-half mr-1"></i> Clôture dans
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="countdown-unit">
+                    <div class="countdown-value" id="cd-days">{{ days_left }}</div>
+                    <div class="countdown-label">Jours</div>
+                  </div>
+                  <div class="countdown-unit">
+                    <div class="countdown-value" id="cd-hours">--</div>
+                    <div class="countdown-label">Heures</div>
+                  </div>
+                  <div class="countdown-unit">
+                    <div class="countdown-value" id="cd-mins">--</div>
+                    <div class="countdown-label">Min</div>
+                  </div>
+                </div>
+              </div>
+              {% elif days_left is not none and days_left == 0 %}
+              <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
+                <i class="fas fa-times-circle text-red-400 text-xl mb-2"></i>
+                <div class="text-sm font-semibold text-red-400">Offre clôturée</div>
+                <div class="text-xs text-gray-500 mt-1">Les candidatures sont fermées</div>
+              </div>
+              {% endif %}
+
+              {# Informations supplémentaires #}
+              <div class="space-y-2.5 pt-2">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-500 flex items-center gap-2">
+                    <i class="fas fa-check-circle text-brand-400 text-xs"></i> Vérifié
+                  </span>
+                  <span class="text-xs text-gray-400">Organisation certifiée</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-500 flex items-center gap-2">
+                    <i class="fas fa-shield-alt text-brand-400 text-xs"></i> Sécurisé
+                  </span>
+                  <span class="text-xs text-gray-400">Données protégées</span>
+                </div>
+                {% if programme.created_at %}
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-500 flex items-center gap-2">
+                    <i class="fas fa-clock text-gray-500 text-xs"></i> Publié
+                  </span>
+                  <span class="text-xs text-gray-400">{{ programme.created_at|format_date }}</span>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          {# ─── SAUVEGARDER ─── #}
+          <button class="w-full py-3 rounded-2xl glass text-sm font-semibold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors">
+            <i class="far fa-bookmark text-brand-400"></i>
+            Sauvegarder pour plus tard
+          </button>
+
+          {# ─── CONSEIL IA ─── #}
+          <div class="glass rounded-2xl p-5 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 rounded-full" style="background: radial-gradient(circle, var(--cat-bg), transparent 70%);"></div>
+            <div class="relative">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-gold-500 flex items-center justify-center">
+                  <i class="fas fa-lightbulb text-white text-xs"></i>
+                </div>
+                <div class="font-semibold text-sm">Conseil</div>
+              </div>
+              <p class="text-xs text-gray-300 leading-relaxed">
+                {% if programme.categorie == 'formation' %}
+                Préparez votre CV et une lettre de motivation pour maximiser vos chances d'admission.
+                {% elif programme.categorie == 'financement' %}
+                Préparez un business plan solide et des projections financières réalistes.
+                {% else %}
+                Détaillez votre proposition avec des livrables concrets et un calendrier précis.
+                {% endif %}
+              </p>
+            </div>
+          </div>
+
+          {# ─── OPPORTUNITÉS SIMILAIRES ─── #}
+          <div class="glass rounded-2xl p-5">
+            <h3 class="font-display font-bold text-sm mb-4 flex items-center gap-2">
+              <i class="fas fa-sparkles text-brand-400 text-xs"></i>
+              Opportunités similaires
+            </h3>
+            <div class="space-y-2.5">
+              {% for i in range(3) %}
+              <a href="#" class="similar-card block">
+                <div class="similar-icon">
+                  <i class="fas fa-{{ ['graduation-cap', 'money-bill-wave', 'star'][i] }} text-sm"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-semibold truncate">
+                    {{ ['Formation Marketing Digital', 'Fonds Innovation 2025', 'Appel à projets AgriTech'][i] }}
+                  </div>
+                  <div class="text-xs text-gray-500 mt-0.5">
+                    {{ ['Bujumbura · 12j restants', 'Gitega · 28j restants', 'National · 45j restants'][i] }}
+                  </div>
+                </div>
+              </a>
+              {% endfor %}
+            </div>
+            <a href="{{ url_for('opportunites.afficher_opportunites') }}" class="block text-center text-xs font-semibold text-brand-400 hover:text-brand-300 mt-4 transition-colors">
+              Voir toutes les opportunités →
+            </a>
+          </div>
+
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+
+{# ============================================================
+   CTA FINAL
+   ============================================================ #}
+<section class="py-16 relative overflow-hidden {{ cat_class }}">
+  <div class="absolute inset-0" style="background: radial-gradient(600px circle at 30% 50%, var(--cat-bg), transparent 60%);"></div>
+  <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h2 class="font-display text-3xl sm:text-4xl font-bold mb-4">
+      Prêt à <span class="gradient-text">saisir cette opportunité</span> ?
+    </h2>
+    <p class="text-gray-400 mb-8 max-w-xl mx-auto">
+      Rejoignez des centaines d'entrepreneurs qui développent leur activité grâce à TURIHO.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      {% if user_logged_in %}
+      <button class="btn-apply max-w-xs mx-auto flex items-center justify-center gap-2">
+        <i class="fas fa-paper-plane"></i>
+        Postuler maintenant
+      </button>
+      {% else %}
+      <a href="{{ url_for('auth.demande_inscription') }}" class="btn-apply max-w-xs mx-auto flex items-center justify-center gap-2">
+        <i class="fas fa-rocket"></i>
+        Créer mon compte
+      </a>
+      {% endif %}
+      <a href="{{ url_for('opportunites.afficher_opportunites') }}" class="btn-ghost px-6 py-3 rounded-xl font-semibold">
+        Explorer d'autres opportunités
+      </a>
+    </div>
+  </div>
+</section>
+
+
+{# ============================================================
+   MOBILE STICKY CTA
+   ============================================================ #}
+<div class="mobile-cta" id="mobile-cta">
+  <div class="flex items-center gap-3">
+    <div class="flex-1 min-w-0">
+      <div class="text-xs text-gray-500 truncate">{{ programme.titre|truncate(40) }}</div>
+      <div class="text-sm font-bold gradient-text">
+        {% if programme.prix and programme.prix > 0 %}{{ "{:,.0f}".format(programme.prix) }} FBU
+        {% elif programme.montant_max %}Jusqu'à {{ "{:,.0f}".format(programme.montant_max) }} FBU
+        {% else %}Gratuit{% endif %}
+      </div>
+    </div>
+    {% if user_logged_in %}
+    <button class="btn-apply !w-auto !px-6 !py-3 flex items-center gap-2">
+      <i class="fas fa-paper-plane text-sm"></i> Postuler
+    </button>
+    {% else %}
+    <a href="{{ url_for('auth.demande_inscription') }}" class="btn-apply !w-auto !px-6 !py-3 flex items-center gap-2">
+      <i class="fas fa-user-plus text-sm"></i> S'inscrire
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+(function() {
+  // ══════════ HERO LOAD ANIMATION ══════════
+  const hero = document.getElementById('detail-hero');
+  if (hero) {
+    const img = hero.querySelector('.detail-hero-img');
+    if (img.complete) hero.classList.add('loaded');
+    else img.addEventListener('load', () => hero.classList.add('loaded'));
+  }
+
+  // ══════════ GSAP REVEAL ══════════
+  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+    document.querySelectorAll('.reveal').forEach(el => {
+      gsap.fromTo(el,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%' }
+        }
+      );
+    });
+  }
+
+  // ══════════ COUNTDOWN ══════════
+  {% if programme.date_fin and days_left is not none and days_left > 0 %}
+  const deadline = new Date('{{ programme.date_fin.strftime("%Y-%m-%dT23:59:59") }}');
+  function updateCountdown() {
+    const now = new Date();
+    const diff = deadline - now;
+    if (diff <= 0) return;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const cdDays = document.getElementById('cd-days');
+    const cdHours = document.getElementById('cd-hours');
+    const cdMins = document.getElementById('cd-mins');
+    if (cdDays) cdDays.textContent = days;
+    if (cdHours) cdHours.textContent = String(hours).padStart(2, '0');
+    if (cdMins) cdMins.textContent = String(mins).padStart(2, '0');
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 60000);
+  {% endif %}
+
+  // ══════════ MOBILE CTA VISIBILITY ══════════
+  const mobileCta = document.getElementById('mobile-cta');
+  if (mobileCta) {
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+      const current = window.scrollY;
+      if (current > 500) {
+        mobileCta.classList.add('visible');
+      } else {
+        mobileCta.classList.remove('visible');
+      }
+      lastScroll = current;
+    }, { passive: true });
+  }
+
+  // ══════════ COPY LINK FEEDBACK ══════════
+  document.querySelectorAll('.owner-btn').forEach(btn => {
+    if (btn.textContent.includes('Copier')) {
+      btn.addEventListener('click', () => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check text-[10px]"></i> Copié !';
+        setTimeout(() => btn.innerHTML = original, 2000);
+      });
+    }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,78 @@
+{# ══════════════════════════════════════════
+   HEADER ADMIN — TOPBAR PREMIUM
+   ══════════════════════════════════════════ #}
+<header class="admin-topbar">
+    <div class="h-full flex items-center justify-between px-6">
+        {# Left: Mobile menu + Search #}
+        <div class="flex items-center gap-4">
+            <button id="mobile-menu-toggle" class="lg:hidden w-10 h-10 rounded-lg glass flex items-center justify-center">
+                <i class="fas fa-bars text-white"></i>
+            </button>
+            
+            <button id="sidebar-toggle" class="hidden lg:flex w-10 h-10 rounded-lg glass items-center justify-center">
+                <i class="fas fa-bars text-white"></i>
+            </button>
+            
+            <div class="relative hidden md:block">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                <input type="text" placeholder="Rechercher organisations, utilisateurs..." class="search-input">
+            </div>
+        </div>
+        
+        {# Right: Actions #}
+        <div class="flex items-center gap-3">
+            {# Quick actions #}
+            <a href="{{ url_for('admin.ajouter_programme') }}" class="btn-admin primary hidden md:inline-flex">
+                <i class="fas fa-plus"></i>
+                <span>Nouveau</span>
+            </a>
+            
+            {# Notifications #}
+            <div class="notification-bell">
+                <i class="fas fa-bell text-gray-400"></i>
+                {% if temoignages_pending is defined and temoignages_pending > 0 %}
+                <span class="notification-badge">{{ temoignages_pending }}</span>
+                {% endif %}
+            </div>
+            
+            {# Messages #}
+            <div class="notification-bell">
+                <i class="fas fa-envelope text-gray-400"></i>
+            </div>
+            
+            {# Profile dropdown #}
+            <div class="relative group">
+                <button class="flex items-center gap-3 pl-3 border-l border-white/5">
+                    <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-500 to-gold-500 flex items-center justify-center">
+                        <span class="text-white text-xs font-bold">A</span>
+                    </div>
+                    <div class="hidden md:block text-left">
+                        <div class="text-sm font-semibold text-white">Admin</div>
+                        <div class="text-xs text-gray-500">Super Admin</div>
+                    </div>
+                    <i class="fas fa-chevron-down text-xs text-gray-500 hidden md:block"></i>
+                </button>
+                
+                {# Dropdown menu #}
+                <div class="absolute right-0 top-full mt-2 w-56 glass-strong rounded-2xl p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
+                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                        <i class="fas fa-user text-brand-400 w-4"></i>
+                        Mon profil
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                        <i class="fas fa-cog text-brand-400 w-4"></i>
+                        Paramètres
+                    </a>
+                    <div class="my-1 border-t border-white/5"></div>
+                    <form method="POST" action="{{ url_for('admin.admin_logout') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+                            <i class="fas fa-sign-out-alt w-4"></i>
+                            Déconnexion
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

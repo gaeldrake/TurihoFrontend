@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier — {{ evenement.nom|e }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container { max-width: 640px; margin: 0 auto; padding: 2rem 1rem; }
+    .form-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .form-header-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.08));
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        display: flex; align-items: center; justify-content: center;
+        color: #a78bfa; font-size: 1.25rem;
+    }
+    .form-card {
+        background: rgba(20, 25, 33, 0.55);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 2rem;
+    }
+    .form-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .form-section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.9375rem; font-weight: 700;
+        margin-bottom: 1.25rem;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .form-section-title i { color: #a78bfa; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-size: 0.75rem; font-weight: 600; color: #94a3b8;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .form-label .required { color: #ef4444; font-size: 0.875rem; }
+    .form-label .optional {
+        color: #64748b; text-transform: none;
+        letter-spacing: normal; font-weight: 400;
+    }
+    .form-input, .form-textarea, .form-select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        color: white; font-size: 0.875rem;
+        transition: all 0.2s; font-family: inherit;
+    }
+    .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+        outline: none;
+        border-color: rgba(139, 92, 246, 0.5);
+        background: rgba(139, 92, 246, 0.03);
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.08);
+    }
+    .form-select option { background: #141921; color: white; }
+    .form-hint { font-size: 0.7rem; color: #64748b; margin-top: 0.375rem; }
+
+    /* Price input */
+    .price-input-wrapper { position: relative; }
+    .price-input-wrapper .form-input { padding-right: 3.5rem; }
+    .price-currency {
+        position: absolute; right: 1rem; top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.75rem; font-weight: 600;
+        color: #64748b; pointer-events: none;
+    }
+
+    /* Status pills */
+    .status-options { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .status-option { position: relative; cursor: pointer; }
+    .status-option input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .status-pill {
+        display: inline-flex; align-items: center; gap: 0.375rem;
+        padding: 0.5rem 1rem; border-radius: 999px;
+        font-size: 0.75rem; font-weight: 600;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #94a3b8; transition: all 0.2s;
+    }
+    .status-option input:checked + .status-pill { border-color: currentColor; }
+    .status-pill.upcoming { color: #34d399; }
+    .status-pill.ongoing { color: #60a5fa; }
+    .status-pill.completed { color: #94a3b8; }
+    .status-pill.cancelled { color: #f87171; }
+    .status-option input:checked + .status-pill.upcoming { background: rgba(16, 185, 129, 0.15); }
+    .status-option input:checked + .status-pill.ongoing { background: rgba(59, 130, 246, 0.15); }
+    .status-option input:checked + .status-pill.completed { background: rgba(148, 163, 184, 0.15); }
+    .status-option input:checked + .status-pill.cancelled { background: rgba(239, 68, 68, 0.15); }
+
+    /* Image upload */
+    .image-upload {
+        border: 2px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        padding: 2rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .image-upload:hover {
+        border-color: rgba(139, 92, 246, 0.4);
+        background: rgba(139, 92, 246, 0.03);
+    }
+    .image-upload.has-image { padding: 0; border-style: solid; border-color: rgba(139, 92, 246, 0.3); }
+    .image-upload-icon {
+        width: 48px; height: 48px; border-radius: 12px;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.08));
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 0.75rem;
+        color: #a78bfa; font-size: 1.25rem;
+    }
+    .image-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; }
+
+    .form-actions {
+        display: flex; justify-content: flex-end; gap: 0.75rem;
+        margin-top: 2rem; padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .btn-form {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        padding: 0.75rem 1.5rem; border-radius: 12px;
+        font-size: 0.875rem; font-weight: 600;
+        transition: all 0.2s; border: none; cursor: pointer;
+    }
+    .btn-form.primary {
+        background: linear-gradient(135deg, #a855f7, #7c3aed);
+        color: white;
+        box-shadow: 0 4px 12px -4px rgba(168, 85, 247, 0.4);
+    }
+    .btn-form.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px -4px rgba(168, 85, 247, 0.5);
+    }
+    .btn-form.ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+    .btn-form.ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(168, 85, 247, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn-form ghost" style="padding: 0.5rem;">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="form-header-icon">
+            <i class="fas fa-calendar-plus"></i>
+        </div>
+        <div>
+            <h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 800; margin: 0;">
+                Modifier l'événement
+            </h1>
+            <p style="font-size: 0.8125rem; color: #64748b; margin: 0;">
+                {{ evenement.nom|e }}
+            </p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('dashboard.modifier_evenement', id=evenement.id) }}" enctype="multipart/form-data" class="form-card">
+        {% if csrf_token is defined %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% endif %}
+
+        {# ═══ Informations principales ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-info-circle"></i>
+                Informations principales
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="nom">
+                    Nom de l'événement <span class="required">*</span>
+                </label>
+                <input type="text" id="nom" name="nom" class="form-input"
+                       value="{{ evenement.nom|e }}" required maxlength="100">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="description">
+                    Description <span class="optional">(optionnel)</span>
+                </label>
+                <textarea id="description" name="description" class="form-textarea"
+                          maxlength="3000">{{ (evenement.description or '')|e }}</textarea>
+            </div>
+        </div>
+
+        {# ═══ Date & Lieu ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-calendar-alt"></i>
+                Date & Lieu
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="date_debut">
+                        Date de début <span class="required">*</span>
+                    </label>
+                    <input type="datetime-local" id="date_debut" name="date_debut" class="form-input"
+                           value="{{ evenement.date_debut.strftime('%Y-%m-%dT%H:%M') if evenement.date_debut else '' }}" required>
+                    <div class="form-hint">Date et heure de début</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="date_fin">
+                        Date de fin <span class="optional">(optionnel)</span>
+                    </label>
+                    <input type="datetime-local" id="date_fin" name="date_fin" class="form-input"
+                           value="{{ evenement.date_fin.strftime('%Y-%m-%dT%H:%M') if evenement.date_fin else '' }}">
+                    <div class="form-hint">Doit être après la date de début</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="lieu">
+                    Lieu <span class="optional">(optionnel)</span>
+                </label>
+                <input type="text" id="lieu" name="lieu" class="form-input"
+                       value="{{ evenement.lieu|e }}" maxlength="100"
+                       placeholder="Ex: Bujumbura, Centre culturel">
+            </div>
+        </div>
+
+        {# ═══ Classification ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-tag"></i>
+                Classification
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="categorie">
+                        Catégorie <span class="optional">(optionnel)</span>
+                    </label>
+                    <select id="categorie" name="categorie" class="form-select">
+                        {% set categories = [
+                            ('', '— Non spécifiée —'),
+                            ('culture', 'Culture'),
+                            ('education', 'Éducation'),
+                            ('meeting', 'Réunion'),
+                            ('workshop', 'Atelier'),
+                            ('sport', 'Sport'),
+                            ('social', 'Social'),
+                            ('autre', 'Autre')
+                        ] %}
+                        {% for value, display in categories %}
+                        <option value="{{ value }}" {% if evenement.categorie == value %}selected{% endif %}>
+                            {{ display }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Statut</label>
+                    <div class="status-options">
+                        {% set statuts = [
+                            ('upcoming', 'fa-clock', 'À venir', 'upcoming'),
+                            ('ongoing', 'fa-play', 'En cours', 'ongoing'),
+                            ('completed', 'fa-check', 'Terminé', 'completed'),
+                            ('cancelled', 'fa-times', 'Annulé', 'cancelled')
+                        ] %}
+                        {% for value, icon, label, cls in statuts %}
+                        <label class="status-option">
+                            <input type="radio" name="statut" value="{{ value }}"
+                                   {% if evenement.statut == value %}checked{% endif %}>
+                            <span class="status-pill {{ cls }}">
+                                <i class="fas {{ icon }}"></i> {{ label }}
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="prix">
+                    Prix <span class="optional">(optionnel)</span>
+                </label>
+                <div class="price-input-wrapper">
+                    <input type="number" id="prix" name="prix" class="form-input"
+                           value="{{ evenement.prix if evenement.prix else '' }}"
+                           min="0" step="1" placeholder="0">
+                    <span class="price-currency">FBU</span>
+                </div>
+                <div class="form-hint">Laissez vide ou mettez 0 pour un événement gratuit</div>
+            </div>
+        </div>
+
+        {# ═══ Image ═══ #}
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-image"></i>
+                Image de l'événement
+            </div>
+
+            <div class="form-group">
+                <label class="image-upload {% if evenement.image %}has-image{% endif %}" id="image-upload" for="image">
+                    {% if evenement.image %}
+                        <img id="image-preview" class="image-preview" src="{{ get_url(evenement.image) }}" alt="Image actuelle">
+                    {% else %}
+                        <div id="image-placeholder">
+                            <div class="image-upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Cliquez pour ajouter une image</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">JPG, PNG, GIF, WebP — max 5 Mo</div>
+                        </div>
+                        <img id="image-preview" class="image-preview" style="display: none;" alt="Preview">
+                    {% endif %}
+                </label>
+                <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;">
+                {% if evenement.image %}
+                <div class="form-hint">Laissez vide pour conserver l'image actuelle</div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ═══ Actions ═══ #}
+        <div class="form-actions">
+            <a href="{{ url_for('dashboard.dashboard') }}" class="btn-form ghost">
+                Annuler
+            </a>
+            <button type="submit" class="btn-form primary">
+                <i class="fas fa-check"></i>
+                Enregistrer les modifications
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Preview image
+const imageInput = document.getElementById('image');
+const imageUpload = document.getElementById('image-upload');
+const imagePreview = document.getElementById('image-preview');
+const imagePlaceholder = document.getElementById('image-placeholder');
+
+if (imageInput) {
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                if (imagePlaceholder) imagePlaceholder.style.display = 'none';
+                imageUpload.classList.add('has-image');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// Validation date fin > date début
+const dateDebut = document.getElementById('date_debut');
+const dateFin = document.getElementById('date_fin');
+if (dateDebut && dateFin) {
+    dateDebut.addEventListener('change', function() {
+        dateFin.min = this.value;
+    });
+}
+</script>
+{% endblock %}
