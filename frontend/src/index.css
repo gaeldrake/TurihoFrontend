@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+
+/* TURIHO — direction visuelle : premium, institutionnel, sobre. */
+:root {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+}
